@@ -20,6 +20,8 @@ public class RabbitSettings {
 
     private String routingKeyPrefix;
 
+    private boolean blockNotification;
+
     @Bean
     Jackson2JsonMessageConverter producerJackson2MessageConverter() {
         return new Jackson2JsonMessageConverter();

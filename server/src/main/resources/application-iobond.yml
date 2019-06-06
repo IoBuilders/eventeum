@@ -24,9 +24,13 @@ rabbitmq:
   routingKeyPrefix: bond
 
 ethereum:
-  node:
-    networkName: Pantheon
+  nodes:
+  - name: default
+    networkName: default
     url: http://127.0.0.1:22010
+  healthcheck:
+    pollInterval: 2000
+  blockStrategy: POLL
 
 eventFilters:
 - id: MyTestContract
