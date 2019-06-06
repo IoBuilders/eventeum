@@ -52,6 +52,7 @@ public class RabbitBlockchainEventBroadcasterTest {
         block.setHash("0xc2141b870536473fdea321893bc084eb3244cc56ea8d4b77de240dfeac6604d2");
         block.setNumber(BigInteger.TEN);
 
+        Mockito.when(rabbitSettings.isBlockNotification()).thenReturn(true);
         underTest.broadcastNewBlock(block);
 
 

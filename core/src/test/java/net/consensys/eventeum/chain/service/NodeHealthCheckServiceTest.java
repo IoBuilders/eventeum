@@ -2,6 +2,7 @@ package net.consensys.eventeum.chain.service;
 
 import net.consensys.eventeum.chain.service.health.strategy.ReconnectionStrategy;
 import net.consensys.eventeum.chain.service.health.NodeHealthCheckService;
+import net.consensys.eventeum.service.SubscriptionService;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,12 +21,15 @@ public class NodeHealthCheckServiceTest {
 
     private ReconnectionStrategy mockReconnectionStrategy;
 
+    private SubscriptionService mockSubscriptionService;
+
     @Before
     public void init() {
         mockBlockchainService = mock(BlockchainService.class);
         mockReconnectionStrategy = mock(ReconnectionStrategy.class);
+        mockSubscriptionService = mock(SubscriptionService.class);
 
-        underTest = new NodeHealthCheckService(mockBlockchainService, mockReconnectionStrategy);
+        underTest = new NodeHealthCheckService(mockBlockchainService, mockReconnectionStrategy, mockSubscriptionService);
     }
 
     @Test

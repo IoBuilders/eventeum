@@ -148,9 +148,17 @@ public class DefaultSubscriptionService implements SubscriptionService {
         log.info("Resubscribed to event filters: {}", JSON.stringify(filterSubscriptions));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unsubscribeToAllSubscriptions() {
+        filterSubscriptions.values().forEach(filterSub -> filterSub.getSubscription().unsubscribe());
+    }
+
     @PreDestroy
     private void unregisterAllContractEventFilters() {
-        filterSubscriptions.values().forEach(filterSub -> {
+            filterSubscriptions.values().forEach(filterSub -> {
             try {
                 unregisterContractEventFilter(filterSub.getFilter().getId(), false);
             } catch (FilterNotFoundException e) {
