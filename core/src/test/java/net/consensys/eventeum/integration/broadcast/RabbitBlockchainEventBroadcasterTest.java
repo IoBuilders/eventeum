@@ -55,6 +55,7 @@ public class RabbitBlockchainEventBroadcasterTest {
         Mockito.when(rabbitSettings.isBlockNotification()).thenReturn(true);
         underTest.broadcastNewBlock(block);
 
+        
 
         final ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
         final ArgumentCaptor<EventeumMessage> messageCaptor = ArgumentCaptor.forClass(EventeumMessage.class);
