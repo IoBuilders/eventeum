@@ -99,7 +99,7 @@ public class DefaultEventBlockManagementServiceTest {
 
         final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
-        assertEquals(BigInteger.valueOf(11), result);
+        assertEquals(BigInteger.valueOf(2), result);
     }
 
     @Test
