@@ -13,45 +13,276 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5p %c: %M - %m%n"
   file: /logs/application.log
 
-ethereum:
-  nodes:
-    - name: default
-      url: ${ETHEREUM_NODE_URL:http://localhost:8545}
-  healthcheck:
-    pollInterval: 2000
-  blockStrategy: POLL
-
-#eventFilters:
-#  - id: RequestCreated
-#    contractAddress: ${CONTRACT_ADDRESS:0x4aecf261541f168bb3ca65fa8ff5012498aac3b8}
-#    eventSpecification:
-#      eventName: RequestCreated
-#      indexedParameterDefinitions:
-#        - position: 0
-#          type: BYTES32
-#        - position: 1
-#          type: ADDRESS
-#      nonIndexedParameterDefinitions:
-#        - position: 2
-#          type: BYTES32
-#    correlationId:
-#      type: NON_INDEXED_PARAMETER
-#      index: 0
-
+eventFilters:
+- id: TokenMinted
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+  eventSpecification:
+    eventName: Mint
+    indexedParameterDefinitions:
+      - position: 0
+        type: ADDRESS
+    nonIndexedParameterDefinitions:
+      - position: 1
+        type: UINT256
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: TokenBurnt
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+  eventSpecification:
+    eventName: Burn
+    indexedParameterDefinitions:
+      - position: 0
+        type: ADDRESS
+    nonIndexedParameterDefinitions:
+      - position: 1
+        type: UINT256
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: TokenTransferred
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+  eventSpecification:
+    eventName: NativeTransfer
+    indexedParameterDefinitions:
+    - position: 0
+      type: ADDRESS
+    - position: 1
+      type: ADDRESS
+    nonIndexedParameterDefinitions:
+    - position: 2
+      type: UINT256
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: TransferOrdered
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+  eventSpecification:
+    eventName: TransferOrdered
+    indexedParameterDefinitions:
+      - position: 1
+        type: ADDRESS
+      - position: 2
+        type: ADDRESS
+    nonIndexedParameterDefinitions:
+      - position: 0
+        type: STRING
+      - position: 3
+        type: UINT256
+      - position: 4
+        type: UINT256
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: TransferReleased
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+  eventSpecification:
+    eventName: TransferReleased
+    indexedParameterDefinitions:
+      - position: 2
+        type: ADDRESS
+      - position: 3
+        type: ADDRESS
+    nonIndexedParameterDefinitions:
+      - position: 0
+        type: STRING
+      - position: 1
+        type: ADDRESS
+      - position: 4
+        type: UINT256
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: TransferRevoked
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+  eventSpecification:
+    eventName: TransferRevoked
+    indexedParameterDefinitions:
+      - position: 2
+        type: ADDRESS
+      - position: 3
+        type: ADDRESS
+    nonIndexedParameterDefinitions:
+      - position: 0
+        type: STRING
+      - position: 1
+        type: ADDRESS
+      - position: 4
+        type: UINT256
+      - position: 5
+        type: UINT8
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: LogPermissionSet
+  contractAddress: ${CONTRACT_ADDRESS_REGULATED_TOKEN:0x1f492a9cc887993a51877a1e5e7455e4e2351f20}
+  eventSpecification:
+    eventName: LogPermissionSet
+    indexedParameterDefinitions:
+      - position: 0
+        type: ADDRESS
+      - position: 1
+        type: ADDRESS
+    nonIndexedParameterDefinitions:
+      - position: 2
+        type: UINT8
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: RedeemOrdered
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+  eventSpecification:
+    eventName: RedeemOrdered
+    indexedParameterDefinitions:
+      - position: 2
+        type: ADDRESS
+    nonIndexedParameterDefinitions:
+      - position: 0
+        type: STRING
+      - position: 1
+        type: ADDRESS
+      - position: 3
+        type: UINT256
+      - position: 4
+        type: UINT256
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: RedeemReleased
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+  eventSpecification:
+    eventName: RedeemReleased
+    indexedParameterDefinitions:
+      - position: 2
+        type: ADDRESS
+    nonIndexedParameterDefinitions:
+      - position: 0
+        type: STRING
+      - position: 1
+        type: ADDRESS
+      - position: 3
+        type: UINT256
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: RedeemRevoked
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+  eventSpecification:
+    eventName: RedeemRevoked
+    indexedParameterDefinitions:
+      - position: 2
+        type: ADDRESS
+    nonIndexedParameterDefinitions:
+      - position: 0
+        type: STRING
+      - position: 1
+        type: ADDRESS
+      - position: 3
+        type: UINT256
+      - position: 4
+        type: UINT8
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: OTPRequested
+  contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
+  eventSpecification:
+    eventName: OTPRequested
+    indexedParameterDefinitions:
+      - position: 0
+        type: ADDRESS
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: OTPVerificationOrdered
+  contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
+  eventSpecification:
+    eventName: OTPVerificationOrdered
+    indexedParameterDefinitions:
+      - position: 0
+        type: ADDRESS
+      - position: 1
+        type: UINT256
+    nonIndexedParameterDefinitions:
+      - position: 2
+        type: STRING
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: NewOTPRequested
+  contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
+  eventSpecification:
+    eventName: NewOTPRequested
+    indexedParameterDefinitions:
+      - position: 0
+        type: ADDRESS
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: NewOTPVerificationOrdered
+  contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
+  eventSpecification:
+    eventName: NewOTPVerificationOrdered
+    indexedParameterDefinitions:
+      - position: 0
+        type: ADDRESS
+      - position: 1
+        type: UINT256
+    nonIndexedParameterDefinitions:
+     - position: 2
+       type: STRING
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+- id: KycLevelSetToUser
+  contractAddress: ${CONTRACT_ADDRESS_COMPLIANCE:0xd3f33245334ce740d95a4e3ecfc6db8c77628174}
+  eventSpecification:
+    eventName: KycLevelSetToUser
+    indexedParameterDefinitions:
+    - position: 1
+      type: ADDRESS
+    nonIndexedParameterDefinitions:
+    - position: 0
+      type: ADDRESS
+    - position: 2
+      type: UINT8
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
 eventStore:
   type: DB
   url: http://localhost:8081/api/rest/v1
   eventPath: /event
 
+spring:
+  profiles.active: pre
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/test
+
+ethereum:
+  nodes:
+  - name: default
+    networkName: ${ETHEREUM_NETWORK:AlastriaTelsius}
+    url: ${ETHEREUM_URL:http://34.241.169.145:22000}
+  healthcheck:
+    pollInterval: 2000
+  blockStrategy: POLL
+
 broadcaster:
-  type: KAFKA
+  type: RABBIT
   cache:
     expirationMillis: 6000000
   event:
     confirmation:
-      numBlocksToWait: 12
+      numBlocksToWait: 0
       numBlocksToWaitForMissingTx: 100
   multiInstance: false
+
+rabbitmq:
+  exchange: money
+  routingKeyPrefix: eventeum
+  blockNotification: false
 
 # For Kafka
 zookeeper:
@@ -64,11 +295,4 @@ kafka:
     blockEvents: block-events
     filterEvents: filter-events
 
-spring:
-  rabbitmq:
-    host: ${RABBIT_ADDRESS:localhost}
-
-rabbitmq:
-  exchange: ThisIsAExchange
-  routingKeyPrefix: thisIsRoutingKey
-
+management.context-path: /monitoring
