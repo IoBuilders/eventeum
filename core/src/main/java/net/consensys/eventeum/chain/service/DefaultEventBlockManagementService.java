@@ -55,18 +55,18 @@ public class DefaultEventBlockManagementService implements EventBlockManagementS
      * {@inheritDoc}
      */
     @Override
-    public BigInteger getLatestBlockForEvent(ContractEventFilter eventFilter) {
+    public BigInteger getBlockNumberToScanEvent(ContractEventFilter eventFilter) {
         final String eventSignature = Web3jUtil.getSignature(eventFilter.getEventSpecification());
         final BigInteger latestBlockNumber = latestBlocks.get(eventSignature);
 
         if (latestBlockNumber != null) {
-            return latestBlockNumber;
+            return latestBlockNumber.add(BigInteger.ONE);
         }
 
         final ContractEventDetails contractEvent = eventStoreService.getLatestContractEvent(eventSignature);
 
         if (contractEvent != null) {
-            return contractEvent.getBlockNumber();
+            return contractEvent.getBlockNumber().add(BigInteger.ONE);
         }
 
         final BlockchainService blockchainService =

@@ -68,27 +68,27 @@ public class DefaultEventBlockManagementServiceTest {
     @Test
     public void testUpdateAndGetNoMatch() {
         underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.TEN);
-        final BigInteger result = underTest.getLatestBlockForEvent(EVENT_FILTER);
+        final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
-        assertEquals(BigInteger.TEN, result);
+        assertEquals(BigInteger.valueOf(11), result);
     }
 
     @Test
     public void testUpdateAndGetLowerMatch() {
         underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.ONE);
         underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.TEN);
-        final BigInteger result = underTest.getLatestBlockForEvent(EVENT_FILTER);
+        final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
-        assertEquals(BigInteger.TEN, result);
+        assertEquals(BigInteger.valueOf(11), result);
     }
 
     @Test
     public void testUpdateAndGetHigherMatch() {
         underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.TEN);
         underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.ONE);
-        final BigInteger result = underTest.getLatestBlockForEvent(EVENT_FILTER);
+        final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
-        assertEquals(BigInteger.TEN, result);
+        assertEquals(BigInteger.valueOf(11), result);
     }
 
     @Test
@@ -97,9 +97,9 @@ public class DefaultEventBlockManagementServiceTest {
         when(mockEventDetails.getBlockNumber()).thenReturn(BigInteger.ONE);
         when(mockEventStoreService.getLatestContractEvent(EVENT_SPEC_HASH)).thenReturn(mockEventDetails);
 
-        final BigInteger result = underTest.getLatestBlockForEvent(EVENT_FILTER);
+        final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
-        assertEquals(BigInteger.ONE, result);
+        assertEquals(BigInteger.valueOf(11), result);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class DefaultEventBlockManagementServiceTest {
         when(mockEventStoreService.getLatestContractEvent(EVENT_SPEC_HASH)).thenReturn(null);
         when(mockBlockchainService.getCurrentBlockNumber()).thenReturn(BigInteger.valueOf(20));
 
-        final BigInteger result = underTest.getLatestBlockForEvent(EVENT_FILTER);
+        final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
         assertEquals(BigInteger.valueOf(20), result);
     }

@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.*;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.eq;
 
 public class Web3jServiceTest {
 
@@ -64,7 +66,7 @@ public class Web3jServiceTest {
         mockContractEventDetails = mock(ContractEventDetails.class);
         mockBlockSubscriptionStrategy = mock(BlockSubscriptionStrategy.class);
 
-        when(mockBlockManagement.getLatestBlockForEvent(any(ContractEventFilter.class))).thenReturn(BLOCK_NUMBER);
+        when(mockBlockManagement.getBlockNumberToScanEvent(any(ContractEventFilter.class))).thenReturn(BLOCK_NUMBER);
 
         //Wire up getBlockNumber
         final Request<?, EthBlockNumber> mockRequest = mock(Request.class);
