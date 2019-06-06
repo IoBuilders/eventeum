@@ -1,0 +1,82 @@
+server:
+  tomcat:
+    uri-encoding: UTF-8
+  port: 8060
+
+logging:
+  level:
+    org.springframework.web: ERROR
+    net.consensys: DEBUG
+    net.consensys.configs: ERROR
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5p %c: %M - %m%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5p %c: %M - %m%n"
+  file: /logs/application.log
+
+eventFilters:
+- id: TokenTransferred
+  contractAddress: ${CONTRACT_ADDRESS:0xb82d98a9f0fd43c1c4a1be29be2dd5fab10b226e}
+  eventSpecification:
+    eventName: Transfer
+    indexedParameterDefinitions:
+    - position: 0
+      type: ADDRESS
+    - position: 1
+      type: ADDRESS
+    - position: 3
+      type: BYTES32
+    nonIndexedParameterDefinitions:
+    - position: 2
+      type: UINT256
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0
+
+eventStore:
+  type: DB
+  url: http://localhost:8081/api/rest/v1
+  eventPath: /event
+
+spring:
+  data:
+    mongodb:
+      uri: mongodb://clappy:ioBuilders18@ds235833.mlab.com:35833/clappy
+ethereum:
+  node:
+    networkName: Alastria
+    url: http://34.241.169.145:22000
+    healthcheck:
+      pollInterval: 2000
+  blockStrategy: POLL
+
+broadcaster:
+  type: HTTP
+  http:
+    blockEventsUrl: http://localhost:3000
+    contractEventsUrl: https://tpq64nflyc.execute-api.eu-west-1.amazonaws.com/staging/api/private/events
+    blockNotification: false
+  cache:
+    expirationMillis: 6000000
+  event:
+    confirmation:
+      numBlocksToWait: 0
+      numBlocksToWaitForMissingTx: 100
+  multiInstance: false
+
+rabbitmq:
+  exchange: money
+  routingKeyPrefix: eventeum
+  blockNotification: false
+
+# For Kafka
+zookeeper:
+  address: ${ZOOKEEPER_ADDRESS:localhost:2181}
+kafka:
+  bootstrap:
+    addresses: ${KAFKA_ADDRESSES:localhost:9092}
+  topic:
+    contractEvents: contract-events
+    blockEvents: block-events
+    filterEvents: filter-events
+
+management.context-path: /monitoring

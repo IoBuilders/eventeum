@@ -1,0 +1,41 @@
+logging:
+  level:
+    org.springframework.web: ERROR
+    net.consensys: DEBUG
+    net.consensys.configs: ERROR
+    org.springframework.amqp: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5p %c: %M - %m%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5p %c: %M - %m%n"
+  file: /logs/application.log
+
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/test
+
+rabbitmq:
+  exchange: securities
+  routingKeyPrefix: bond
+
+ethereum:
+  node:
+    networkName: Pantheon
+    url: http://127.0.0.1:22010
+
+eventFilters:
+- id: MyTestContract
+  contractAddress: "0x2e003270a781fa5ddafe7b2601852564e09c389a"
+  eventSpecification:
+    eventName: MyEvent
+    nonIndexedParameterDefinitions:
+    - position: 0
+      type: ADDRESS
+  correlationId:
+    type: NON_INDEXED_PARAMETER
+    index: 0

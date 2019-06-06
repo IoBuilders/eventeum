@@ -1,0 +1,88 @@
+stages:
+  - build
+  - tagging
+#  - deploy
+
+services:
+  - docker:dind
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - core/target
+    - server/target
+    - target
+
+tagging:
+  image: alpine:latest
+  stage: tagging
+  only:
+    - master
+  script:
+    - apk add xmlstarlet git
+    - git config user.email $GIT_EMAIL
+    - git config user.name $GIT_USER
+    - export ECHO_EXEC="$(which echo)"
+    - $ECHO_EXEC "$ECHO_EXEC '$GIT_PASSWD'" > cucu.sh
+    - chmod +x cucu.sh
+    - export GIT_ASKPASS="./cucu.sh"
+    - git remote add temp https://$GIT_USER:$GIT_PASSWD@gitlab.com/iobuilders/iob-eventeum.git
+    - export GIT_TAG=$(xmlstarlet sel -N my=http://maven.apache.org/POM/4.0.0 -t -m my:project -v my:version pom.xml)
+    - if git tag -d $GIT_TAG 1>&2 2>/dev/null; then echo "Deleted Tag $GIT_TAG on local"; fi
+    - if git push --delete temp $GIT_TAG 1>&2 2>/dev/null; then echo "Deleted Tag $GIT_TAG on remote"; fi
+    - git tag -a $GIT_TAG -m "Tagged commit from Gitlab-CI"
+    - git push temp --tags
+    - rm cucu.sh
+
+build:
+  image: maven:3.5.3
+  stage: build
+  only:
+    - master
+  script:
+    - mvn clean package
+
+#deploy:
+#  image: docker:stable
+#  stage: deploy
+#  only:
+#    - master
+#  before_script:
+#    - >
+#      docker run -t --rm
+#      -v /var/run/docker.sock:/var/run/docker.sock
+#      -v "$(pwd)":"$(pwd)"
+#      -w "$(pwd)"
+#      -u 0:0
+#      -e AWS_DEFAULT_REGION
+#      -e AWS_ACCESS_KEY_ID
+#      -e AWS_SECRET_ACCESS_KEY
+#      mesosphere/aws-cli ecr get-login --registry-ids $REGISTRY_ID --no-include-email |  sed 's/\r//g' | sh
+#  script:
+#    - apk add xmlstarlet
+#    - export GIT_TAG=$(xmlstarlet sel -N my=http://maven.apache.org/POM/4.0.0 -t -m my:project -v my:version pom.xml)
+#    - export ENV_EXEC="PRE"
+#    - if $(echo "$GIT_TAG" | grep GA 1>/dev/null 2>&1); then ENV_EXEC="PRO"; fi
+#    - cd server
+#    - docker build --build-arg APP_VERSION="$GIT_TAG" -t $REPOSITORY_URL:$ENV_EXEC -t $REPOSITORY_URL:$GIT_TAG -t $REPOSITORY_URL:latest .
+#    - docker push $REPOSITORY_URL
+#    - >
+#      docker run -t --rm
+#      -v /var/run/docker.sock:/var/run/docker.sock
+#      -v "$(pwd)":"$(pwd)"
+#      -w "$(pwd)"
+#      -u 0:0
+#      -e AWS_DEFAULT_REGION
+#      -e AWS_ACCESS_KEY_ID
+#      -e AWS_SECRET_ACCESS_KEY
+#      mesosphere/aws-cli ecs update-service --cluster PRE-$CLUSTER_NAME --service PRE-$SERVICE_NAME --force-new-deployment  --deployment-configuration maximumPercent=100,minimumHealthyPercent=0
+#    - >
+#      if [[ "$ENV_EXEC" == "PRO" ]]; then docker run -t --rm
+#      -v /var/run/docker.sock:/var/run/docker.sock
+#      -v "$(pwd)":"$(pwd)"
+#      -w "$(pwd)"
+#      -u 0:0
+#      -e AWS_DEFAULT_REGION
+#      -e AWS_ACCESS_KEY_ID
+#      -e AWS_SECRET_ACCESS_KEY
+#      mesosphere/aws-cli ecs update-service --cluster PRE-$CLUSTER_NAME --service PRE-$SERVICE_NAME --force-new-deployment  --deployment-configuration maximumPercent=100,minimumHealthyPercent=0 ; fi
