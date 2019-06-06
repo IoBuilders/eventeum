@@ -33,13 +33,15 @@ public class HttpBlockchainEventBroadcaster implements BlockchainEventBroadcaste
 
     @Override
     public void broadcastNewBlock(BlockDetails block) {
-        retryTemplate.execute((context) -> {
-            final ResponseEntity<Void> response =
-                    restTemplate.postForEntity(settings.getBlockEventsUrl(), block, Void.class);
+        if (settings.isBlockNotification()) {
+            retryTemplate.execute((context) -> {
+                final ResponseEntity<Void> response =
+                        restTemplate.postForEntity(settings.getBlockEventsUrl(), block, Void.class);
 
-            checkForSuccessResponse(response);
-            return null;
-        });
+                checkForSuccessResponse(response);
+                return null;
+            });
+        }
     }
 
     @Override

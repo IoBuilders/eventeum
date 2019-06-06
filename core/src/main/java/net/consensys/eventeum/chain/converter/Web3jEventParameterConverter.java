@@ -3,8 +3,10 @@ package net.consensys.eventeum.chain.converter;
 import net.consensys.eventeum.dto.event.parameter.EventParameter;
 import net.consensys.eventeum.dto.event.parameter.NumberParameter;
 import net.consensys.eventeum.dto.event.parameter.StringParameter;
+import org.bouncycastle.util.encoders.Hex;
 import org.springframework.stereotype.Component;
 import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.crypto.Keys;
 import org.web3j.utils.Numeric;
 
@@ -33,7 +35,7 @@ public class Web3jEventParameterConverter implements EventParameterConverter<Typ
                 (type) -> new NumberParameter(type.getTypeAsString(), (BigInteger) type.getValue()));
         typeConverters.put("bytes32",
                 (type) -> new StringParameter(type.getTypeAsString(),
-                        trim(new String((byte[]) type.getValue()))));
+                        "0x"+ Hex.toHexString(((Bytes32) type).getValue())));
         typeConverters.put("bytes32Hex",
                 (type) -> new StringParameter(type.getTypeAsString(),
                         trim(Numeric.toHexString((byte[]) type.getValue()))));

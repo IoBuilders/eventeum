@@ -1,6 +1,7 @@
 package net.consensys.eventeum.chain.converter;
 
 import net.consensys.eventeum.dto.event.parameter.EventParameter;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.Before;
 import org.junit.Test;
 import org.web3j.abi.datatypes.Address;
@@ -51,7 +52,7 @@ public class Web3jEventParameterConverterTest {
 
         final EventParameter<String> result = underTest.convert(value);
 
-        assertEquals("aTopic", result.getValue());
+        assertEquals("0x"+ Hex.toHexString(bytes), result.getValue());
     }
 
     @Test(expected = TypeConversionException.class)

@@ -38,6 +38,7 @@ public class HttpBlockchainEventBroadcasterTest {
         settings.setBlockEventsUrl("http://localhost:8082/consumer/block-event");
         settings.setContractEventsUrl("http://localhost:8082/consumer/contract-event");
 
+        settings.setBlockNotification(true);
         RetryTemplate retryTemplate = new RetryTemplate();
 
         FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
