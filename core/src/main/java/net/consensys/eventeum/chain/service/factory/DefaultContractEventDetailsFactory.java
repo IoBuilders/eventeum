@@ -13,6 +13,7 @@ import net.consensys.eventeum.dto.event.parameter.EventParameter;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.Utils;
 import org.web3j.abi.datatypes.Type;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 
 import java.math.BigInteger;
@@ -35,7 +36,7 @@ public class DefaultContractEventDetailsFactory implements ContractEventDetailsF
     }
 
     @Override
-    public ContractEventDetails createEventDetails(ContractEventFilter eventFilter, Log log) {
+    public ContractEventDetails createEventDetails(ContractEventFilter eventFilter, Log log, EthBlock ethBlock) {
         final ContractEventSpecification eventSpec = eventFilter.getEventSpecification();
 
         final List<EventParameter> nonIndexed = typeListToParameterList(getNonIndexedParametersFromLog(eventSpec, log));
@@ -54,6 +55,7 @@ public class DefaultContractEventDetailsFactory implements ContractEventDetailsF
         eventDetails.setEventSpecificationSignature(Web3jUtil.getSignature(eventSpec));
         eventDetails.setNetworkName(this.networkName);
         eventDetails.setNodeName(eventFilter.getNode());
+        eventDetails.setBlockTimestamp(ethBlock.getBlock().getTimestamp());
 
         if (log.isRemoved()) {
             eventDetails.setStatus(ContractEventStatus.INVALIDATED);

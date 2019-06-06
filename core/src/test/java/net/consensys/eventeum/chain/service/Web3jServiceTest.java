@@ -80,7 +80,7 @@ public class Web3jServiceTest {
     }
 
     @Test
-    public void testRegisterEventListener() {
+    public void testRegisterEventListener() throws IOException {
 
         final ContractEventDetails eventDetails = doRegisterEventListenerAndTrigger();
 
@@ -88,7 +88,7 @@ public class Web3jServiceTest {
     }
 
     @Test
-    public void testEventPassedToListenerIsCorrect() {
+    public void testEventPassedToListenerIsCorrect() throws IOException {
 
         final ContractEventDetails eventDetails = doRegisterEventListenerAndTrigger();
 
@@ -163,16 +163,23 @@ public class Web3jServiceTest {
         underTest.getCurrentBlockNumber();
     }
 
-    private ContractEventDetails doRegisterEventListenerAndTrigger() {
+    private ContractEventDetails doRegisterEventListenerAndTrigger() throws IOException {
         final org.web3j.protocol.core.methods.response.Log mockLog
                 = mock(org.web3j.protocol.core.methods.response.Log.class);
 
         final Observable<org.web3j.protocol.core.methods.response.Log> observable = Observable.just(mockLog);
         when(mockWeb3j.ethLogObservable(any(EthFilter.class))).thenReturn(observable);
 
+        final Request<?, EthBlock> mockRequest = mock(Request.class);
+        final EthBlock mockBlock = mock(EthBlock.class);
+
+
+        when(mockRequest.send()).thenReturn(mockBlock);
+        doReturn(mockRequest).when(mockWeb3j).ethGetBlockByNumber(any(DefaultBlockParameterNumber.class), eq(false));
+
         final ContractEventFilter filter = new ContractEventFilter();
 
-        when(mockContractEventDetailsFactory.createEventDetails(filter, mockLog)).thenReturn(mockContractEventDetails);
+        when(mockContractEventDetailsFactory.createEventDetails(filter, mockLog, mockBlock)).thenReturn(mockContractEventDetails);
 
         final ContractEventListener mockEventListener = mock(ContractEventListener.class);
         underTest.registerEventListener(filter, mockEventListener);

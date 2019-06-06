@@ -106,9 +106,15 @@ public class Web3jService implements BlockchainService {
             lock.lock();
 
             try {
+                BigInteger blockNumber = theLog.getBlockNumber();
+                DefaultBlockParameterNumber blockParameterNumber = new DefaultBlockParameterNumber(blockNumber);
+                EthBlock ethBlock = (EthBlock) this.web3j.ethGetBlockByNumber(blockParameterNumber, false).send();
+
                 log.debug("Dispatching log: {}", theLog);
                 eventListener.onEvent(
-                        eventDetailsFactory.createEventDetails(eventFilter, theLog));
+                        eventDetailsFactory.createEventDetails(eventFilter, theLog, ethBlock));
+            } catch (IOException exception) {
+                log.warn(exception.getMessage());
             } finally {
                 lock.unlock();
             }
@@ -192,6 +198,6 @@ public class Web3jService implements BlockchainService {
     }
 
     private BigInteger getStartBlockForEventFilter(ContractEventFilter filter) {
-        return blockManagement.getLatestBlockForEvent(filter);
+        return blockManagement.getBlockNumberToScanEvent(filter);
     }
 }

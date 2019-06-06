@@ -48,6 +48,8 @@ public class ContractEventDetails {
 
     private String networkName;
 
+    private BigInteger blockTimestamp;
+
     public String getId() {
         return transactionHash + "-" + blockHash + "-" + logIndex;
     }

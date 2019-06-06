@@ -2,6 +2,7 @@ package net.consensys.eventeum.chain.service.factory;
 
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 
 /**
@@ -11,5 +12,5 @@ import org.web3j.protocol.core.methods.response.Log;
  * @author Craig Williams <craig.williams@consensys.net>
  */
 public interface ContractEventDetailsFactory {
-    ContractEventDetails createEventDetails(ContractEventFilter eventFilter, Log log);
+    ContractEventDetails createEventDetails(ContractEventFilter eventFilter, Log log, EthBlock ethBlock);
 }
