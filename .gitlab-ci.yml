@@ -20,8 +20,8 @@ tagging:
     - master
   script:
     - apk add xmlstarlet git
-    - git config user.email $GIT_EMAIL
-    - git config user.name $GIT_USER
+    - git config --verbose user.email $GIT_EMAIL
+    - git config --verbose user.name $GIT_USER
     - export ECHO_EXEC="$(which echo)"
     - $ECHO_EXEC "$ECHO_EXEC '$GIT_PASSWD'" > cucu.sh
     - chmod +x cucu.sh
