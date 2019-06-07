@@ -295,4 +295,11 @@ kafka:
     blockEvents: block-events
     filterEvents: filter-events
 
-management.context-path: /monitoring
+management:
+  endpoints:
+    web.base-path: /monitoring
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
