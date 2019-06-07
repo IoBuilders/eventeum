@@ -222,6 +222,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: NewOTPRequested
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
   eventSpecification:
     eventName: NewOTPRequested
