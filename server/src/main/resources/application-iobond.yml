@@ -27,7 +27,7 @@ ethereum:
   nodes:
   - name: default
     networkName: default
-    url: http://127.0.0.1:22010
+    url: https://regular.pre.iosec.io.builders:8565
   healthcheck:
     pollInterval: 2000
   blockStrategy: POLL
@@ -43,3 +43,8 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
+
+eventStore:
+  type: DB
+  url: http://localhost:8081/api/rest/v1
+  eventPath: /event
