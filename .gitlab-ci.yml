@@ -20,20 +20,12 @@ tagging:
     - master
   script:
     - apk add xmlstarlet git
-    - env
-    - git config user.email $GIT_EMAIL
-    - git config user.name $GIT_USER
-    - export ECHO_EXEC="$(which echo)"
-    - $ECHO_EXEC "$ECHO_EXEC '$GIT_PASSWD'" > cucu.sh
-    - chmod +x cucu.sh
-    - export GIT_ASKPASS="./cucu.sh"
     - git remote add temp https://$GIT_USER:$GIT_PASSWD@gitlab.com/iobuilders/iob-eventeum-v2.git
     - export GIT_TAG=$(xmlstarlet sel -N my=http://maven.apache.org/POM/4.0.0 -t -m my:project -v my:version pom.xml)
     - if git tag -d $GIT_TAG 1>&2 2>/dev/null; then echo "Deleted Tag $GIT_TAG on local"; fi
     - if git push --delete temp $GIT_TAG 1>&2 2>/dev/null; then echo "Deleted Tag $GIT_TAG on remote"; fi
     - git tag -a $GIT_TAG -m "Tagged commit from Gitlab-CI"
     - git push temp --tags
-    - rm cucu.sh
 
 build:
   image: maven:3.5.3
