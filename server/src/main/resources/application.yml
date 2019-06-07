@@ -15,6 +15,7 @@ logging:
 
 eventFilters:
 - id: TokenMinted
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
     eventName: Mint
@@ -28,6 +29,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: TokenBurnt
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
     eventName: Burn
@@ -41,6 +43,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: TokenTransferred
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
     eventName: NativeTransfer
@@ -56,6 +59,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: TransferOrdered
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
     eventName: TransferOrdered
@@ -75,6 +79,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: TransferReleased
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
     eventName: TransferReleased
@@ -94,6 +99,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: TransferRevoked
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
     eventName: TransferRevoked
@@ -115,6 +121,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: LogPermissionSet
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_REGULATED_TOKEN:0x1f492a9cc887993a51877a1e5e7455e4e2351f20}
   eventSpecification:
     eventName: LogPermissionSet
@@ -130,6 +137,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: RedeemOrdered
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
     eventName: RedeemOrdered
@@ -149,6 +157,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: RedeemReleased
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
     eventName: RedeemReleased
@@ -166,6 +175,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: RedeemRevoked
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
     eventName: RedeemRevoked
@@ -185,6 +195,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: OTPRequested
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
   eventSpecification:
     eventName: OTPRequested
@@ -195,6 +206,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: OTPVerificationOrdered
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
   eventSpecification:
     eventName: OTPVerificationOrdered
@@ -220,6 +232,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: NewOTPVerificationOrdered
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
   eventSpecification:
     eventName: NewOTPVerificationOrdered
@@ -235,6 +248,7 @@ eventFilters:
     type: NON_INDEXED_PARAMETER
     index: 0
 - id: KycLevelSetToUser
+  node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_COMPLIANCE:0xd3f33245334ce740d95a4e3ecfc6db8c77628174}
   eventSpecification:
     eventName: KycLevelSetToUser
@@ -262,8 +276,7 @@ spring:
 
 ethereum:
   nodes:
-  - name: default
-    networkName: ${ETHEREUM_NETWORK:AlastriaTelsius}
+  - name: ${ETHEREUM_NETWORK:AlastriaTelsius}
     url: ${ETHEREUM_URL:http://34.241.169.145:22000}
   healthcheck:
     pollInterval: 2000
