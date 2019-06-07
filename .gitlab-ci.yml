@@ -6,12 +6,12 @@ stages:
 services:
   - docker:dind
 
-#cache:
-#  key: ${CI_COMMIT_REF_SLUG}
-#  paths:
-#    - core/target
-#    - server/target
-#    - target
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - core/target
+    - server/target
+    - target
 
 tagging:
   image: alpine:latest
@@ -20,6 +20,7 @@ tagging:
     - master
   script:
     - apk add xmlstarlet git
+    - env
     - git config user.email $GIT_EMAIL
     - git config user.name $GIT_USER
     - export ECHO_EXEC="$(which echo)"
