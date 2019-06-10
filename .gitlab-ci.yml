@@ -13,10 +13,10 @@ cache:
     - server/target
     - target
 
-variables:
-  GIT_USER: "IoCashBot"
-  GIT_PASSWD: "wLq68tPZVDQYKqaN"
-  GIT_EMAIL: "iocash@io.builders"
+#variables:
+#  GIT_USER: "IoCashBot"
+#  GIT_PASSWD: "wLq68tPZVDQYKqaN"
+#  GIT_EMAIL: "iocash@io.builders"
 
 tagging:
   image: alpine:latest
