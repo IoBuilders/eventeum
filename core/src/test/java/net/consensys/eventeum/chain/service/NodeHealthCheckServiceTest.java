@@ -49,6 +49,7 @@ public class NodeHealthCheckServiceTest {
 
         verify(mockReconnectionStrategy, times(1)).reconnect();
         verify(mockReconnectionStrategy, times(1)).resubscribe();
+        verify(mockSubscriptionService, times(1)).unsubscribeToAllSubscriptions();
     }
 
     @Test
@@ -59,6 +60,7 @@ public class NodeHealthCheckServiceTest {
 
         verify(mockReconnectionStrategy, times(1)).reconnect();
         verify(mockReconnectionStrategy, never()).resubscribe();
+        verify(mockSubscriptionService, times(1)).unsubscribeToAllSubscriptions();
     }
 
     @Test
@@ -67,11 +69,13 @@ public class NodeHealthCheckServiceTest {
         underTest.checkHealth();
 
         verify(mockReconnectionStrategy, times(1)).reconnect();
+        verify(mockSubscriptionService, times(1)).unsubscribeToAllSubscriptions();
 
         underTest.checkHealth();
 
         verify(mockReconnectionStrategy, times(2)).reconnect();
         verify(mockReconnectionStrategy, never()).resubscribe();
+        verify(mockSubscriptionService, times(1)).unsubscribeToAllSubscriptions();
     }
 
 
@@ -82,6 +86,7 @@ public class NodeHealthCheckServiceTest {
 
         verify(mockReconnectionStrategy, times(1)).reconnect();
         verify(mockReconnectionStrategy, never()).resubscribe();
+        verify(mockSubscriptionService, times(1)).unsubscribeToAllSubscriptions();
 
         reset(mockBlockchainService);
         wireBlockchainServiceUp(false);
@@ -114,6 +119,7 @@ public class NodeHealthCheckServiceTest {
 
         verify(mockReconnectionStrategy, never()).reconnect();
         verify(mockReconnectionStrategy, never()).resubscribe();
+        verify(mockSubscriptionService, never()).unsubscribeToAllSubscriptions();
 
         reset(mockBlockchainService);
         wireBlockchainServiceUp(false);
@@ -130,18 +136,35 @@ public class NodeHealthCheckServiceTest {
 
         verify(mockReconnectionStrategy, times(1)).reconnect();
         verify(mockReconnectionStrategy, never()).resubscribe();
+        verify(mockSubscriptionService, times(1)).unsubscribeToAllSubscriptions();
 
         reset(mockBlockchainService);
+        reset(mockSubscriptionService);
         wireBlockchainServiceUp(true);
         underTest.checkHealth();
 
         verify(mockReconnectionStrategy, times(1)).reconnect();
         verify(mockReconnectionStrategy, times(1)).resubscribe();
+        verify(mockSubscriptionService, never()).unsubscribeToAllSubscriptions();
 
         underTest.checkHealth();
 
         verify(mockReconnectionStrategy, times(1)).reconnect();
         verify(mockReconnectionStrategy, times(1)).resubscribe();
+        verify(mockSubscriptionService, never()).unsubscribeToAllSubscriptions();
+    }
+
+    @Test
+    public void testUnsubscribeOnlyOccursFirsTime() {
+        wireBlockchainServiceDown(false, false);
+
+        underTest.checkHealth();
+        verify(mockSubscriptionService, times(1)).unsubscribeToAllSubscriptions();
+
+        reset(mockSubscriptionService);
+
+        underTest.checkHealth();
+        verify(mockSubscriptionService, never()).unsubscribeToAllSubscriptions();
     }
 
     private void wireBlockchainServiceUp(boolean isSubscribed) {
