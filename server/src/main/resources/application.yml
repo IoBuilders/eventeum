@@ -14,7 +14,7 @@ logging:
   file: /logs/application.log
 
 eventFilters:
-- id: AlastriaTelsius.TokenMinted
+- id: TokenMinted
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
@@ -28,7 +28,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.TokenBurnt
+- id: TokenBurnt
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
@@ -42,7 +42,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.TokenTransferred
+- id: TokenTransferred
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
@@ -58,7 +58,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.TransferOrdered
+- id: TransferOrdered
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
@@ -78,7 +78,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.TransferReleased
+- id: TransferReleased
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
@@ -98,7 +98,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.TransferRevoked
+- id: TransferRevoked
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
@@ -120,7 +120,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.LogPermissionSet
+- id: LogPermissionSet
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_REGULATED_TOKEN:0x1f492a9cc887993a51877a1e5e7455e4e2351f20}
   eventSpecification:
@@ -136,7 +136,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.RedeemOrdered
+- id: RedeemOrdered
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
@@ -156,7 +156,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.RedeemReleased
+- id: RedeemReleased
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
@@ -174,7 +174,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.RedeemRevoked
+- id: RedeemRevoked
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
   eventSpecification:
@@ -194,7 +194,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.OTPRequested
+- id: OTPRequested
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
   eventSpecification:
@@ -205,7 +205,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.OTPVerificationOrdered
+- id: OTPVerificationOrdered
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
   eventSpecification:
@@ -221,7 +221,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.NewOTPRequested
+- id: NewOTPRequested
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
   eventSpecification:
@@ -232,7 +232,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.NewOTPVerificationOrdered
+- id: NewOTPVerificationOrdered
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_OTP:0xb2b64403869fa9707b6cf30ccce05a896018c23a}
   eventSpecification:
@@ -248,7 +248,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: AlastriaTelsius.KycLevelSetToUser
+- id: KycLevelSetToUser
   node: ${ETHEREUM_NETWORK:AlastriaTelsius}
   contractAddress: ${CONTRACT_ADDRESS_COMPLIANCE:0xd3f33245334ce740d95a4e3ecfc6db8c77628174}
   eventSpecification:
@@ -264,9 +264,9 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.TokenMinted
+- id: Pantheon_TokenMinted
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0x5F48794Acf980E9e6126bFaB68b2F0d92BEC15f4}
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0xB23F2e2fA47680349384Cd15BE5CF51d4E508768}
   eventSpecification:
     eventName: Mint
     indexedParameterDefinitions:
@@ -278,9 +278,9 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.TokenBurnt
+- id: Pantheon_TokenBurnt
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0x5F48794Acf980E9e6126bFaB68b2F0d92BEC15f4}
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0xB23F2e2fA47680349384Cd15BE5CF51d4E508768}
   eventSpecification:
     eventName: Burn
     indexedParameterDefinitions:
@@ -292,9 +292,9 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.TokenTransferred
+- id: Pantheon_TokenTransferred
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0x5F48794Acf980E9e6126bFaB68b2F0d92BEC15f4}
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0xB23F2e2fA47680349384Cd15BE5CF51d4E508768}
   eventSpecification:
     eventName: NativeTransfer
     indexedParameterDefinitions:
@@ -308,9 +308,9 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.TransferOrdered
+- id: Pantheon_TransferOrdered
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0x5F48794Acf980E9e6126bFaB68b2F0d92BEC15f4}
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0xB23F2e2fA47680349384Cd15BE5CF51d4E508768}
   eventSpecification:
     eventName: TransferOrdered
     indexedParameterDefinitions:
@@ -328,9 +328,9 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.TransferReleased
+- id: Pantheon_TransferReleased
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0x5F48794Acf980E9e6126bFaB68b2F0d92BEC15f4}
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0xB23F2e2fA47680349384Cd15BE5CF51d4E508768}
   eventSpecification:
     eventName: TransferReleased
     indexedParameterDefinitions:
@@ -348,9 +348,9 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.TransferRevoked
+- id: Pantheon_TransferRevoked
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0x5F48794Acf980E9e6126bFaB68b2F0d92BEC15f4}
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0xB23F2e2fA47680349384Cd15BE5CF51d4E508768}
   eventSpecification:
     eventName: TransferRevoked
     indexedParameterDefinitions:
@@ -370,7 +370,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.LogPermissionSet
+- id: Pantheon_LogPermissionSet
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
   contractAddress: ${CONTRACT_ADDRESS_REGULATED_TOKEN_PANTHEON:0xB0320ec72359E9A73e7039Eb2cf94896c7AD8f6a}
   eventSpecification:
@@ -386,9 +386,9 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.RedeemOrdered
+- id: Pantheon_RedeemOrdered
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0x5F48794Acf980E9e6126bFaB68b2F0d92BEC15f4}
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0xB23F2e2fA47680349384Cd15BE5CF51d4E508768}
   eventSpecification:
     eventName: RedeemOrdered
     indexedParameterDefinitions:
@@ -406,9 +406,9 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.RedeemReleased
+- id: Pantheon_RedeemReleased
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0x5F48794Acf980E9e6126bFaB68b2F0d92BEC15f4}
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0xB23F2e2fA47680349384Cd15BE5CF51d4E508768}
   eventSpecification:
     eventName: RedeemReleased
     indexedParameterDefinitions:
@@ -424,9 +424,9 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.RedeemRevoked
+- id: Pantheon_RedeemRevoked
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0x5F48794Acf980E9e6126bFaB68b2F0d92BEC15f4}
+  contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN_PANTHEON:0xB23F2e2fA47680349384Cd15BE5CF51d4E508768}
   eventSpecification:
     eventName: RedeemRevoked
     indexedParameterDefinitions:
@@ -444,7 +444,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.OTPRequested
+- id: Pantheon_OTPRequested
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
   contractAddress: ${CONTRACT_ADDRESS_OTP_PANTHEON:0x7F5dEb24aFcA810e571010a1653c16dFFf2B0585}
   eventSpecification:
@@ -455,7 +455,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.OTPVerificationOrdered
+- id: Pantheon_OTPVerificationOrdered
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
   contractAddress: ${CONTRACT_ADDRESS_OTP_PANTHEON:0x7F5dEb24aFcA810e571010a1653c16dFFf2B0585}
   eventSpecification:
@@ -471,7 +471,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.NewOTPRequested
+- id: Pantheon_NewOTPRequested
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
   contractAddress: ${CONTRACT_ADDRESS_OTP_PANTHEON:0x7F5dEb24aFcA810e571010a1653c16dFFf2B0585}
   eventSpecification:
@@ -482,7 +482,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.NewOTPVerificationOrdered
+- id: Pantheon_NewOTPVerificationOrdered
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
   contractAddress: ${CONTRACT_ADDRESS_OTP_PANTHEON:0x7F5dEb24aFcA810e571010a1653c16dFFf2B0585}
   eventSpecification:
@@ -498,7 +498,7 @@ eventFilters:
   correlationId:
     type: NON_INDEXED_PARAMETER
     index: 0
-- id: Pantheon.KycLevelSetToUser
+- id: Pantheon_KycLevelSetToUser
   node: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
   contractAddress: ${CONTRACT_ADDRESS_COMPLIANCE_PANTHEON:0x82493980B2f8b8332e8e422552244aA9D1dFe063}
   eventSpecification:

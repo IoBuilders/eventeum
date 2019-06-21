@@ -9,7 +9,7 @@
     <parent>
         <groupId>net.consensys.eventeum</groupId>
         <artifactId>eventeum</artifactId>
-        <version>1.0.15-SNAPSHOT</version>
+        <version>1.0.14-RC</version>
     </parent>
 
     <dependencies>
