@@ -16,7 +16,7 @@ logging:
 eventFilters:
   - id: AlastriaTelsius.TokenMinted
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x2Db86794D220C4192aEa01a5c677ca241337E1d7}
     eventSpecification:
       eventName: Mint
       indexedParameterDefinitions:
@@ -30,7 +30,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.TokenBurnt
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x2Db86794D220C4192aEa01a5c677ca241337E1d7}
     eventSpecification:
       eventName: Burn
       indexedParameterDefinitions:
@@ -44,7 +44,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.TokenTransferred
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x2Db86794D220C4192aEa01a5c677ca241337E1d7}
     eventSpecification:
       eventName: NativeTransfer
       indexedParameterDefinitions:
@@ -60,7 +60,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.TransferOrdered
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x2Db86794D220C4192aEa01a5c677ca241337E1d7}
     eventSpecification:
       eventName: TransferOrdered
       indexedParameterDefinitions:
@@ -80,7 +80,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.TransferReleased
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x2Db86794D220C4192aEa01a5c677ca241337E1d7}
     eventSpecification:
       eventName: TransferReleased
       indexedParameterDefinitions:
@@ -100,7 +100,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.TransferRevoked
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x2Db86794D220C4192aEa01a5c677ca241337E1d7}
     eventSpecification:
       eventName: TransferRevoked
       indexedParameterDefinitions:
@@ -138,7 +138,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.RedeemOrdered
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x2Db86794D220C4192aEa01a5c677ca241337E1d7}
     eventSpecification:
       eventName: RedeemOrdered
       indexedParameterDefinitions:
@@ -158,7 +158,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.RedeemReleased
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x2Db86794D220C4192aEa01a5c677ca241337E1d7}
     eventSpecification:
       eventName: RedeemReleased
       indexedParameterDefinitions:
@@ -176,7 +176,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.RedeemRevoked
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x6658d0948929def8b8deb44f2a21a7b5ca6d5b8e}
+    contractAddress: ${CONTRACT_ADDRESS_EM_TOKEN:0x2Db86794D220C4192aEa01a5c677ca241337E1d7}
     eventSpecification:
       eventName: RedeemRevoked
       indexedParameterDefinitions:
@@ -254,12 +254,14 @@ eventFilters:
     eventSpecification:
       eventName: KycLevelSetToUser
       indexedParameterDefinitions:
-        - position: 1
-          type: ADDRESS
-      nonIndexedParameterDefinitions:
         - position: 0
           type: ADDRESS
+        - position: 1
+          type: BYTES32
         - position: 2
+          type: ADDRESS
+      nonIndexedParameterDefinitions:
+        - position: 3
           type: UINT8
     correlationId:
       type: NON_INDEXED_PARAMETER
