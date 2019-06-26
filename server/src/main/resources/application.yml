@@ -122,7 +122,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.LogPermissionSet
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_REGULATED_TOKEN:0x1f492a9cc887993a51877a1e5e7455e4e2351f20}
+    contractAddress: ${CONTRACT_ADDRESS_REGULATED_TOKEN:0x3adf29800b88ce8cf3d2f11642ceacac05a63803}
     eventSpecification:
       eventName: LogPermissionSet
       indexedParameterDefinitions:
@@ -250,7 +250,7 @@ eventFilters:
       index: 0
   - id: AlastriaTelsius.KycLevelSetToUser
     node: ${ETHEREUM_NETWORK:AlastriaTelsius}
-    contractAddress: ${CONTRACT_ADDRESS_COMPLIANCE:0xd3f33245334ce740d95a4e3ecfc6db8c77628174}
+    contractAddress: ${CONTRACT_ADDRESS_COMPLIANCE:0x8E8f876382C1EC95548361F6e913cb1E92B55c42}
     eventSpecification:
       eventName: KycLevelSetToUser
       indexedParameterDefinitions:
@@ -523,7 +523,7 @@ spring:
   profiles.active: local
   data:
     mongodb:
-      uri: mongodb://localhost:27017/test
+      uri: mongodb://192.168.16.7:27017/test
 
 ethereum:
   nodes:
