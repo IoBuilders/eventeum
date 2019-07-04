@@ -1,5 +1,6 @@
 package net.consensys.eventeum.chain.service;
 
+import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
 import net.consensys.eventeum.chain.util.Web3jUtil;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
@@ -24,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Craig Williams <craig.williams@consensys.net>
  */
 @Component
+@Slf4j
 public class DefaultEventBlockManagementService implements EventBlockManagementService {
 
     private AbstractMap<String, BigInteger> latestBlocks = new ConcurrentHashMap<>();
@@ -60,18 +62,28 @@ public class DefaultEventBlockManagementService implements EventBlockManagementS
         final BigInteger latestBlockNumber = latestBlocks.get(eventSignature);
 
         if (latestBlockNumber != null) {
+            log.debug("latestBlockNumber {} found in memory, starting at blockNumber: {}", eventFilter.getId(), latestBlockNumber.add(BigInteger.ONE));
+
             return latestBlockNumber.add(BigInteger.ONE);
         }
 
         final ContractEventDetails contractEvent = eventStoreService.getLatestContractEvent(eventSignature);
 
         if (contractEvent != null) {
+            log.debug("contractEvent {} found in the database, starting at blockNumber: {}", eventFilter.getId(), contractEvent.getBlockNumber().add(BigInteger.ONE));
+
+
             return contractEvent.getBlockNumber().add(BigInteger.ONE);
         }
 
         final BlockchainService blockchainService =
                 chainServicesContainer.getNodeServices(eventFilter.getNode()).getBlockchainService();
 
-        return blockchainService.getCurrentBlockNumber();
+        BigInteger currentBlockNumber =  blockchainService.getCurrentBlockNumber();
+
+        log.debug("Event {} not found in memory or database, starting at blockNumber: {}", eventFilter.getId(), currentBlockNumber);
+
+
+        return currentBlockNumber;
     }
 }
