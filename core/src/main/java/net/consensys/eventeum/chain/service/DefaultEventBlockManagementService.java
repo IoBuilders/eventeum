@@ -28,7 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class DefaultEventBlockManagementService implements EventBlockManagementService {
 
-    private AbstractMap<String, BigInteger> latestBlocks = new ConcurrentHashMap<>();
+    /* latestBlocks will contains a set of events per Network */
+    private AbstractMap<String, AbstractMap> latestBlocks = new ConcurrentHashMap<>();
 
     private ChainServicesContainer chainServicesContainer;
 
@@ -45,11 +46,19 @@ public class DefaultEventBlockManagementService implements EventBlockManagementS
      * {@inheritDoc}
      */
     @Override
-    public void updateLatestBlock(String eventSpecHash, BigInteger blockNumber) {
-        final BigInteger currentLatest = latestBlocks.get(eventSpecHash);
+    public void updateLatestBlock(String eventSpecHash, BigInteger blockNumber, String node) {
+        AbstractMap<String, BigInteger> events = latestBlocks.get(node);
+
+        if (events == null) {
+            events = new ConcurrentHashMap<>();
+            latestBlocks.put(node, events);
+        }
+
+        final BigInteger currentLatest = events.get(eventSpecHash);
+
 
         if (currentLatest == null || blockNumber.compareTo(currentLatest) > 0) {
-            latestBlocks.put(eventSpecHash, blockNumber);
+            events.put(eventSpecHash, blockNumber);
         }
     }
 
@@ -59,12 +68,16 @@ public class DefaultEventBlockManagementService implements EventBlockManagementS
     @Override
     public BigInteger getBlockNumberToScanEvent(ContractEventFilter eventFilter) {
         final String eventSignature = Web3jUtil.getSignature(eventFilter.getEventSpecification());
-        final BigInteger latestBlockNumber = latestBlocks.get(eventSignature);
+        final AbstractMap<String, BigInteger> events = latestBlocks.get(eventFilter.getNode());
 
-        if (latestBlockNumber != null) {
-            log.debug("latestBlockNumber {} found in memory, starting at blockNumber: {}", eventFilter.getId(), latestBlockNumber.add(BigInteger.ONE));
+        if (events != null) {
+            final BigInteger latestBlockNumber = events.get(eventSignature);
 
-            return latestBlockNumber.add(BigInteger.ONE);
+            if (latestBlockNumber != null) {
+                log.debug("latestBlockNumber {} found in memory, starting at blockNumber: {}", eventFilter.getId(), latestBlockNumber.add(BigInteger.ONE));
+
+                return latestBlockNumber.add(BigInteger.ONE);
+            }
         }
 
         final ContractEventDetails contractEvent = eventStoreService.getLatestContractEvent(eventSignature, eventFilter.getNode());
