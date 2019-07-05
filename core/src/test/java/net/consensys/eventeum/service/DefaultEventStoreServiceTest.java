@@ -24,6 +24,8 @@ public class DefaultEventStoreServiceTest {
 
     private static final String EVENT_SIGNATURE = "signture";
 
+    private static final String NETWORK_NODE = "default";
+
     private DefaultEventStoreService underTest;
 
     @Mock
@@ -47,23 +49,23 @@ public class DefaultEventStoreServiceTest {
     public void testGetLatestContractEvent() {
         when(mockPage.getContent()).thenReturn(Arrays.asList(mockEventDetails1, mockEventDetails2));
         when(mockEventStore.getContractEventsForSignature(
-                eq(EVENT_SIGNATURE), any(PageRequest.class))).thenReturn(mockPage);
-        assertEquals(mockEventDetails1, underTest.getLatestContractEvent(EVENT_SIGNATURE));
+                eq(EVENT_SIGNATURE), eq(NETWORK_NODE), any(PageRequest.class))).thenReturn(mockPage);
+        assertEquals(mockEventDetails1, underTest.getLatestContractEvent(EVENT_SIGNATURE, NETWORK_NODE));
     }
 
     @Test
     public void testGetLatestContractEventNullEvents() {
         when(mockPage.getContent()).thenReturn(null);
         when(mockEventStore.getContractEventsForSignature(
-                eq(EVENT_SIGNATURE), any(PageRequest.class))).thenReturn(mockPage);
-        assertNull(underTest.getLatestContractEvent(EVENT_SIGNATURE));
+                eq(EVENT_SIGNATURE), eq(NETWORK_NODE), any(PageRequest.class))).thenReturn(mockPage);
+        assertNull(underTest.getLatestContractEvent(EVENT_SIGNATURE, NETWORK_NODE));
     }
 
     @Test
     public void testGetLatestContractEventEmptyEvents() {
         when(mockPage.getContent()).thenReturn(new ArrayList<>());
         when(mockEventStore.getContractEventsForSignature(
-                eq(EVENT_SIGNATURE), any(PageRequest.class))).thenReturn(mockPage);
-        assertNull(underTest.getLatestContractEvent(EVENT_SIGNATURE));
+                eq(EVENT_SIGNATURE), eq(NETWORK_NODE), any(PageRequest.class))).thenReturn(mockPage);
+        assertNull(underTest.getLatestContractEvent(EVENT_SIGNATURE, NETWORK_NODE));
     }
 }

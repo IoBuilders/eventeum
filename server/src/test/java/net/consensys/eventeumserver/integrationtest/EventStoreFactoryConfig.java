@@ -49,7 +49,7 @@ public class EventStoreFactoryConfig {
                     }
 
                     @Override
-                    public Page<ContractEventDetails> getContractEventsForSignature(String eventSignature, PageRequest pagination) {
+                    public Page<ContractEventDetails> getContractEventsForSignature(String eventSignature, String node, PageRequest pagination) {
                         return null;
                     }
 

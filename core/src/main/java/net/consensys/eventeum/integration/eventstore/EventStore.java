@@ -10,7 +10,7 @@ import org.springframework.data.domain.PageRequest;
  * @author Craig Williams <craig.williams@consensys.net>
  */
 public interface EventStore {
-    Page<ContractEventDetails> getContractEventsForSignature(String eventSignature, PageRequest pagination);
+    Page<ContractEventDetails> getContractEventsForSignature(String eventSignature, String node, PageRequest pagination);
 
     boolean isPagingZeroIndexed();
 }

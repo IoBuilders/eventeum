@@ -41,8 +41,6 @@ tagging:
 build:
   image: maven:3.5.3
   stage: build
-  only:
-    - master
   script:
     - mvn clean package
 

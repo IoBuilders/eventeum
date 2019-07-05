@@ -22,6 +22,8 @@ public class DefaultEventBlockManagementServiceTest {
 
     private static final String EVENT_SPEC_HASH = "0x4d44a3f7bbdc3ab16cf28ad5234f38b7464ff912da473754ab39f0f97692eded";
 
+    private static final String NETWORK_NODE = "default";
+
     private static final ContractEventSpecification EVENT_SPEC;
 
     private static final ContractEventFilter EVENT_FILTER;
@@ -95,7 +97,7 @@ public class DefaultEventBlockManagementServiceTest {
     public void testGetNoLocalMatchButHitInEventStore() {
         final ContractEventDetails mockEventDetails = mock(ContractEventDetails.class);
         when(mockEventDetails.getBlockNumber()).thenReturn(BigInteger.ONE);
-        when(mockEventStoreService.getLatestContractEvent(EVENT_SPEC_HASH)).thenReturn(mockEventDetails);
+        when(mockEventStoreService.getLatestContractEvent(EVENT_SPEC_HASH, NETWORK_NODE)).thenReturn(mockEventDetails);
 
         final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
@@ -104,7 +106,7 @@ public class DefaultEventBlockManagementServiceTest {
 
     @Test
     public void testGetNoLocalMatchAndNoHitInEventStore() {
-        when(mockEventStoreService.getLatestContractEvent(EVENT_SPEC_HASH)).thenReturn(null);
+        when(mockEventStoreService.getLatestContractEvent(EVENT_SPEC_HASH, NETWORK_NODE)).thenReturn(null);
         when(mockBlockchainService.getCurrentBlockNumber()).thenReturn(BigInteger.valueOf(20));
 
         final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
