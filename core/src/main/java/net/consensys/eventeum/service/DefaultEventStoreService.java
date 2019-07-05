@@ -27,14 +27,14 @@ public class DefaultEventStoreService implements EventStoreService {
      * @{inheritDoc}
      */
     @Override
-    public ContractEventDetails getLatestContractEvent(String eventSignature) {
+    public ContractEventDetails getLatestContractEvent(String eventSignature, String node) {
         int page = eventStore.isPagingZeroIndexed() ? 0 : 1;
 
         final PageRequest pagination = new PageRequest(page,
                 1, new Sort(Sort.Direction.DESC, "blockNumber"));
 
         final Page<ContractEventDetails> eventsPage =
-                eventStore.getContractEventsForSignature(eventSignature, pagination);
+                eventStore.getContractEventsForSignature(eventSignature, node, pagination);
 
         if (eventsPage == null) {
             return null;

@@ -31,7 +31,7 @@ public class RESTEventStore implements EventStore {
     }
 
     @Override
-    public Page<ContractEventDetails> getContractEventsForSignature(String eventSignature, PageRequest pagination) {
+    public Page<ContractEventDetails> getContractEventsForSignature(String eventSignature, String node, PageRequest pagination) {
 
         final Sort.Order firstOrder = pagination.getSort().iterator().next();
         return client.getContractEvents(pagination.getPageNumber(),

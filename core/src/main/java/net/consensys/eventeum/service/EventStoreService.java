@@ -15,5 +15,5 @@ public interface EventStoreService {
      * @param eventSignature The event signature
      * @return The event details
      */
-    ContractEventDetails getLatestContractEvent(String eventSignature);
+    ContractEventDetails getLatestContractEvent(String eventSignature, String nodeName);
 }
