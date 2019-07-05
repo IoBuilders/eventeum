@@ -18,7 +18,7 @@ public interface EventBlockManagementService {
      * @param eventSpecHash The event specification hash.
      * @param blockNumber The new latest block number.
      */
-    void updateLatestBlock(String eventSpecHash, BigInteger blockNumber);
+    void updateLatestBlock(String eventSpecHash, BigInteger blockNumber, String node);
 
     /**
      * Retrieve the block number to start scanning events.
