@@ -14,6 +14,7 @@ public abstract class ResubscribingReconnectionStrategy implements ReconnectionS
 
     @Override
     public void resubscribe() {
+        //TODO need to figure out if we need to unregister
         subscriptionService.resubscribeToAllSubscriptions();
 
         blockchainService.reconnect();

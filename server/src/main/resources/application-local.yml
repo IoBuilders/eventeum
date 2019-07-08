@@ -22,3 +22,15 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/test
+
+ethereum:
+  nodes:
+  - name: ${ETHEREUM_NETWORK:AlastriaTelsius}
+    url: ${ETHEREUM_URL:http://34.241.169.145:22000}
+    pollingInterval: 20000
+  - name: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
+    url: ${ETHEREUM_URL_PANTHEON:https://regular.pre.iosec.io.builders:8565}
+    pollingInterval: 20000
+  healthcheck:
+    pollInterval: 2000
+  blockStrategy: POLL

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.AbstractMap;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -46,12 +47,12 @@ public class DefaultEventBlockManagementService implements EventBlockManagementS
      * {@inheritDoc}
      */
     @Override
-    public void updateLatestBlock(String eventSpecHash, BigInteger blockNumber, String node) {
-        AbstractMap<String, BigInteger> events = latestBlocks.get(node);
+    public void updateLatestBlock(String eventSpecHash, BigInteger blockNumber, String address) {
+        AbstractMap<String, BigInteger> events = latestBlocks.get(address);
 
         if (events == null) {
             events = new ConcurrentHashMap<>();
-            latestBlocks.put(node, events);
+            latestBlocks.put(address, events);
         }
 
         final BigInteger currentLatest = events.get(eventSpecHash);
@@ -68,7 +69,7 @@ public class DefaultEventBlockManagementService implements EventBlockManagementS
     @Override
     public BigInteger getBlockNumberToScanEvent(ContractEventFilter eventFilter) {
         final String eventSignature = Web3jUtil.getSignature(eventFilter.getEventSpecification());
-        final AbstractMap<String, BigInteger> events = latestBlocks.get(eventFilter.getNode());
+        final AbstractMap<String, BigInteger> events = latestBlocks.get(eventFilter.getContractAddress());
 
         if (events != null) {
             final BigInteger latestBlockNumber = events.get(eventSignature);
@@ -80,13 +81,19 @@ public class DefaultEventBlockManagementService implements EventBlockManagementS
             }
         }
 
-        final ContractEventDetails contractEvent = eventStoreService.getLatestContractEvent(eventSignature, eventFilter.getNode());
+        final Optional<ContractEventDetails> contractEvent =
+                eventStoreService.getLatestContractEvent(eventSignature, eventFilter.getContractAddress());
 
-        if (contractEvent != null) {
-            log.debug("contractEvent {} found in the database, starting at blockNumber: {}", eventFilter.getId(), contractEvent.getBlockNumber().add(BigInteger.ONE));
+        if (contractEvent.isPresent()) {
+            log.debug("contractEvent {} found in the database, starting at blockNumber: {}", eventFilter.getId(), contractEvent.get().getBlockNumber().add(BigInteger.ONE));
 
+            return contractEvent.get().getBlockNumber().add(BigInteger.ONE);
+        }
 
-            return contractEvent.getBlockNumber().add(BigInteger.ONE);
+        if (eventFilter.getStartBlock() != null) {
+            log.debug("Getting starting block from the event filter: {}, starting at blockNumber: {}", eventFilter.getId(), eventFilter.getStartBlock());
+
+            return eventFilter.getStartBlock();
         }
 
         final BlockchainService blockchainService =

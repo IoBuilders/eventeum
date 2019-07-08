@@ -531,11 +531,14 @@ ethereum:
   nodes:
     - name: ${ETHEREUM_NETWORK:AlastriaTelsius}
       url: ${ETHEREUM_URL:http://34.241.169.145:22000}
+      pollingInterval: ${POLLING_INTERVAL:1000}
     - name: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
       url: ${ETHEREUM_URL_PANTHEON:https://regular.pre.iosec.io.builders:8565}
+      pollingInterval: ${POLLING_INTERVAL:10000}
   healthcheck:
     pollInterval: 2000
   blockStrategy: POLL
+
 
 broadcaster:
   type: RABBIT
@@ -561,7 +564,11 @@ kafka:
   topic:
     contractEvents: contract-events
     blockEvents: block-events
-    filterEvents: filter-events
+    eventeumEvents: eventeum-events
+    transactionEvents: transaction-events
+
+    partitions: 1
+    replicationSets: 1
 
 management:
   endpoints:
