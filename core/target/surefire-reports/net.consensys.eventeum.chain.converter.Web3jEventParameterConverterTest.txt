@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: net.consensys.eventeum.chain.converter.Web3jEventParameterConverterTest
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.091 s - in net.consensys.eventeum.chain.converter.Web3jEventParameterConverterTest

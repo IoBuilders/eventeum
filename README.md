@@ -1,5 +1,13 @@
 # Eventeum
-A bridge between your Ethereum smart contract events and backend microservices.  Eventeum listens for specified event emissions from the Ethereum network, and broadcasts these events into your middleware layer.  This provides a distinct seperation of concerns and means that your microservices do not have to subscribe to events directly to an Ethereum node.
+An Ethereum event listener that bridges your smart contract events and backend microservices. Eventeum listens for specified event emissions from the Ethereum network, and broadcasts these events into your middleware layer. This provides a distinct separation of concerns and means that your microservices do not have to subscribe to events directly to an Ethereum node.
+
+**Master**
+
+[![CircleCI](https://circleci.com/gh/ConsenSys/eventeum/tree/master.svg?style=svg)](https://circleci.com/gh/ConsenSys/eventeum/tree/master)
+
+**Development**
+
+[![CircleCI](https://circleci.com/gh/ConsenSys/eventeum/tree/development.svg?style=svg)](https://circleci.com/gh/ConsenSys/eventeum/tree/development)
 
 ## Features
 * Dynamically Configurable - Eventeum exposes a REST api so that smart contract events can be dynamically subscribed / unsubscribed.
@@ -14,6 +22,7 @@ A bridge between your Ethereum smart contract events and backend microservices. 
 * Kafka
 * HTTP Post
 * [RabbitMQ](https://www.rabbitmq.com/)
+* [Pulsar](https://pulsar.apache.org)
 
 ## Getting Started
 Follow the instructions below in order to run Eventeum on your local machine for development and testing purposes.
@@ -39,9 +48,8 @@ $ mvn clean package
 a. If you have a running instance of MongoDB, Kafka, Zookeeper and an Ethereum node:
 
 **Executable JAR:**
-```
-* Spring profiles is used in order to deploy differents instances/configurations.
-* In this example, profile clappy set connfiguration application-clappy.yml
+
+```sh
 $ cd server
 $ export SPRING_DATA_MONGODB_HOST=<mongodb-host:port>
 $ export ETHEREUM_NODE_URL=http://<node-host:port>
@@ -49,12 +57,12 @@ $ export ZOOKEEPER_ADDRESS=<zookeeper-host:port>
 $ export KAFKA_ADDRESSES=<kafka-host:port>
 $ export RABBIT_ADDRESSES=<rabbit-host:port>
 
-$ java -jar -Dspring.profiles.active=clappy target/eventeum-server.jar
+$ java -jar target/eventeum-server.jar
 ```
 
 **Docker:**
 
-```
+```sh
 $ cd server
 $ docker build  . -t kauri/eventeum:latest
 
@@ -68,11 +76,26 @@ $ docker run -p 8060:8060 kauri/eventeum
 ```
 
 b. If you prefer build an all-in-one test environment with a parity dev node, use docker-compose:
-```
+
+```sh
 $ cd server
 $ docker-compose -f docker-compose.yml build
 $ docker-compose -f docker-compose.yml up
 ```
+
+## Configuring Nodes
+Listening for events from multiple different nodes is supported in Eventeum, and these nodes can be configured in the properties file.
+
+```yaml
+ethereum:
+  nodes:
+    - name: default
+      url: http://mainnet:8545
+    - name: sidechain
+      url: wss://sidechain/ws
+```
+
+If an event does not specify a node, then it will be registered against the 'default' node.
 
 ## Registering Events
 
@@ -83,13 +106,14 @@ Eventeum exposes a REST api that can be used to register events that should be s
 -   **Method:** `POST`
 -   **Headers:**  
 
-| Key | Value | 
+| Key | Value |
 | -------- | -------- |
 | content-type | application/json |
 
 -   **URL Params:** `N/A`
--   **Body:** 
-```
+-   **Body:**
+
+```json
 {
 	"id": "event-identifier",
 	"contractAddress": "0x1fbBeeE6eC2B7B095fE3c5A572551b1e260Af4d2",
@@ -128,7 +152,7 @@ Eventeum exposes a REST api that can be used to register events that should be s
 | position | Number | yes | | The zero indexed position of the parameter within the event specification |
 | type | String | yes | | The type of the event parameter. |
 
-Currently supported parameter types: UINT256, ADDRESS, BYTES32, STRING
+Currently supported parameter types: UINT8, UINT256, ADDRESS, BYTES16, BYTES32, STRING
 
 **correlationIdStrategy**:
 
@@ -139,8 +163,9 @@ Currently supported parameter types: UINT256, ADDRESS, BYTES32, STRING
 
 -   **Success Response:**
     -   **Code:** 200  
-        **Content:** 
-```
+        **Content:**
+
+```json
 {
     "id": "event-identifier"
 }
@@ -149,7 +174,7 @@ Currently supported parameter types: UINT256, ADDRESS, BYTES32, STRING
 ### Hard Coded Configuration
 Static events can be configured within the application.yml file of Eventeum.
 
-```
+```yaml
 eventFilters:
   - id: RequestCreated
     contractAddress: ${CONTRACT_ADDRESS:0x4aecf261541f168bb3ca65fa8ff5012498aac3b8}
@@ -179,15 +204,55 @@ eventFilters:
 -   **Body:** `N/A`
 
 -   **Success Response:**
+    -   **Code:** 200
+        **Content:** `N/A`
+
+## Registering a Transaction Monitor
+
+From version 0.5.3, eventeum supports monitoring and broadcasting transactions.  Currently the only matching criteria is by transaction hash, but more will be added in the near future.
+
+### REST
+
+To register a transaction monitor, use the below REST endpoint:
+
+-   **URL:** `/api/rest/v1/transaction?identifier=<txHash>&nodeName=<nodeName>`
+-   **Method:** `POST`
+-   **Headers:**  `N/A`
+-   **URL Params:** `N/A`
+    - identifier - The transaction hash to monitor
+    - nodeName - The node name that should be monitored
+-   **Body:** `N/A`
+
+-   **Success Response:**
+    -   **Code:** 200
+        **Content:**
+
+```json
+{
+    "id": "transaction-monitor-identifier"
+}
+```
+
+## Un-Registering a Transaction Monitor
+
+### REST
+
+-   **URL:** `/api/rest/v1/transaction/{monitor-id}`
+-   **Method:** `DELETE`
+-   **Headers:**  `N/A`
+-   **URL Params:** `N/A`
+-   **Body:** `N/A`
+
+-   **Success Response:**
     -   **Code:** 200  
         **Content:** `N/A`
-	
+
 ## Broadcast Messages Format
 
 ###  Contract Events
 When a subscribed event is emitted, a JSON message is broadcast to the configured kafka topic or rabbit exchange (contract-events by default), with the following format:
 
-```
+```json
 {
 	"id":"unique-event-id",
 	"type":"CONTRACT_EVENT",
@@ -202,7 +267,7 @@ When a subscribed event is emitted, a JSON message is broadcast to the configure
 		"logIndex":0,
 		"blockNumber":258,
 		"blockHash":"0x65d1956c2850677f75ec9adcd7b2cfab89e31ad1e7a5ba93b6fad11e6cd15e4a",
-		"address":"0x9ec580fa364159a09ea15cd39505fc0a926d3a00",	
+		"address":"0x9ec580fa364159a09ea15cd39505fc0a926d3a00",
 		"status":"UNCONFIRMED",
 		"eventSpecificationSignature":"0x46aca551d5bafd01d98f8cadeb9b50f1b3ee44c33007f2a13d969dab7e7cf2a8",
 		"id":"unique-event-id"},
@@ -214,26 +279,65 @@ When a subscribed event is emitted, a JSON message is broadcast to the configure
 ### Block Events
 When a new block is mined, a JSON message is broadcast to the configured kafka topic or rabbit exchange (block-events by default), with the following format:
 
-```
+```json
  {
  	"id":"0x79799054d1782eb4f246b3055b967557148f38344fbd7020febf7b2d44faa4f8",
 	"type":"BLOCK",
 	"details":{
 		"number":257,
-		"hash":"0x79799054d1782eb4f246b3055b967557148f38344fbd7020febf7b2d44faa4f8"},
+		"hash":"0x79799054d1782eb4f246b3055b967557148f38344fbd7020febf7b2d44faa4f8",
+		"timestamp":12345678},
 	"retries":0
 }
 ```
 
+
+### Transaction Events
+When a new transaction that matches a transaction monitor is mined, a JSON message is broadcast to the configured kafka topic or rabbit exchange (transaction-events by default), with the following format:
+
+```json
+ {
+ 	"id":"0x1c0482642861779703a34f4539b3ba18a0fddfb16558f3be7157fdafcaf2c030",
+	"type":"TRANSACTION",
+	"details":{
+		"hash":"0x1c0482642861779703a34f4539b3ba18a0fddfb16558f3be7157fdafcaf2c030",
+		"nonce":"0xf",
+		"blockHash":"0x6a68edf369ba4ddf93aa31cf5871ad51b5f7988a69f1ddf9ed09ead8b626db48",
+		"blockNumber":"0x1e1",
+		"transactionIndex":"0x0",
+		"from":"0xf17f52151ebef6c7334fad080c5704d77216b732",
+		"to":"0xc5fdf4076b8f3a5357c5e395ab970b5b54098fef",
+		"value":"0x16345785d8a0000",
+		"nodeName":"default",
+		"status":"CONFIRMED"},
+	"retries":0
+}
+```
+
+#### Transaction Event Statuses
+
+A broadcast transaction event can have the following statuses:
+
+| Status | Description |
+| -------- | -------- |
+| UNCONFIRMED | Transaction has been mined and we're now waiting for the configured number of blocks |
+| CONFIRMED | The configured number of blocks have been mined since the transaction has been mined |
+| INVALIDATED | The blockchain has forked since the initially broadcast UNCONFIRMED transaction was broadcast |
+| FAILED | The transaction has been mined but the tx execution failed |
+
 ## Configuration
-Many values within Eventeum are configurable either by changing the values in the application.yml file or by setting the associated environment variable.
+Eventeum can either be configured by:
+
+1. storing an `application.yml` next to the built JAR (copy one from `config-examples`). This overlays the defaults from `server/src/main/resources/application.yml`.
+2. Setting the associated environment variables.
 
 | Env Variable | Default | Description |
 | -------- | -------- | -------- |
 | SERVER_PORT | 8060 | The port for the eventeum instance. |
 | ETHEREUM_BLOCKSTRATEGY | POLL | The strategy for obtaining block events from an ethereum node (POLL or PUBSUB) |
-| ETHEREUM_NODE_URL | http://localhost:8545 | The ethereum node url. |
+| ETHEREUM_NODE_URL | http://localhost:8545 | The default ethereum node url. |
 | ETHEREUM_NODE _HEALTHCHECK_POLLINTERVAL | 2000 | The interval time in ms, in which a request is made to the ethereum node, to ensure that the node is running and functional. |
+| POLLING_INTERVAL | 10000 | The polling interval used by Web3j to get events from the blockchain. |
 | EVENTSTORE_TYPE | DB | The type of eventstore used in Eventeum. (See the Advanced section for more details) |
 | BROADCASTER_TYPE | KAFKA | The broadcast mechanism to use.  (KAFKA or HTTP or RABBIT) |
 | BROADCASTER_CACHE _EXPIRATIONMILLIS | 6000000 | The eventeum broadcaster has an internal cache of sent messages, which ensures that duplicate messages are not broadcast.  This is the time that a message should live within this cache. |
@@ -242,10 +346,20 @@ Many values within Eventeum are configurable either by changing the values in th
 | BROADCASTER_MULTIINSTANCE | false | If multiple instances of eventeum are to be deployed in your system, this should be set to true so that the eventeum communicates added/removed filters to other instances, via kafka. |
 | BROADCASTER_HTTP CONTRACTEVENTSURL | | The http url for posting contract events (for HTTP broadcasting) |
 | BROADCASTER_HTTP BLOCKEVENTSURL | | The http url for posting block events (for HTTP broadcasting) |
+| BROADCASTER_BYTESTOASCII | false | If any bytes values within events should be converted to ascii (default is hex) |
 | ZOOKEEPER_ADDRESS | localhost:2181 | The zookeeper address |
 | KAFKA_ADDRESSES | localhost:9092 | Comma seperated list of kafka addresses |
 | KAFKA_TOPIC_CONTRACT_EVENTS | contract-events | The topic name for broadcast contract event messages |
 | KAFKA_TOPIC_BLOCK_EVENTS | block-events | The topic name for broadcast block event messages |
+| KAFKA_TOPIC_TRANSACTION_EVENTS | transaction-events | The topic name for broadcast trasaction messages |
+| KAFKA_REQUEST_TIMEOUT_MS | 20000 | The duration after which a request timeouts |
+| KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM | null | The endpoint identification algorithm to validate server hostname using server certificate |
+| KAFKA_SASL_MECHANISM | PLAIN | The mechanism used for SASL authentication |
+| KAFKA_USERNAME | "" | The username used to connect to a SASL secured Kafka cluster |
+| KAFKA_PASSWORD | "" | The password used to connect to a SASL secured Kafka cluster |
+| KAFKA_SECURITY_PROTOCOL | PLAINTEXT | Protocol used to communicate with Kafka brokers |
+| KAFKA_RETRIES | 10 | The number of times a Kafka consumer will try to publish a message before throwing an error |
+| KAFKA_RETRY_BACKOFF_MS | 500 | The duration between each retry |
 | SPRING_DATA_MONGODB_HOST | localhost | The mongoDB host (used when event store is set to DB) |
 | SPRING_DATA_MONGODB_PORT | 27017 | The mongoDB post (used when event store is set to DB) |
 | RABBIT_ADDRESS | localhost:5672 | property spring.rabbitmq.host (The rabbitmq address) |
@@ -293,13 +407,13 @@ The implemented REST service should have a pageable endpoint which accepts a req
 -   **Method:** `GET`
 -   **Headers:**  
 
-| Key | Value | 
+| Key | Value |
 | -------- | -------- |
 | content-type | application/json |
 
--   **URL Params:** 
+-   **URL Params:**
 
-| Key | Value | 
+| Key | Value |
 | -------- | -------- |
 | page | The page number |
 | size | The page size |
@@ -311,8 +425,9 @@ The implemented REST service should have a pageable endpoint which accepts a req
 
 -   **Success Response:**
     -   **Code:** 200  
-        **Content:** 
-```
+        **Content:**
+
+```json
 {
 	"content":[
 		{"blockNumber":10,"id":<unique event id>}],
@@ -343,7 +458,7 @@ Eventeum can be embedded into an existing Spring Application via an annotation.
 
 1. Add the Consensys Kauri bintray repository into your `pom.xml` file:
 
-```
+```xml
 <repositories>
   <repository>
     <id>bintray-consensys-kauri</id>
@@ -354,7 +469,7 @@ Eventeum can be embedded into an existing Spring Application via an annotation.
 
 2. Add the eventeum-core dependency to your `pom.xml` file:
 
-```
+```xml
 <dependency>
   <groupId>net.consensys.eventeum</groupId>
   <artifactId>eventeum-core</artifactId>
@@ -366,45 +481,3 @@ Eventeum can be embedded into an existing Spring Application via an annotation.
 
 ## Known Caveats / Issues
 * In multi-instance mode, where there is more than one Eventeum instance in a system, your services are required to handle duplicate messages gracefully, as each instance will broadcast the same events.
-
-## Continuous Integration
-We are using Gitlab CI pipelines to construct and deploy this repository over IoCash infrastructure.
-
-This pipeline use a *docker:dind* image as a service to be able to perform task over docker from Jobs that are running in docker containers. To be able to mantain the work made by other GitLab Jobs, the directory `core/target`, `server/target` and `target` are cached between all jobs, in other way, Jobs will not have access to information generated by other Jobs.
-
-Our pipeline have 3 stages that will execute sequentially:
-
-### BUILD Stage
-Will execute a `mvn clean package`. Artifact results will cached between all Jobs of the pipeline. 
-
-### TAGGING Stage
-This stage will try to tag the commit that has launched the pipeline with the version number found in `pom.xml` file. It will make a XPath search over the document and return the value for *"//project/version"* element.
-
-There are two protected tags on this repository: **\&ast;RC\&ast;** and **\&ast;GA\&ast;**. The following scheme shows you how tagging logic will be applied to define the infrastructure where we will deploy:
-
-```mermaid
-graph LR
-A(Is Protected Tag?)-->|YES|B(Exist this Tag in previous commits?)
-A(Is Protected Tag?)-->|NO|C(Move Tag and deploy in PRE)
-B(Exist this Tag in previous commits?)-->|YES|D(Fail and end Pipeline)
-B(Exist this Tag in previous commits?)-->|NO|E(Is a GA Tag?)
-E(Is a GA Tag?)-->|NO|F(Tag and deploy in PRE)
-E(Is a GA Tag?)-->|YES|G(Tag and deploy in PRE and PRO)
-style D fill:#ffb3b3
-style C fill:#99ff99
-style F fill:#99ff99
-style G fill:#99ff99
-```
-
-### DEPLOY Stage
-This stage will construct docker images of this application (`server/Dockerfile`) and upload it to corresponding AWS ECR repositories. After that, it will restart the container running in the correspondig Infrastructure (PRE or PRO) based on the version name specified in `pom.cml` file (see [tagging state](#stagging) for more info)
-
-The application has the configuration for all environments. It will start with one or another based on a Environment variable (*SPRING_PROFILES_ACTIVE*) set in the AWS task definition for this service.
-
-When the docker image is uploaded to ECR repository, we put in 3 different tags:
-- **latest**: always will point lo the latest image
-- **\<version>**: all docker images will be tagged with it version. Take in mind that non protected tags (like &ast;SNAPSHOT) could be moved between different images (like in git)
-- **PRE | PRO**: If it is a **GA** version, it will be tagged with **PRO**, and PRE in other case.
-
-PREproduction environment will launch the **:latest** docker image, while PROduction environment will launch **:PRO** docker image.
-

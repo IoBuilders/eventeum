@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.mockito.Mockito.*;
@@ -24,12 +25,12 @@ public class NodeHealthCheckServiceTest {
     private SubscriptionService mockSubscriptionService;
 
     @Before
-    public void init() {
+    public void init() throws Exception {
         mockBlockchainService = mock(BlockchainService.class);
         mockReconnectionStrategy = mock(ReconnectionStrategy.class);
         mockSubscriptionService = mock(SubscriptionService.class);
 
-        underTest = new NodeHealthCheckService(mockBlockchainService, mockReconnectionStrategy, mockSubscriptionService);
+        underTest = createUnderTest();
     }
 
     @Test
@@ -204,5 +205,16 @@ public class NodeHealthCheckServiceTest {
                 throw new BlockchainException("Error!", new IOException(""));
             }
         }).when(mockBlockchainService).getClientVersion();
+    }
+
+    private NodeHealthCheckService createUnderTest() throws Exception {
+        final NodeHealthCheckService healthCheckService =
+                new NodeHealthCheckService(mockBlockchainService, mockReconnectionStrategy, mockSubscriptionService);
+
+        Field initiallySubscribed = NodeHealthCheckService.class.getDeclaredField("initiallySubscribed");
+        initiallySubscribed.setAccessible(true);
+        initiallySubscribed.set(healthCheckService, true);
+
+        return healthCheckService;
     }
 }
