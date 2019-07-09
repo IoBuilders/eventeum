@@ -5,7 +5,6 @@ import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
 import net.consensys.eventeum.chain.util.Web3jUtil;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
-import net.consensys.eventeum.dto.event.filter.ContractEventSpecification;
 import net.consensys.eventeum.service.EventStoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -75,7 +74,7 @@ public class DefaultEventBlockManagementService implements EventBlockManagementS
             final BigInteger latestBlockNumber = events.get(eventSignature);
 
             if (latestBlockNumber != null) {
-                log.debug("latestBlockNumber {} found in memory, starting at blockNumber: {}", eventFilter.getId(), latestBlockNumber.add(BigInteger.ONE));
+                log.debug("Block number for event {} found in memory, starting at blockNumber: {}", eventFilter.getId(), latestBlockNumber.add(BigInteger.ONE));
 
                 return latestBlockNumber.add(BigInteger.ONE);
             }
@@ -85,25 +84,28 @@ public class DefaultEventBlockManagementService implements EventBlockManagementS
                 eventStoreService.getLatestContractEvent(eventSignature, eventFilter.getContractAddress());
 
         if (contractEvent.isPresent()) {
-            log.debug("contractEvent {} found in the database, starting at blockNumber: {}", eventFilter.getId(), contractEvent.get().getBlockNumber().add(BigInteger.ONE));
+            BigInteger blockNumber = contractEvent.get().getBlockNumber().add(BigInteger.ONE);
 
-            return contractEvent.get().getBlockNumber().add(BigInteger.ONE);
+            log.debug("Block number for event {} found in the database, starting at blockNumber: {}", eventFilter.getId(), blockNumber);
+
+            return blockNumber;
         }
 
         if (eventFilter.getStartBlock() != null) {
-            log.debug("Getting starting block from the event filter: {}, starting at blockNumber: {}", eventFilter.getId(), eventFilter.getStartBlock());
+            BigInteger blockNumber = eventFilter.getStartBlock();
 
-            return eventFilter.getStartBlock();
+            log.debug("Block number for event {}, starting at blockNumber configured for the event: {}", eventFilter.getId(), blockNumber);
+
+            return blockNumber;
         }
 
         final BlockchainService blockchainService =
                 chainServicesContainer.getNodeServices(eventFilter.getNode()).getBlockchainService();
 
-        BigInteger currentBlockNumber =  blockchainService.getCurrentBlockNumber();
+        BigInteger blockNumber =  blockchainService.getCurrentBlockNumber();
 
-        log.debug("Event {} not found in memory or database, starting at blockNumber: {}", eventFilter.getId(), currentBlockNumber);
+        log.debug("Block number for event {} not found in memory or database, starting at blockNumber: {}", eventFilter.getId(), blockNumber);
 
-
-        return currentBlockNumber;
+        return blockNumber;
     }
 }
