@@ -11,7 +11,7 @@ import static org.mockito.Mockito.*;
 
 public class EventBlockUpdaterListenerTest {
 
-    private static final String NETWORK_NODE = "default";
+    private static final String ADDRESS = "0x2250683dbe4e0b90395c3c5d7def87784a2b916c";
 
     private EventBlockUpdaterListener underTest;
 
@@ -29,10 +29,10 @@ public class EventBlockUpdaterListenerTest {
         final ContractEventDetails eventDetails = mock(ContractEventDetails.class);
         when(eventDetails.getEventSpecificationSignature()).thenReturn("spec");
         when(eventDetails.getBlockNumber()).thenReturn(BigInteger.TEN);
-        when(eventDetails.getNodeName()).thenReturn(NETWORK_NODE);
+        when(eventDetails.getAddress()).thenReturn(ADDRESS);
 
         underTest.onEvent(eventDetails);
 
-        verify(mockBlockManagementService, times(1)).updateLatestBlock("spec", BigInteger.TEN, NETWORK_NODE);
+        verify(mockBlockManagementService, times(1)).updateLatestBlock("spec", BigInteger.TEN, ADDRESS);
     }
 }

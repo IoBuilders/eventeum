@@ -9,7 +9,7 @@
     <parent>
         <groupId>net.consensys.eventeum</groupId>
         <artifactId>eventeum</artifactId>
-        <version>1.0.19-SNAPSHOT</version>
+        <version>1.0.20-SNAPSHOT</version>
     </parent>
 
     <properties>
