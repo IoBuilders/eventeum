@@ -15,6 +15,7 @@ import net.consensys.eventeum.utils.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Component;
+import org.web3j.crypto.Keys;
 
 import javax.annotation.PreDestroy;
 import java.util.*;
