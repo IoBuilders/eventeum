@@ -100,7 +100,7 @@ public class Web3jService implements BlockchainService {
 
         final Observable<Log> observable = web3j.ethLogObservable(ethFilter);
 
-        final Subscription sub = observable.subscribe(theLog -> {
+        final Subscription sub = observable.retry().subscribe(theLog -> {
             lock.lock();
 
             try {
