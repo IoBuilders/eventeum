@@ -28,6 +28,7 @@ public class RabbitBlockChainEventBroadcaster implements BlockchainEventBroadcas
 
     private static final Logger LOG = LoggerFactory.getLogger(RabbitBlockChainEventBroadcaster.class);
     private static final String BLOCKEVENT_ROUTING_KEY_SUFIX = "NewBlock";
+    private static final String TRANSACTION_ROUTING_KEY_SUFIX = "transaction";
 
     private RabbitTemplate rabbitTemplate;
     private RabbitSettings rabbitSettings;
@@ -71,13 +72,14 @@ public class RabbitBlockChainEventBroadcaster implements BlockchainEventBroadcas
     public void broadcastTransaction(TransactionDetails transactionDetails) {
         final EventeumMessage<TransactionDetails> message = createTransactionEventMessage(transactionDetails);
         rabbitTemplate.convertAndSend(this.rabbitSettings.getExchange(),
-                String.format("%s.%s", this.rabbitSettings.getRoutingKeyPrefix(), transactionDetails.getHash()),
+                String.format("%s.%s.%s", this.rabbitSettings.getRoutingKeyPrefix(), TRANSACTION_ROUTING_KEY_SUFIX, transactionDetails.getHash()),
                 message);
 
-        LOG.info(String.format("New transaction event sent: [%s] to exchange [%s] with routing key [%s.%s]",
+        LOG.info(String.format("New transaction event sent: [%s] to exchange [%s] with routing key [%s.%s.%s]",
                 JSON.stringify(message),
                 this.rabbitSettings.getExchange(),
                 this.rabbitSettings.getRoutingKeyPrefix(),
+                TRANSACTION_ROUTING_KEY_SUFIX,
                 transactionDetails.getHash()));
     }
 
