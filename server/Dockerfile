@@ -1,15 +1,6 @@
-FROM openjdk:8-jdk-alpine
-
-ARG APP_VERSION
-ENV APP_VERSION=${APP_VERSION}
-ARG FATHER_VERSION
-ENV FATHER_VERSION=${FATHER_VERSION}
-ARG SET_JAVA_OPTS
-ENV JAVA_OPTS="${SET_JAVA_OPTS}"
-
-ADD target/eventeum-server.jar app.jar
-RUN apk update && apk add bash
-VOLUME /tmp
+FROM openjdk:8-jre
+ADD target/eventeum-server.jar eventeum-server.jar
+ADD docker-scripts/start-eventeum.sh start-eventeum.sh
+ENV CONF ""
 EXPOSE 8060
-# CMD ["java", "$JAVA_OPTS", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
-CMD java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar app.jar
+CMD chmod +x start-eventeum.sh && ./start-eventeum.sh

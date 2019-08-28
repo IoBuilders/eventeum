@@ -86,7 +86,10 @@ public class DefaultSubscriptionServiceTest {
     }
 
     @Test
-    public void testSubscribeToNewBlocksOnConstruction() {
+    public void testSubscribeToNewBlocksOnInit() {
+
+        underTest.init();
+
         verify(mockBlockchainService, times(1)).addBlockListener(mockBlockListener1);
         verify(mockBlockchainService, times(1)).addBlockListener(mockBlockListener2);
     }
@@ -198,7 +201,6 @@ public class DefaultSubscriptionServiceTest {
                 eq(filter1), any(ContractEventListener.class))).thenReturn(new FilterSubscription(filter1, sub1));
         when(mockBlockchainService.registerEventListener(
                 eq(filter2), any(ContractEventListener.class))).thenReturn(new FilterSubscription(filter2, sub2));
-
 
         underTest.registerContractEventFilter(filter1, false);
         underTest.registerContractEventFilter(filter2, false);

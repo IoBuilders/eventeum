@@ -81,17 +81,20 @@ public class DefaultEventBlockManagementServiceTest {
     @Test
     public void testUpdateAndGetLowerMatch() {
         underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.ONE, CONTRACT_ADDRESS);
+        underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.TEN, CONTRACT_ADDRESS);
         final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
-        assertEquals(BigInteger.valueOf(2), result);
+        assertEquals(BigInteger.valueOf(11), result);
     }
 
     @Test
     public void testUpdateAndGetHigherMatch() {
+        underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.TEN, CONTRACT_ADDRESS);
+        underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.ONE, CONTRACT_ADDRESS);
+        final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
 
         underTest.updateLatestBlock(EVENT_SPEC_HASH, BigInteger.TEN, CONTRACT_ADDRESS);
-        final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
 
         assertEquals(BigInteger.valueOf(11), result);
     }
@@ -102,6 +105,7 @@ public class DefaultEventBlockManagementServiceTest {
         when(mockEventDetails.getBlockNumber()).thenReturn(BigInteger.ONE);
         when(mockEventStoreService.getLatestContractEvent(EVENT_SPEC_HASH, CONTRACT_ADDRESS)).thenReturn(Optional.of(mockEventDetails));
         final BigInteger result = underTest.getBlockNumberToScanEvent(EVENT_FILTER);
+
 
         assertEquals(BigInteger.valueOf(2), result);
     }

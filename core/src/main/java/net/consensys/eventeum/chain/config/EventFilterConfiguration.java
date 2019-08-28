@@ -46,7 +46,7 @@ public class EventFilterConfiguration {
                 mapper.map(configFilter, contractEventFilter);
                 contractEventFilter.setContractAddress(Keys.toChecksumAddress(contractEventFilter.getContractAddress()));
                 contractEventFilter.setCorrelationIdStrategy(configFilter.getCorrelationId().toStrategy());
-
+                contractEventFilter.setContractAddress(Keys.toChecksumAddress(contractEventFilter.getContractAddress()));
                 filtersToReturn.add(contractEventFilter);
             });
         }
