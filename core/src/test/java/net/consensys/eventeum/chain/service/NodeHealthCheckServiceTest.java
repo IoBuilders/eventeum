@@ -32,6 +32,8 @@ public class NodeHealthCheckServiceTest {
 
         mockReconnectionStrategy = mock(ReconnectionStrategy.class);
         mockSubscriptionService = mock(SubscriptionService.class);
+        when(mockBlockchainService.getNodeName()).thenReturn(Constants.DEFAULT_NODE_NAME);
+
 
         underTest = createUnderTest();
     }

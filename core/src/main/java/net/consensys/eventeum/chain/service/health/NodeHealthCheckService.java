@@ -28,7 +28,6 @@ public class NodeHealthCheckService {
 
     private boolean initiallySubscribed = false;
 
-
     public NodeHealthCheckService(BlockchainService blockchainService,
                                   ReconnectionStrategy reconnectionStrategy,
                                   SubscriptionService subscriptionService) {

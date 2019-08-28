@@ -3,6 +3,7 @@ package net.consensys.eventeum.chain.converter;
 import net.consensys.eventeum.dto.event.parameter.EventParameter;
 import net.consensys.eventeum.settings.EventeumSettings;
 import org.bouncycastle.util.encoders.Hex;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.web3j.abi.datatypes.Address;

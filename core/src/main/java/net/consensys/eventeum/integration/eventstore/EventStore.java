@@ -19,6 +19,5 @@ public interface EventStore {
 
     Optional<LatestBlock> getLatestBlockForNode(String nodeName);
 
-
     boolean isPagingZeroIndexed();
 }

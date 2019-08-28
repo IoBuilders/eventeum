@@ -24,11 +24,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Craig Williams <craig.williams@consensys.net>
  */
-@Component
 @Slf4j
+@Component
 public class DefaultEventBlockManagementService implements EventBlockManagementService {
 
-    /* latestBlocks will contains a set of events per Network */
     private AbstractMap<String, AbstractMap> latestBlocks = new ConcurrentHashMap<>();
 
     private ChainServicesContainer chainServicesContainer;

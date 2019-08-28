@@ -19,5 +19,4 @@ public class HttpBroadcasterSettings {
 
     @Value("${broadcaster.http.blockNotification:false}")
     private boolean blockNotification;
-
 }
