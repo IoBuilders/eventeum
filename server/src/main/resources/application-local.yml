@@ -26,7 +26,7 @@ spring:
 
 ethereum:
   nodes:
-  - name: ${ETHEREUM_NETWORK:AlastriaTelsius}
+  - name: default
     url: ${ETHEREUM_URL:http://18.200.4.214:22000}
     pollInterval: 1000
   healthcheck:

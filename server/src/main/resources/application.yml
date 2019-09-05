@@ -13,6 +13,15 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5p %c: %M - %m%n"
   file: /logs/application.log
 
+ethereum:
+  nodes:
+    - name: default
+      url: ${ETHEREUM_NODE_URL:http://localhost:8545}
+      blockStrategy: POLL
+  healthcheck:
+    pollInterval: 2000
+  blockStrategy: POLL
+
 eventStore:
   type: DB
   url: http://localhost:8081/api/rest/v1
