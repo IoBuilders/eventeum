@@ -61,7 +61,7 @@ spring:
   profiles.active: local
   data:
     mongodb:
-      uri: mongodb://localhost:27017/test
+      uri: mongodb://mongo:27017/test
   rabbitmq:
     host: ${RABBIT_ADDRESS:localhost}
 
