@@ -62,11 +62,6 @@ spring:
   data:
     mongodb:
       uri: mongodb://mongo:27017/test
-  rabbitmq:
-    host: ${RABBIT_ADDRESS:localhost}
-
-    partitions: 1
-    replicationSets: 1
 broadcaster:
   type: RABBIT
   cache:

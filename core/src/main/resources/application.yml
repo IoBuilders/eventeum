@@ -13,43 +13,6 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5p %c: %M - %m%n"
   file: /logs/application.log
 
-ethereum:
-  nodes:
-    - name: default
-      url: http://localhost:8545
-      pollingInterval: ${POLLING_INTERVAL:10000}
-
-  healthcheck:
-    pollInterval: 2000
-
-#eventFilters:
-#  - id: RequestCreated
-#    contractAddress: ${CONTRACT_ADDRESS:0x4aecf261541f168bb3ca65fa8ff5012498aac3b8}
-#    eventSpecification:
-#      eventName: RequestCreated
-#      indexedParameterDefinitions:
-#        - position: 0
-#          type: BYTES32
-#        - position: 1
-#          type: ADDRESS
-#      nonIndexedParameterDefinitions:
-#        - position: 2
-#          type: BYTES32
-#    correlationId:
-#      type: NON_INDEXED_PARAMETER
-#      index: 0
-
-#transactionFilters:
-#- nodeName: ${ETHEREUM_NETWORK:default}
-#  type: "FROM_ADDRESS"
-#  transactionIdentifierValue: ${CONTRACT_ADDRESS_EM_TOKEN:0x0f8E7A681019Ec13EfE853a6Eca666E05b214Fd5}
-#  statuses: ['CONFIRMED']
-#- nodeName: ${ETHEREUM_NETWORK:default}
-#  type: "TO_ADDRESS"
-#  transactionIdentifierValue: ${CONTRACT_ADDRESS_EM_TOKEN:0xfBAB8dE62002c86986C6e070BD3bB46BF983C74e}
-#  statuses: ['FAILED']
-
-
 eventStore:
   type: DB
   url: http://localhost:8081/api/rest/v1
