@@ -17,31 +17,12 @@ eventStore:
   type: DB
   url: http://localhost:8081/api/rest/v1
   eventPath: /event
-  latestBlockPath: /latestblock
-database:
-  type: MONGO
 
 spring:
-  rabbitmq:
-    host: rabbit
-    port: 5672
-    username: guest
-    password: guest
+  profiles.active: local
   data:
     mongodb:
-      uri: mongodb://mongo:27017/test
-
-ethereum:
-  nodes:
-    - name: ${ETHEREUM_NETWORK:AlastriaTelsius}
-      url: ${ETHEREUM_URL:http://34.241.169.145:22000}
-      pollInterval: 1000
-    - name: ${ETHEREUM_NETWORK_PANTHEON:Pantheon}
-      url: ${ETHEREUM_URL_PANTHEON:wss://regular.pre.iosec.io.builders:8576}
-      blockStrategy: PUBSUB
-  healthcheck:
-    pollInterval: 2000
-  blockStrategy: POLL
+      uri: mongodb://localhost:27017/test
 
 broadcaster:
   type: RABBIT
@@ -72,7 +53,6 @@ kafka:
 
     partitions: 1
     replicationSets: 1
-
 
 management:
   endpoints:
