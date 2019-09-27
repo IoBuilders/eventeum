@@ -45,7 +45,7 @@ public class ConfirmationCheckInitialiserTest {
          final EventConfirmationConfig config = new EventConfirmationConfig(BigInteger.TEN, BigInteger.valueOf(100));
 
          underTest = new ConfirmationCheckInitialiserForTest(mockChainServicesContainer,
-                 mock(BlockchainEventBroadcaster.class), config, mockBlockchainService);
+                 mock(BlockchainEventBroadcaster.class), config);
      }
 
      @Test
@@ -85,9 +85,8 @@ public class ConfirmationCheckInitialiserTest {
 
          public ConfirmationCheckInitialiserForTest(ChainServicesContainer chainServicesContainer,
                                                     BlockchainEventBroadcaster eventBroadcaster,
-                                                    EventConfirmationConfig eventConfirmationConfig,
-                                                    BlockchainService blockchainService) {
-             super(chainServicesContainer, eventBroadcaster, eventConfirmationConfig, asyncTaskService, blockchainService);
+                                                    EventConfirmationConfig eventConfirmationConfig) {
+             super(chainServicesContainer, eventBroadcaster, eventConfirmationConfig, asyncTaskService);
          }
 
          @Override

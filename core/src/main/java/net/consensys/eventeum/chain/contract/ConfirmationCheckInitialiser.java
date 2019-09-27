@@ -32,16 +32,16 @@ public class ConfirmationCheckInitialiser implements ContractEventListener {
     private BlockchainEventBroadcaster eventBroadcaster;
     private EventConfirmationConfig eventConfirmationConfig;
     private AsyncTaskService asyncTaskService;
-    private BlockchainService blockchainService;
 
     @Override
     public void onEvent(ContractEventDetails eventDetails) {
         if (eventDetails.getStatus() == ContractEventStatus.UNCONFIRMED) {
             log.info("Registering an EventConfirmationBlockListener for event: {}", eventDetails.getId());
 
-            BigInteger currentBlock = blockchainService.getCurrentBlockNumber();
-            BigInteger waitBlocks = eventConfirmationConfig.getBlocksToWaitForMissingTx();
+            final BlockchainService blockchainService = getBlockchainService(eventDetails);
 
+            BigInteger currentBlock = blockchainService.getCurrentBlockNumber();
+            BigInteger waitBlocks = eventConfirmationConfig.getBlocksToWaitForConfirmation();
 
             if (currentBlock.compareTo(eventDetails.getBlockNumber().add(waitBlocks)) >= 0) {
                 eventDetails.setStatus(ContractEventStatus.CONFIRMED);
@@ -50,7 +50,6 @@ public class ConfirmationCheckInitialiser implements ContractEventListener {
                 return;
             }
 
-            final BlockchainService blockchainService = getBlockchainService(eventDetails);
             blockchainService.addBlockListener(createEventConfirmationBlockListener(eventDetails));
         }
     }
