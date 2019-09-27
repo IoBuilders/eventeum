@@ -8,7 +8,6 @@ import net.consensys.eventeum.chain.service.container.NodeServices;
 import net.consensys.eventeum.constant.Constants;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.ContractEventStatus;
-import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.integration.broadcast.blockchain.BlockchainEventBroadcaster;
 import net.consensys.eventeum.service.AsyncTaskService;
 import net.consensys.eventeum.testutils.DummyAsyncTaskService;
@@ -28,9 +27,11 @@ public class ConfirmationCheckInitialiserTest {
      private ChainServicesContainer mockChainServicesContainer;
      private NodeServices mockNodeServices;
      private AsyncTaskService asyncTaskService = new DummyAsyncTaskService();
+     private BigInteger currentBlock = BigInteger.valueOf(2000);
 
      @Before
      public void init() {
+
          mockBlockchainService = mock(BlockchainService.class);
          mockBlockListener = mock(BlockListener.class);
          mockChainServicesContainer = mock(ChainServicesContainer.class);
@@ -40,11 +41,11 @@ public class ConfirmationCheckInitialiserTest {
                  .thenReturn(mockNodeServices);
 
          when(mockNodeServices.getBlockchainService()).thenReturn(mockBlockchainService);
-
+         when(mockBlockchainService.getCurrentBlockNumber()).thenReturn(currentBlock);
          final EventConfirmationConfig config = new EventConfirmationConfig(BigInteger.TEN, BigInteger.valueOf(100));
 
          underTest = new ConfirmationCheckInitialiserForTest(mockChainServicesContainer,
-                 mock(BlockchainEventBroadcaster.class), config);
+                 mock(BlockchainEventBroadcaster.class), config, mockBlockchainService);
      }
 
      @Test
@@ -61,11 +62,21 @@ public class ConfirmationCheckInitialiserTest {
         verify(mockBlockchainService, never()).addBlockListener(mockBlockListener);
     }
 
+    @Test
+    public void testOnEventWithAExpiredBlockEvent() {
+        ContractEventDetails event = createContractEventDetails(ContractEventStatus.UNCONFIRMED);
+        when(event.getBlockNumber()).thenReturn(BigInteger.valueOf(1));
+        underTest.onEvent(event);
+
+        verify(mockBlockchainService, times(0)).addBlockListener(mockBlockListener);
+    }
+
      private ContractEventDetails createContractEventDetails(ContractEventStatus status) {
          final ContractEventDetails eventDetails = mock(ContractEventDetails.class);
 
          when(eventDetails.getStatus()).thenReturn(status);
          when(eventDetails.getNodeName()).thenReturn(Constants.DEFAULT_NODE_NAME);
+         when(eventDetails.getBlockNumber()).thenReturn(currentBlock);
 
          return eventDetails;
      }
@@ -74,8 +85,9 @@ public class ConfirmationCheckInitialiserTest {
 
          public ConfirmationCheckInitialiserForTest(ChainServicesContainer chainServicesContainer,
                                                     BlockchainEventBroadcaster eventBroadcaster,
-                                                    EventConfirmationConfig eventConfirmationConfig) {
-             super(chainServicesContainer, eventBroadcaster, eventConfirmationConfig, asyncTaskService);
+                                                    EventConfirmationConfig eventConfirmationConfig,
+                                                    BlockchainService blockchainService) {
+             super(chainServicesContainer, eventBroadcaster, eventConfirmationConfig, asyncTaskService, blockchainService);
          }
 
          @Override
