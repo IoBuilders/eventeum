@@ -73,7 +73,7 @@ broadcaster:
     expirationMillis: 6000000
   event:
     confirmation:
-      numBlocksToWait: 0
+      numBlocksToWait: 1
       numBlocksToWaitForMissingTx: 100
   multiInstance: false
 
