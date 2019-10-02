@@ -10,6 +10,7 @@ import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.dto.event.filter.ContractEventSpecification;
 import net.consensys.eventeum.dto.event.filter.ParameterDefinition;
 import net.consensys.eventeum.dto.event.parameter.EventParameter;
+import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.Utils;
 import org.web3j.abi.datatypes.Type;
@@ -56,7 +57,20 @@ public class DefaultContractEventDetailsFactory implements ContractEventDetailsF
         eventDetails.setEventSpecificationSignature(Web3jUtil.getSignature(eventSpec));
         eventDetails.setNetworkName(this.networkName);
         eventDetails.setNodeName(eventFilter.getNode());
-        eventDetails.setBlockTimestamp(ethBlock.getBlock().getTimestamp());
+
+        BigInteger timeStamp = null;
+        while (timeStamp == null) {
+            try {
+                timeStamp = ethBlock.getBlock().getTimestamp();
+            } catch (WebsocketNotConnectedException wsnce) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        eventDetails.setBlockTimestamp(timeStamp);
 
         if (log.isRemoved()) {
             eventDetails.setStatus(ContractEventStatus.INVALIDATED);
