@@ -75,6 +75,7 @@ broadcaster:
     confirmation:
       numBlocksToWait: 1
       numBlocksToWaitForMissingTx: 100
+      numBlocksToWaitToInvalidateEvent: 5
   multiInstance: false
 
 rabbitmq:
