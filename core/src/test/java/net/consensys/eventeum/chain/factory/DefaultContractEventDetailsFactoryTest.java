@@ -167,7 +167,7 @@ public class DefaultContractEventDetailsFactoryTest {
     }
 
     private DefaultContractEventDetailsFactory createFactory(BigInteger confirmations) {
-        final EventConfirmationConfig config = new EventConfirmationConfig(confirmations, BigInteger.valueOf(100));
+        final EventConfirmationConfig config = new EventConfirmationConfig(confirmations, BigInteger.valueOf(100), BigInteger.valueOf(5));
         return new DefaultContractEventDetailsFactory(mockParameterCoverter, config, NETWORK_NAME);
     }
 }
