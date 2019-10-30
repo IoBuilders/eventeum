@@ -31,7 +31,8 @@ public class EventConfirmationBlockListener extends SelfUnregisteringBlockListen
 
     private AtomicBoolean isInvalidated = new AtomicBoolean(false);
     private BigInteger missingTxBlockLimit;
-    private BigInteger blockOrphanLimit;
+    private BigInteger numBlocksToWaitBeforeInvalidating;
+    private BigInteger currentNumBlocksToWaitBeforeInvalidating;
 
     public EventConfirmationBlockListener(ContractEventDetails contractEvent,
                                           BlockchainService blockchainService,
@@ -47,7 +48,7 @@ public class EventConfirmationBlockListener extends SelfUnregisteringBlockListen
         final BigInteger currentBlock = blockchainService.getCurrentBlockNumber();
         this.targetBlock = currentBlock.add(eventConfirmationConfig.getBlocksToWaitForConfirmation());
         this.blocksToWaitForMissingTx = eventConfirmationConfig.getBlocksToWaitForMissingTx();
-        this.blocksToWait = eventConfirmationConfig.getBlocksToWaitToInvalidateEvent();
+        this.numBlocksToWaitBeforeInvalidating = eventConfirmationConfig.getNumBlocksToWaitBeforeInvalidating();
     }
 
     @Override
@@ -130,9 +131,9 @@ public class EventConfirmationBlockListener extends SelfUnregisteringBlockListen
     }
 
     private void processInvalidatedEvent(BlockDetails blockDetails) {
-        if (blockOrphanLimit == null) {
-            blockOrphanLimit = blockDetails.getNumber().add(blocksToWait);
-        } else if (blockDetails.getNumber().compareTo(blockOrphanLimit) > 0) {
+        if (currentNumBlocksToWaitBeforeInvalidating == null) {
+            currentNumBlocksToWaitBeforeInvalidating = blockDetails.getNumber().add(numBlocksToWaitBeforeInvalidating);
+        } else if (blockDetails.getNumber().compareTo(currentNumBlocksToWaitBeforeInvalidating) > 0) {
             LOG.debug(String.format("Unregistering because the block %s was invalidated", blockDetails.getNumber()));
             broadcastEventInvalidated();
             isInvalidated.set(true);
