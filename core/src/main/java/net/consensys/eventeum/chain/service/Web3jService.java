@@ -55,27 +55,24 @@ import java.util.stream.Collectors;
 public class Web3jService implements BlockchainService {
 
     private static final String EVENT_EXECUTOR_NAME = "EVENT";
-    @Getter
-    private String nodeName;
 
-    @Getter
-    @Setter
-    private Web3j web3j;
-    private ContractEventDetailsFactory eventDetailsFactory;
-    private AsyncTaskService asyncTaskService;
+    private final Web3j web3j;
+    private final String nodeName;
+    private final AsyncTaskService asyncTaskService;
+    private final EventBlockManagementService blockManagement;
+    private final ContractEventDetailsFactory eventDetailsFactory;
 
-    private EventBlockManagementService blockManagement;
 
     public Web3jService(String nodeName,
                         Web3j web3j,
                         ContractEventDetailsFactory eventDetailsFactory,
                         AsyncTaskService asyncTaskService,
                         EventBlockManagementService blockManagement) {
-        this.nodeName = nodeName;
         this.web3j = web3j;
-        this.eventDetailsFactory = eventDetailsFactory;
+        this.nodeName = nodeName;
         this.asyncTaskService = asyncTaskService;
         this.blockManagement = blockManagement;
+        this.eventDetailsFactory = eventDetailsFactory;
     }
 
     @Override

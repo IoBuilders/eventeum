@@ -65,6 +65,10 @@ public class DefaultSubscriptionService implements SubscriptionService {
 
     private RetryTemplate retryTemplate;
 
+    private Map<String, FilterSubscription> filterSubscriptions = new ConcurrentHashMap<>();
+
+    private List<ContractEventListener> contractEventListeners;
+
     private EventSyncService eventSyncService;
 
     private List<ContractEventListener> contractEventListeners;
