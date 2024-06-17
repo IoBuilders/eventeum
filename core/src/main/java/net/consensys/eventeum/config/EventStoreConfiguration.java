@@ -1,3 +1,17 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeum.config;
 
 import net.consensys.eventeum.chain.block.BlockListener;
@@ -13,9 +27,9 @@ import net.consensys.eventeum.integration.eventstore.db.MongoEventStore;
 import net.consensys.eventeum.integration.eventstore.db.SqlEventStore;
 import net.consensys.eventeum.integration.eventstore.db.repository.ContractEventDetailsRepository;
 import net.consensys.eventeum.integration.eventstore.db.repository.LatestBlockRepository;
+import net.consensys.eventeum.integration.eventstore.db.repository.MessageDetailsRepository;
 import net.consensys.eventeum.integration.eventstore.rest.RESTEventStore;
 import net.consensys.eventeum.integration.eventstore.rest.client.EventStoreClient;
-
 import net.consensys.eventeum.monitoring.EventeumValueMonitor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -38,9 +52,11 @@ public class EventStoreConfiguration {
 		@Bean
 		public SaveableEventStore dbEventStore(
 				ContractEventDetailsRepository contractEventRepository,
+				MessageDetailsRepository messageDetailsRepository,
 				LatestBlockRepository latestBlockRepository,
 				MongoTemplate mongoTemplate) {
-			return new MongoEventStore(contractEventRepository, latestBlockRepository, mongoTemplate);
+			return new MongoEventStore(
+					contractEventRepository, messageDetailsRepository, latestBlockRepository, mongoTemplate);
 		}
 
 		@Bean
@@ -65,9 +81,11 @@ public class EventStoreConfiguration {
 		@Bean
 		public SaveableEventStore dbEventStore(
 				ContractEventDetailsRepository contractEventRepository,
+				MessageDetailsRepository messageDetailsRepository,
 				LatestBlockRepository latestBlockRepository,
 				JdbcTemplate jdbcTemplate) {
-			return new SqlEventStore(contractEventRepository, latestBlockRepository, jdbcTemplate);
+			return new SqlEventStore(
+					contractEventRepository, messageDetailsRepository, latestBlockRepository, jdbcTemplate);
 		}
 
 		@Bean

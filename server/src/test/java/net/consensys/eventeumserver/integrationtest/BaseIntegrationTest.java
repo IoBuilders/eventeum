@@ -1,10 +1,19 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeumserver.integrationtest;
 
-import java.io.File;
-import java.util.*;
-
-import junit.framework.TestCase;
-import net.consensys.eventeum.chain.service.health.NodeHealthCheckService;
 import net.consensys.eventeum.chain.util.Web3jUtil;
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
@@ -14,22 +23,26 @@ import net.consensys.eventeum.dto.event.filter.ContractEventSpecification;
 import net.consensys.eventeum.dto.event.filter.ParameterDefinition;
 import net.consensys.eventeum.dto.event.filter.ParameterType;
 import net.consensys.eventeum.dto.transaction.TransactionDetails;
-import net.consensys.eventeum.dto.transaction.TransactionIdentifier;
 import net.consensys.eventeum.endpoint.response.AddEventFilterResponse;
 import net.consensys.eventeum.endpoint.response.MonitorTransactionsResponse;
 import net.consensys.eventeum.integration.eventstore.db.repository.ContractEventDetailsRepository;
 import net.consensys.eventeum.model.TransactionMonitoringSpec;
 import net.consensys.eventeum.repository.ContractEventFilterRepository;
+import net.consensys.eventeum.repository.TransactionMonitoringSpecRepository;
 import net.consensys.eventeum.utils.JSON;
 import net.consensys.eventeumserver.integrationtest.utils.SpringRestarter;
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.io.FileUtils;
-import org.junit.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.TestContextManager;
 import org.springframework.web.client.RestTemplate;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
@@ -47,18 +60,28 @@ import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
-import wiremock.org.apache.commons.collections4.IterableUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.ServerSocket;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
+
+enum TopicTypesEnum {
+    transaction,
+    event,
+    block,
+    message
+}
 
 public class BaseIntegrationTest {
 
     private static final String PARITY_VOLUME_PATH = "target/parity";
+
+    private static final Integer MONGODB_PORT = 27017;
 
     //"BytesValue" in hex
     private static final String BYTES_VALUE_HEX = "0x427974657356616c756500000000000000000000000000000000000000000000";
@@ -76,6 +99,8 @@ public class BaseIntegrationTest {
 
     private static FixedHostPortGenericContainer parityContainer;
 
+    private static FixedHostPortGenericContainer mongoDBContainer;
+
     private List<ContractEventDetails> broadcastContractEvents = new ArrayList<>();
 
     private List<BlockDetails> broadcastBlockMessages = new ArrayList<>();
@@ -87,6 +112,9 @@ public class BaseIntegrationTest {
 
     @Autowired(required = false)
     private ContractEventFilterRepository filterRepo;
+
+    @Autowired(required = false)
+    private TransactionMonitoringSpecRepository txFilterRepo;
 
     @Autowired(required = false)
     private ContractEventDetailsRepository eventDetailsRepository;
@@ -107,7 +135,9 @@ public class BaseIntegrationTest {
 
     private List<String> registeredTransactionMonitorIds = new ArrayList<>();
 
-    @BeforeClass
+    public static boolean shouldPersistNodeVolume = false;
+
+    @BeforeAll
     public static void setupEnvironment() throws Exception {
         StubEventStoreService.start();
 
@@ -115,9 +145,10 @@ public class BaseIntegrationTest {
         file.mkdirs();
 
         startParity();
+        startMongo();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         initRestTemplate();
@@ -145,22 +176,27 @@ public class BaseIntegrationTest {
 
     }
 
-    @AfterClass
+    @AfterAll
     public static void teardownEnvironment() throws Exception {
         StubEventStoreService.stop();
 
+        shouldPersistNodeVolume = true;
         stopParity();
+
+        stopMongo();
 
         try {
             //Clear parity data
             final File file = new File(PARITY_VOLUME_PATH);
             FileUtils.deleteDirectory(file);
         } catch (Throwable t) {
+            System.err.println("Cannot delete parity directory: " + t.getMessage());
+            t.printStackTrace();
             //When running on circleci the parity dir cannot be deleted but this does no affect tests
         }
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         final ArrayList<String> filterIds = new ArrayList<>(registeredFilters.keySet());
 
@@ -198,6 +234,10 @@ public class BaseIntegrationTest {
 
     protected ContractEventFilterRepository getFilterRepo() {
         return filterRepo;
+    }
+
+    protected TransactionMonitoringSpecRepository getTxFilterRepo() {
+        return txFilterRepo;
     }
 
     protected EventEmitter deployEventEmitterContract() throws Exception {
@@ -350,9 +390,10 @@ public class BaseIntegrationTest {
         assertEquals(BigInteger.ONE, eventDetails.getNonIndexedParameters().get(2).getValue());
         assertEquals(Web3jUtil.getSignature(registeredFilter.getEventSpecification()),
                 eventDetails.getEventSpecificationSignature());
+        assertNotNull(eventDetails.getTimestamp());
     }
 
-    protected byte[] stringToBytes(String string) {
+    protected static byte[] stringToBytes(String string) {
         byte[] byteValue = string.getBytes();
         byte[] byteValueLen32 = new byte[32];
         System.arraycopy(byteValue, 0, byteValueLen32, 0, byteValue.length);
@@ -374,26 +415,26 @@ public class BaseIntegrationTest {
     }
 
     protected void waitForContractEventMessages(int expectedContractEventMessages) {
-        waitForMessages(expectedContractEventMessages, getBroadcastContractEvents());
+        waitForMessages(expectedContractEventMessages, getBroadcastContractEvents(), true, TopicTypesEnum.event);
     }
 
     protected void waitForBlockMessages(int expectedBlockMessages) {
-        waitForMessages(expectedBlockMessages, getBroadcastBlockMessages());
+        waitForMessages(expectedBlockMessages, getBroadcastBlockMessages(), true, TopicTypesEnum.block);
     }
 
     protected void waitForTransactionMessages(int expectedTransactionMessages) {
-        waitForMessages(expectedTransactionMessages, getBroadcastTransactionMessages());
+        waitForMessages(expectedTransactionMessages, getBroadcastTransactionMessages(), true, TopicTypesEnum.transaction);
     }
 
     protected void waitForTransactionMessages(int expectedTransactionMessages,  boolean failOnTimeout) {
-        waitForMessages(expectedTransactionMessages, getBroadcastTransactionMessages(), failOnTimeout);
+        waitForMessages(expectedTransactionMessages, getBroadcastTransactionMessages(), failOnTimeout, TopicTypesEnum.transaction);
     }
 
     protected <T> boolean waitForMessages(int expectedMessageCount, List<T> messages) {
-        return waitForMessages(expectedMessageCount, messages, true);
+        return waitForMessages(expectedMessageCount, messages, true, TopicTypesEnum.message);
     }
 
-    protected <T> boolean waitForMessages(int expectedMessageCount, List<T> messages, boolean failOnTimeout) {
+    protected <T> boolean waitForMessages(int expectedMessageCount, List<T> messages, boolean failOnTimeout, TopicTypesEnum type) {
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -408,7 +449,7 @@ public class BaseIntegrationTest {
 
             if (System.currentTimeMillis() > startTime + 20000) {
                 if (failOnTimeout) {
-                    TestCase.fail(generateFailureMessage(expectedMessageCount, messages));
+                    fail(generateFailureMessage(expectedMessageCount, messages, type));
                 }
 
                 return false;
@@ -464,9 +505,11 @@ public class BaseIntegrationTest {
         return createFilter(getDummyEventNotOrderedFilterId(), contractAddress, eventSpec);
     }
 
-    protected void restartEventeum(Runnable stoppedLogic) {
+    protected void restartEventeum(Runnable stoppedLogic, TestContextManager testContextManager) {
 
-        SpringRestarter.getInstance().restart(stoppedLogic);
+        SpringRestarter sr = SpringRestarter.getInstance();
+        sr.init(testContextManager);
+        sr.restart(stoppedLogic);
 
         restUrl = "http://localhost:" + port;
         restTemplate = new RestTemplate();
@@ -477,7 +520,9 @@ public class BaseIntegrationTest {
         Optional<ContractEventFilter> saved = getFilterRepo().findById(getDummyEventFilterId());
         assertEquals(registeredFilter, saved.get());
 
+        Thread.sleep(1000);
         unregisterDummyEventFilter();
+        Thread.sleep(1000);
 
         saved = getFilterRepo().findById(getDummyEventFilterId());
         assertFalse(saved.isPresent());
@@ -492,7 +537,6 @@ public class BaseIntegrationTest {
         contractEventFilter.setId(id);
         contractEventFilter.setContractAddress(contractAddress);
         contractEventFilter.setEventSpecification(eventSpec);
-        contractEventFilter.setStartBlock(BigInteger.ONE);
 
         return contractEventFilter;
     }
@@ -502,31 +546,60 @@ public class BaseIntegrationTest {
         parityContainer.waitingFor(Wait.forListeningPort());
         parityContainer.withFixedExposedPort(8545, 8545);
         parityContainer.withFixedExposedPort(8546, 8546);
-        parityContainer.withFileSystemBind(PARITY_VOLUME_PATH,
-                "/root/.local/share/io.parity.ethereum/", BindMode.READ_WRITE);
+        if (shouldPersistNodeVolume) {
+            parityContainer.withFileSystemBind(PARITY_VOLUME_PATH,
+                    "/root/.local/share/io.parity.ethereum/", BindMode.READ_WRITE);
+        }
         parityContainer.addEnv("NO_BLOCKS", "true");
         parityContainer.start();
 
         waitForParityToStart(10000, Web3j.build(new HttpService("http://localhost:8545")));
     }
 
+    protected static void startMongo() {
+        if (isLocalPortFree(MONGODB_PORT)) {
+            mongoDBContainer = new FixedHostPortGenericContainer("mongo:4.0.10");
+            mongoDBContainer.waitingFor(Wait.forListeningPort());
+            mongoDBContainer.withFixedExposedPort(MONGODB_PORT, MONGODB_PORT);
+            mongoDBContainer.waitingFor(Wait.forLogMessage(".*waiting for connections on port 27017.*", 1));
+
+            mongoDBContainer.start();
+            System.setProperty("spring.data.mongodb.uri", "mongodb://" + mongoDBContainer.getHost() + ":" +
+                    mongoDBContainer.getMappedPort(MONGODB_PORT).toString() + "/mongodb");
+        }
+    }
+
     protected static void stopParity() {
         parityContainer.stop();
     }
 
-    private <T> String generateFailureMessage(int expectedMessageCount, List<T> messages) {
-        final StringBuilder builder = new StringBuilder("Failed to receive all expected messages");
+    protected static void stopMongo() {
+        if (mongoDBContainer != null) {
+            mongoDBContainer.stop();
+        }
+    }
+
+    private <T> String generateFailureMessage(int expectedMessageCount, List<T> messages, TopicTypesEnum type) {
+        final StringBuilder builder = new StringBuilder("Failed to receive all expected " + type);
         builder.append("\n");
-        builder.append("Expected message count: " + expectedMessageCount);
+        builder.append("Expected " + type + " count: " + expectedMessageCount);
         builder.append(", received: " + messages.size());
         builder.append("\n\n");
-        builder.append("Registered filters:");
+        builder.append(type.toString().substring(0, 1).toUpperCase() + type.toString().substring(1) + " received: " + JSON.stringify(messages));
+        builder.append("\n\n");
+        builder.append("Registered event filters:");
         builder.append("\n\n");
         builder.append(JSON.stringify(IterableUtils.toList(getFilterRepo().findAll())));
         builder.append("\n\n");
+        builder.append("Registered transaction filters:");
+        builder.append("\n\n");
+        builder.append(JSON.stringify(IterableUtils.toList(getTxFilterRepo().findAll())));
+        builder.append("\n\n");
         builder.append("ContractEventDetails entries:");
         builder.append("\n\n");
-        builder.append(JSON.stringify(IterableUtils.toList(eventDetailsRepository.findAll())));
+        try {
+            builder.append(JSON.stringify(IterableUtils.toList(eventDetailsRepository.findAll())));
+        } catch(Exception ex) {}
 
         return builder.toString();
     }
@@ -534,6 +607,15 @@ public class BaseIntegrationTest {
     private void initRestTemplate() {
         restUrl = "http://localhost:" + port;
         restTemplate = new RestTemplate();
+    }
+
+    public static Boolean isLocalPortFree(Integer port) {
+        try {
+            new ServerSocket(port).close();
+            return true;
+        } catch (IOException ignored) {
+            return false;
+        }
     }
 
     private static void waitForParityToStart(long timeToWait, Web3j web3j) {

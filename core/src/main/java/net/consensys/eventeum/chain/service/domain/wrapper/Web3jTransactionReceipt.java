@@ -1,12 +1,24 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeum.chain.service.domain.wrapper;
 
 import lombok.Data;
 import net.consensys.eventeum.chain.service.domain.Log;
 import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
 import net.consensys.eventeum.utils.ModelMapperFactory;
-import org.modelmapper.Condition;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.spi.MappingContext;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -33,6 +45,7 @@ public class Web3jTransactionReceipt implements TransactionReceipt {
     private List<Log> logs;
     private String logsBloom;
     private String status;
+    private String revertReason;
 
     public Web3jTransactionReceipt(
             org.web3j.protocol.core.methods.response.TransactionReceipt web3TransactionReceipt) {
@@ -40,7 +53,7 @@ public class Web3jTransactionReceipt implements TransactionReceipt {
         logs = convertLogs(web3TransactionReceipt.getLogs());
 
         try {
-            final ModelMapper modelMapper = ModelMapperFactory.getInstance().createModelMapper();
+            final ModelMapper modelMapper = ModelMapperFactory.getInstance().getModelMapper();
             //Skip logs
             modelMapper.getConfiguration().setPropertyCondition(ctx ->
                     !ctx.getMapping().getLastDestinationProperty().getName().equals("logs"));

@@ -1,14 +1,28 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeum.chain.service.strategy;
 
-import io.reactivex.disposables.Disposable;
+import io.reactivex.Flowable;
 import io.reactivex.processors.PublishProcessor;
 import net.consensys.eventeum.chain.block.BlockListener;
+import net.consensys.eventeum.chain.service.block.BlockNumberService;
 import net.consensys.eventeum.chain.service.domain.Block;
-import net.consensys.eventeum.service.AsyncTaskService;
-import net.consensys.eventeum.service.EventStoreService;
+import net.consensys.eventeum.chain.settings.NodeType;
 import net.consensys.eventeum.testutils.DummyAsyncTaskService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.Request;
@@ -21,8 +35,8 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.math.BigInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 public class PubSubBlockchainSubscriptionStrategyTest {
@@ -52,20 +66,22 @@ public class PubSubBlockchainSubscriptionStrategyTest {
 
     private BlockListener mockBlockListener;
 
-    private EventStoreService mockEventStoreService;
+    private BlockNumberService mockBlockNumberService;
 
-    @Before
+
+    @BeforeEach
     public void init() throws IOException {
         this.mockWeb3j = mock(Web3j.class);
 
         mockNewHeadsNotification = mock(NewHeadsNotification.class);
-        mockEventStoreService = mock(EventStoreService.class);
+        mockBlockNumberService = mock(BlockNumberService.class);
         when(mockNewHeadsNotification.getParams()).thenReturn(new NewHeadNotificationParameter());
 
         mockNewHead = mock(NewHead.class);
         when(mockNewHead.getHash()).thenReturn(BLOCK_HASH);
 
         blockPublishProcessor = PublishProcessor.create();
+        when(mockWeb3j.replayPastBlocksFlowable(any(), eq(true))).thenReturn(Flowable.empty());
         when(mockWeb3j.newHeadsNotifications()).thenReturn(blockPublishProcessor);
 
         mockEthBlock = mock(EthBlock.class);
@@ -81,26 +97,10 @@ public class PubSubBlockchainSubscriptionStrategyTest {
 
         when(mockRequest.send()).thenReturn(mockEthBlock);
 
-        underTest = new PubSubBlockSubscriptionStrategy(mockWeb3j, NODE_NAME,
-                mockEventStoreService, new DummyAsyncTaskService());
-    }
+        when(mockBlockNumberService.getStartBlockForNode(NODE_NAME)).thenReturn(BigInteger.ONE);
 
-    @Test
-    public void testSubscribe() {
-        final Disposable returnedSubscription = underTest.subscribe();
-
-        assertEquals(false, returnedSubscription.isDisposed());
-    }
-
-    @Test
-    public void testUnsubscribe() {
-        final Disposable returnedSubscription = underTest.subscribe();
-
-        assertEquals(false, returnedSubscription.isDisposed());
-
-        underTest.unsubscribe();
-
-        assertEquals(true, returnedSubscription.isDisposed());
+        underTest = new PubSubBlockSubscriptionStrategy(mockWeb3j, NODE_NAME, NodeType.NORMAL.getNodeName(),
+                new DummyAsyncTaskService(), mockBlockNumberService);
     }
 
     @Test

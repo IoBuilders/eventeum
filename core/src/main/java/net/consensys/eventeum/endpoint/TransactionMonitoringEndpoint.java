@@ -1,13 +1,28 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeum.endpoint;
 
 import lombok.AllArgsConstructor;
 import net.consensys.eventeum.endpoint.response.MonitorTransactionsResponse;
 import net.consensys.eventeum.model.TransactionMonitoringSpec;
-import net.consensys.eventeum.service.exception.NotFoundException;
 import net.consensys.eventeum.service.TransactionMonitoringService;
+import net.consensys.eventeum.service.exception.NotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * A REST endpoint for adding a removing event filters.
@@ -24,7 +39,7 @@ public class TransactionMonitoringEndpoint {
     /**
      * Monitors a transaction with the specified hash, on a specific node
      *
-     * @param TransactionMonitoringSpec the transaction spec to add
+     * @param spec the transaction spec to add
      * @param response the http response
      */
     @RequestMapping(method = RequestMethod.POST)
@@ -36,6 +51,19 @@ public class TransactionMonitoringEndpoint {
         response.setStatus(HttpServletResponse.SC_ACCEPTED);
 
         return new MonitorTransactionsResponse(spec.getId());
+    }
+
+    /**
+     * Returns the list of registered {@link MonitorTransactionsResponse}
+     *
+     * @param response the http response
+     */
+    @RequestMapping(method = RequestMethod.GET)
+    public List<TransactionMonitoringSpec> getMonitorTransactions(HttpServletResponse response) {
+        List<TransactionMonitoringSpec> registeredTransactions = monitoringService.listTransactionMonitorings();
+        response.setStatus(HttpServletResponse.SC_ACCEPTED);
+
+        return registeredTransactions;
     }
 
     /**

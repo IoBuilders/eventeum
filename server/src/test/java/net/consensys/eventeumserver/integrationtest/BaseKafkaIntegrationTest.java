@@ -1,3 +1,17 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeumserver.integrationtest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,9 +27,8 @@ import net.consensys.eventeum.model.TransactionMonitoringSpec;
 import net.consensys.eventeum.utils.JSON;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -23,9 +36,12 @@ import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
-import org.springframework.kafka.test.rule.KafkaEmbedded;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestContextManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@EmbeddedKafka(partitions = 1, controlledShutdown = true)
 public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
 
     private static final String KAFKA_LISTENER_CONTAINER_ID = "org.springframework.kafka.KafkaListenerEndpointContainer#0";
@@ -46,23 +64,29 @@ public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private KafkaSettings kafkaSettings;
 
-    private KafkaMessageListenerContainer springMessageListener;
+    @Autowired
+    EmbeddedKafkaBroker embeddedKafka;
 
-    @ClassRule
-    public static KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, 1);
+    private KafkaMessageListenerContainer springMessageListener;
 
     private KafkaMessageListenerContainer<String, String> testContainer;
 
     @Autowired
     public KafkaListenerEndpointRegistry registry;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
+        startKafkaContainer();
+    }
 
+    private void startKafkaContainer() {
         // set up the Kafka consumer properties
         final Map<String, Object> consumerProperties =
                 KafkaTestUtils.consumerProps(generateTestGroupId(), "false", embeddedKafka);
+
+        //Child classes can modify the properties
+        modifyKafkaConsumerProps(consumerProperties);
 
         // create a Kafka consumer factory
         DefaultKafkaConsumerFactory<String, String> consumerFactory =
@@ -79,7 +103,7 @@ public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
         testContainer.setupMessageListener(new MessageListener<String, String>() {
             @Override
             public void onMessage(ConsumerRecord<String, String> record) {
-                System.out.println("Received message: " + JSON.stringify(record.value()));
+                System.err.println(">> Received message: " + JSON.stringify(record.value()));
                 try {
                     if (record.topic().equals(kafkaSettings.getContractEventsTopic())) {
                         final EventeumMessage<ContractEventDetails> message =
@@ -126,7 +150,7 @@ public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
         testContainer.start();
 
         ContainerTestUtils.waitForAssignment(testContainer,
-                embeddedKafka.getPartitionsPerTopic() * testContainer.getContainerProperties().getTopics().length);
+                embeddedKafka.getTopics().size() * embeddedKafka.getPartitionsPerTopic());
 
         final MessageListenerContainer defaultContainer = registry.getListenerContainer(KAFKA_LISTENER_CONTAINER_ID);
 
@@ -140,7 +164,7 @@ public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
                 .forEach(container -> {
                     try {
                         if (container != defaultContainer) {
-                            ContainerTestUtils.waitForAssignment(container, 3);
+                            ContainerTestUtils.waitForAssignment(container, 1);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -150,7 +174,13 @@ public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
         clearMessages();
     }
 
-    @After
+    protected void restartEventeumKafka(Runnable stoppedLogic, TestContextManager testContextManager) {
+        testContainer.stop();
+        this.restartEventeum(stoppedLogic, testContextManager);
+        startKafkaContainer();
+    }
+
+    @AfterEach
     public void tearDown() {
         // stop the container
         testContainer.stop();
@@ -171,6 +201,10 @@ public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
 
     private String generateTestGroupId() {
         return "testGroup-" + UUID.randomUUID().toString();
+    }
+
+    protected Map<String, Object> modifyKafkaConsumerProps(Map<String, Object> consumerProps) {
+        return consumerProps;
     }
 
 }

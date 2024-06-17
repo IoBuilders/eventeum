@@ -1,23 +1,29 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeumserver.integrationtest;
 
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
-import net.consensys.eventeum.utils.JSON;
-import org.junit.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.HttpServerErrorException;
 import org.web3j.crypto.Keys;
 import org.web3j.utils.Numeric;
-import wiremock.org.apache.commons.collections4.IterableUtils;
-import wiremock.org.apache.commons.collections4.IteratorUtils;
 
 import java.math.BigInteger;
-import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals; 
 
 public class NodeRecoveryTests extends BaseKafkaIntegrationTest {
 
@@ -60,37 +66,6 @@ public class NodeRecoveryTests extends BaseKafkaIntegrationTest {
 
         emitEventAndVerify(emitter, registeredFilter);
 
-    }
-
-    protected void doNodeFailureBeforeEventRegistrationRecoveryTest(Optional<Long> waitTimeAfterRestart) throws Exception {
-        final EventEmitter emitter = deployEventEmitterContract();
-
-        stopParity();
-
-        boolean hasErrored = false;
-        try {
-            final ContractEventFilter registeredFilter = registerDummyEventFilter(emitter.getContractAddress());
-        } catch (HttpServerErrorException e) {
-            //Expected
-            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.getStatusCode());
-            hasErrored = true;
-        }
-
-        assertEquals(true, hasErrored);
-
-        startParity();
-
-        waitTimeAfterRestart
-                .ifPresent(waitTime -> {
-                    try {
-                        Thread.sleep(waitTime);
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
-                });
-
-        final ContractEventFilter registeredFilter = registerDummyEventFilter(emitter.getContractAddress());
-        emitEventAndVerify(emitter, registeredFilter);
     }
 
     private void doParityRestartEventEmissionsAssertion(

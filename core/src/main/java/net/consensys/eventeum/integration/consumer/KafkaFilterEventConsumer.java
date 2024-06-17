@@ -1,16 +1,32 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeum.integration.consumer;
 
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.dto.message.*;
 import net.consensys.eventeum.integration.KafkaSettings;
 import net.consensys.eventeum.model.TransactionMonitoringSpec;
+import net.consensys.eventeum.service.SubscriptionService;
 import net.consensys.eventeum.service.TransactionMonitoringService;
 import net.consensys.eventeum.service.exception.NotFoundException;
-import net.consensys.eventeum.service.SubscriptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.retry.annotation.Backoff;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +83,11 @@ public class KafkaFilterEventConsumer implements EventeumInternalEventConsumer {
     @Override
     @KafkaListener(topics = "#{eventeumKafkaSettings.eventeumEventsTopic}", groupId = "#{eventeumKafkaSettings.groupId}",
             containerFactory = "eventeumKafkaListenerContainerFactory")
+    @RetryableTopic(
+            kafkaTemplate = "eventeumKafkaTemplate", listenerContainerFactory = "eventeumKafkaListenerContainerFactory",
+            attempts = "${kafka.retries:10}", backoff = @Backoff(delayExpression = "${kafka.retry.backoff.msConfig:500}"),
+            numPartitions = "${kafka.topic.partitions:3}", replicationFactor = "${kafka.topic.replicationSets:1}"
+    )
     public void onMessage(EventeumMessage message) {
         final Consumer<EventeumMessage> consumer = messageConsumers.get(message.getType());
 
