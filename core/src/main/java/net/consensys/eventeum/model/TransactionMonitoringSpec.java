@@ -20,21 +20,17 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import net.consensys.eventeum.constant.Constants;
+import net.consensys.eventeum.dto.converter.HashMapConverter;
 import net.consensys.eventeum.dto.transaction.TransactionStatus;
-
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Keys;
 
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Document
 @Entity
@@ -52,21 +48,26 @@ public class TransactionMonitoringSpec {
     private String nodeName = Constants.DEFAULT_NODE_NAME;
 
     //Need to wrap in an ArrayList so its modifiable
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.ORDINAL)
     private List<TransactionStatus> statuses = new ArrayList(
             Arrays.asList(TransactionStatus.UNCONFIRMED, TransactionStatus.CONFIRMED, TransactionStatus.FAILED));
 
     private String transactionIdentifierValue;
 
+    @Convert(converter = HashMapConverter.class)
+    private Map<String, Object> extension;
+
     public TransactionMonitoringSpec(TransactionIdentifierType type,
                                      String transactionIdentifierValue,
                                      String nodeName,
-                                     List<TransactionStatus> statuses) {
+                                     List<TransactionStatus> statuses,
+                                     Map<String, Object> extension) {
         this.type = type;
         this.transactionIdentifierValue = transactionIdentifierValue;
         this.nodeName = nodeName;
-
+        this.extension = extension;
+        System.out.println("Extension: " + extension);
         if (statuses != null && !statuses.isEmpty()) {
             this.statuses = statuses;
         }
@@ -79,7 +80,7 @@ public class TransactionMonitoringSpec {
     public TransactionMonitoringSpec(TransactionIdentifierType type,
                                      String transactionIdentifierValue,
                                      String nodeName) {
-        this(type, transactionIdentifierValue, nodeName, null);
+        this(type, transactionIdentifierValue, nodeName, null, null);
     }
 
     @JsonSetter("type")

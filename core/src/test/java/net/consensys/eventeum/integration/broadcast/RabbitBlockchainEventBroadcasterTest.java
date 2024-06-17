@@ -19,26 +19,24 @@ import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.dto.event.parameter.NumberParameter;
 import net.consensys.eventeum.dto.event.parameter.StringParameter;
-import net.consensys.eventeum.dto.message.BlockEvent;
-import net.consensys.eventeum.dto.message.ContractEvent;
-import net.consensys.eventeum.dto.message.EventeumMessage;
-import net.consensys.eventeum.dto.message.TransactionEvent;
+import net.consensys.eventeum.dto.message.*;
 import net.consensys.eventeum.dto.transaction.TransactionDetails;
 import net.consensys.eventeum.dto.transaction.TransactionStatus;
 import net.consensys.eventeum.integration.RabbitSettings;
 import net.consensys.eventeum.integration.broadcast.blockchain.RabbitBlockChainEventBroadcaster;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 public class RabbitBlockchainEventBroadcasterTest {
@@ -48,13 +46,15 @@ public class RabbitBlockchainEventBroadcasterTest {
     private static final String CONTRACT_EVENT_ROUTING_KEY = "contractEvent";
     private static final String TRANSACTION_EVENT_ROUTING_KEY = "transactionEvent";
 
+    private static final String MESSAGE_EVENT_ROUTING_KEY = "messageEvent";
+
 
     private RabbitBlockChainEventBroadcaster underTest;
 
     private RabbitTemplate rabbitTemplate;
     private RabbitSettings rabbitSettings;
 
-    @Before
+    @BeforeEach
     public void init() {
         rabbitTemplate = Mockito.mock(RabbitTemplate.class);
         rabbitSettings = Mockito.mock(RabbitSettings.class);
@@ -63,6 +63,7 @@ public class RabbitBlockchainEventBroadcasterTest {
         Mockito.when(rabbitSettings.getBlockEventsRoutingKey()).thenReturn(NEW_BLOCK_ROUTING_KEY);
         Mockito.when(rabbitSettings.getContractEventsRoutingKey()).thenReturn(CONTRACT_EVENT_ROUTING_KEY);
         Mockito.when(rabbitSettings.getTransactionEventsRoutingKey()).thenReturn(TRANSACTION_EVENT_ROUTING_KEY);
+        Mockito.when(rabbitSettings.getMessageEventsRoutingKey()).thenReturn(MESSAGE_EVENT_ROUTING_KEY);
 
         underTest = new RabbitBlockChainEventBroadcaster(rabbitTemplate, rabbitSettings);
     }
@@ -117,6 +118,22 @@ public class RabbitBlockchainEventBroadcasterTest {
         assertEquals(event, messageCaptor.getValue().getDetails());
     }
 
+    @Test
+    public void testBroadcastMessageEvent() {
+
+        final MessageDetails event = createMessageDetailsEvent();
+
+        underTest.broadcastMessage(event);
+
+        final ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<EventeumMessage> messageCaptor = ArgumentCaptor.forClass(EventeumMessage.class);
+        verify(rabbitTemplate).convertAndSend(eq(EVENT_EXCHANGE), routingKeyCaptor.capture(), messageCaptor.capture());
+
+        assertEquals(String.format("%s.%s", MESSAGE_EVENT_ROUTING_KEY, event.getTopicId()),routingKeyCaptor.getValue());
+        assertEquals(MessageEvent.TYPE, messageCaptor.getValue().getType());
+        assertEquals(event, messageCaptor.getValue().getDetails());
+    }
+
     private TransactionDetails createTransactionEvent() {
         final TransactionDetails transactionEvent = new TransactionDetails();
         transactionEvent.setBlockNumber("10");
@@ -147,5 +164,16 @@ public class RabbitBlockchainEventBroadcasterTest {
                 (new StringParameter("string", "5678"), new NumberParameter("uint256", BigInteger.valueOf(456))));
 
         return contractEvent;
+    }
+
+    private MessageDetails createMessageDetailsEvent() {
+        final MessageDetails transactionEvent = new MessageDetails();
+        transactionEvent.setTopicId("0.0.1");
+        transactionEvent.setNodeName("default");
+        transactionEvent.setMessage("Hello world!");
+        transactionEvent.setSequenceNumber(Long.valueOf("10"));
+        transactionEvent.setTimestamp(Instant.now().getEpochSecond());
+
+        return transactionEvent;
     }
 }

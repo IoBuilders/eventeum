@@ -14,6 +14,9 @@
 
 package net.consensys.eventeum.utils;
 
+import net.consensys.eventeum.chain.service.domain.converter.BlockResponseToHederaBlockConverter;
+import net.consensys.eventeum.chain.service.domain.converter.ContractResultResponseToTransactionConverter;
+import net.consensys.eventeum.chain.service.domain.converter.EthBlockToWeb3jBlockConverter;
 import org.modelmapper.ModelMapper;
 
 /**
@@ -24,6 +27,7 @@ import org.modelmapper.ModelMapper;
 public class ModelMapperFactory {
 
     private static ModelMapperFactory INSTANCE;
+    private static ModelMapper MODEL_MAPPER_INSTANCE;
 
     private ModelMapperFactory() {}
 
@@ -35,7 +39,13 @@ public class ModelMapperFactory {
         return INSTANCE;
     }
 
-    public ModelMapper createModelMapper() {
-        return new ModelMapper();
+    public ModelMapper getModelMapper() {
+        if (MODEL_MAPPER_INSTANCE == null) {
+            MODEL_MAPPER_INSTANCE = new ModelMapper();
+            MODEL_MAPPER_INSTANCE.addConverter(new EthBlockToWeb3jBlockConverter());
+            MODEL_MAPPER_INSTANCE.addConverter(new BlockResponseToHederaBlockConverter());
+            MODEL_MAPPER_INSTANCE.addConverter(new ContractResultResponseToTransactionConverter());
+        }
+        return MODEL_MAPPER_INSTANCE;
     }
 }

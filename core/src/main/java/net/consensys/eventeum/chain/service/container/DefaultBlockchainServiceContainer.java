@@ -14,15 +14,16 @@
 
 package net.consensys.eventeum.chain.service.container;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import net.consensys.eventeum.chain.config.NodeExtensionsConfig;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Lazy
 @Component
@@ -32,7 +33,7 @@ public class DefaultBlockchainServiceContainer implements ChainServicesContainer
     private Map<String, NodeServices> nodeServicesMap;
 
     @Autowired
-    public DefaultBlockchainServiceContainer(@Lazy List<NodeServices> nodeServices) {
+    public DefaultBlockchainServiceContainer(@Lazy List<NodeServices> nodeServices, NodeExtensionsConfig config) {
         this.nodeServices = nodeServices;
     }
 

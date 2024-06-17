@@ -22,6 +22,8 @@ import net.consensys.eventeum.chain.block.tx.criteria.factory.TransactionMatchin
 import net.consensys.eventeum.chain.factory.TransactionDetailsFactory;
 import net.consensys.eventeum.chain.service.block.BlockCache;
 import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
+import net.consensys.eventeum.chain.service.container.NodeServices;
+import net.consensys.eventeum.chain.settings.NodeType;
 import net.consensys.eventeum.integration.broadcast.blockchain.BlockchainEventBroadcaster;
 import net.consensys.eventeum.integration.broadcast.internal.EventeumEventBroadcaster;
 import net.consensys.eventeum.model.TransactionMonitoringSpec;
@@ -31,7 +33,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -116,6 +120,11 @@ public class DefaultTransactionMonitoringService implements TransactionMonitorin
         }
     }
 
+    @Override
+    public List<TransactionMonitoringSpec> listTransactionMonitorings() {
+        return transactionMonitors.values().stream().map(TransactionMonitor::getSpec).collect(Collectors.toList());
+    }
+
     private void removeTransactionMonitorMatchinCriteria(TransactionMonitor transactionMonitor) {
         monitoringBlockListener.removeMatchingCriteria(transactionMonitor.getMatchingCriteria());
     }
@@ -133,7 +142,16 @@ public class DefaultTransactionMonitoringService implements TransactionMonitorin
     private void registerTransactionMonitoring(TransactionMonitoringSpec spec) {
 
         final TransactionMatchingCriteria matchingCriteria = matchingCriteriaFactory.build(spec);
+        final NodeServices nodeServices = chainServices.getNodeServices(spec.getNodeName());
+
         monitoringBlockListener.addMatchingCriteria(matchingCriteria);
+//        switch (NodeType.valueOf(nodeServices.getNodeType())) {
+//            case NORMAL:
+//                break;
+//            case MIRROR:
+//                nodeServices.getHederaService().subscribeToTopic(spec.getTransactionIdentifierValue());
+//                break;
+//        }
 
         transactionMonitors.put(spec.getId(), new TransactionMonitor(spec, matchingCriteria));
     }

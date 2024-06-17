@@ -14,12 +14,13 @@
 
 package net.consensys.eventeum.chain.service.domain.wrapper;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import net.consensys.eventeum.chain.service.domain.Block;
 import net.consensys.eventeum.chain.service.domain.Transaction;
 import net.consensys.eventeum.utils.ModelMapperFactory;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.PropertyMap;
 import org.web3j.crypto.Keys;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
+@Builder
+@AllArgsConstructor
 public class Web3jBlock implements Block {
 
     private BigInteger number;
@@ -55,23 +58,19 @@ public class Web3jBlock implements Block {
     private String nodeName;
 
     public Web3jBlock(EthBlock.Block web3jBlock, String nodeName) {
-        final ModelMapper modelMapper = ModelMapperFactory.getInstance().createModelMapper();
-        modelMapper.typeMap(
-                EthBlock.Block.class, Web3jBlock.class)
-                .addMappings(mapper -> {
-                    mapper.skip(Web3jBlock::setTransactions);
-
-                    //Nonce can be null which throws exception in web3j when
-                    //calling getNonce (because of attempted hex conversion)
-                    if (web3jBlock.getNonceRaw() == null) {
-                        mapper.skip(Web3jBlock::setNonce);
-                    }
-                });
+        final ModelMapper modelMapper = ModelMapperFactory.getInstance().getModelMapper();
 
         modelMapper.map(web3jBlock, this);
 
         transactions = convertTransactions(web3jBlock.getTransactions());
 
+        this.nodeName = nodeName;
+    }
+
+    public Web3jBlock(BigInteger number, String hash, BigInteger timestamp, String nodeName) {
+        this.number = number;
+        this.hash = hash;
+        this.timestamp = timestamp;
         this.nodeName = nodeName;
     }
 

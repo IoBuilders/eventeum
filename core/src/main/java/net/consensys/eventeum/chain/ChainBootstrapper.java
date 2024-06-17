@@ -15,12 +15,12 @@
 package net.consensys.eventeum.chain;
 
 import lombok.AllArgsConstructor;
+import net.consensys.eventeum.chain.config.EventFilterConfiguration;
 import net.consensys.eventeum.chain.config.TransactionFilterConfiguration;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.factory.ContractEventFilterFactory;
 import net.consensys.eventeum.model.TransactionMonitoringSpec;
 import net.consensys.eventeum.service.SubscriptionService;
-import net.consensys.eventeum.chain.config.EventFilterConfiguration;
 import net.consensys.eventeum.service.TransactionMonitoringService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +32,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Registers filters that are either configured within the properties file, exist in the
@@ -57,9 +59,15 @@ public class ChainBootstrapper {
         registerTransactionsToMonitor(transactionMonitoringRepository.findAll(), true);
         registerTransactionsToMonitor(transactionFilterConfiguration.getConfiguredTransactionFilters(), true);
 
-        subscriptionService.init(filterConfiguration.getConfiguredEventFilters());
-        registerFilters(filterConfiguration.getConfiguredEventFilters(), true);
-        registerFilters(filterRepository.findAll(), false);
+        // Remove from existing eventFilters the ones that are included by configuration to avoid overwriting
+        List<ContractEventFilter> existingEventFilters = StreamSupport.stream(filterRepository.findAll().spliterator(), false).collect(Collectors.toList());
+        List<ContractEventFilter> configuredEventFilters = filterConfiguration.getConfiguredEventFilters();
+        existingEventFilters.removeAll(configuredEventFilters);
+
+        subscriptionService.init(configuredEventFilters);
+
+        registerFilters(configuredEventFilters, true);
+        registerFilters(existingEventFilters, false);
 
         contractEventFilterFactories.ifPresent((factories) -> {
             factories.forEach(factory -> registerFilters(factory.build(), true));

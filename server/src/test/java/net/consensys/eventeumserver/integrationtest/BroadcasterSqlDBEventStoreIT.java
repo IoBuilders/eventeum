@@ -19,10 +19,8 @@ import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.integration.eventstore.EventStore;
 import net.consensys.eventeum.model.LatestBlock;
-import net.consensys.eventeum.utils.JSON;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -32,27 +30,31 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.web3j.crypto.Keys;
 
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals; 
 
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestPropertySource(locations="classpath:application-test-sql.properties")
 @ContextConfiguration(initializers = {BroadcasterSqlDBEventStoreIT.Initializer.class})
+@Testcontainers
 public class BroadcasterSqlDBEventStoreIT extends MainBroadcasterTests {
 
-    @ClassRule
+    @Container
     public static MSSQLServerContainer mssqlserver = new MSSQLServerContainer()
-            .withPassword("reallyStrongPwd123");
+            .withPassword("reallyStrongPwd123")
+            .acceptLicense();
 
     static class Initializer
             implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -126,7 +128,7 @@ public class BroadcasterSqlDBEventStoreIT extends MainBroadcasterTests {
 
         waitForContractEventMessages(1);
 
-        assertEquals("***** " + JSON.stringify(getBroadcastContractEvents()),1, getBroadcastContractEvents().size());
+        assertEquals(1, getBroadcastContractEvents().size());
 
         final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
 

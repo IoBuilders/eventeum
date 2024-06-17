@@ -45,7 +45,7 @@ public class Web3jLog implements Log {
 
     public Web3jLog(org.web3j.protocol.core.methods.response.Log web3jLog) {
 
-        final ModelMapper modelMapper = ModelMapperFactory.getInstance().createModelMapper();
+        final ModelMapper modelMapper = ModelMapperFactory.getInstance().getModelMapper();
         modelMapper.map(web3jLog, this);
     }
 }

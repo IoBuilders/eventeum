@@ -49,4 +49,6 @@ public interface TransactionReceipt {
     String getLogsBloom();
 
     String getStatus();
+
+    String getRevertReason();
 }

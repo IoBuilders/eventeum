@@ -58,7 +58,6 @@ public class DefaultEventSyncService implements EventSyncService {
 
     @Override
     public void sync(List<ContractEventFilter> filters) {
-
         filters.forEach(filter -> retryTemplate.execute((context) -> {
             syncFilter(filter);
             return null;

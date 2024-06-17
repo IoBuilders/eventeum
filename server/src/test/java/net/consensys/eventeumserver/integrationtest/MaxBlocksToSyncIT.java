@@ -14,16 +14,26 @@
 
 package net.consensys.eventeumserver.integrationtest;
 
-import org.junit.Test;
+import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
+import net.consensys.eventeum.constant.Constants;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.test.context.TestContextManager;
 import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestPropertySource(locations="classpath:application-test-db.properties",
         properties = {"ethereum.nodes[0].maxBlocksToSync=4"})
 public class MaxBlocksToSyncIT extends ServiceRestartRecoveryTests {
+
+    @Autowired
+    @Lazy
+    ChainServicesContainer chainServices;
 
     @Test
     public void onlySyncMaxBlocksOnStartup() throws Exception {
@@ -31,18 +41,16 @@ public class MaxBlocksToSyncIT extends ServiceRestartRecoveryTests {
         waitForBlockMessages(1);
         waitForFilterPoll();
 
-        final BigInteger lastBlockNumber = getBroadcastBlockMessages()
-                .get(getBroadcastBlockMessages().size() - 1).getNumber();
+        TestContextManager tc = new TestContextManager(getClass());
+        tc.prepareTestInstance(this);
 
-        getBroadcastBlockMessages().clear();
+        AtomicReference<BigInteger> lastBlockNumber = new AtomicReference<>(BigInteger.ZERO);
 
-        restartEventeum(() -> {
-            try {
-                triggerBlocks(10);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        restartEventeumKafka(() -> {
+            lastBlockNumber.set(getBroadcastBlockMessages()
+                    .get(getBroadcastBlockMessages().size() - 1).getNumber());
+            getBroadcastBlockMessages().clear();
+        }, tc);
 
         waitForBlockMessages(4);
 
@@ -50,6 +58,9 @@ public class MaxBlocksToSyncIT extends ServiceRestartRecoveryTests {
 
         assertEquals(4, getBroadcastBlockMessages().size());
 
-        assertEquals(lastBlockNumber.add(BigInteger.valueOf(7)), getBroadcastBlockMessages().get(0).getNumber());
+        // Current number at start - 4 (3) of maxSync
+        assertEquals(chainServices.getNodeServices(Constants.DEFAULT_NODE_NAME).getBlockchainService().getCurrentBlockNumber()
+                        .subtract(BigInteger.valueOf(3)),
+                getBroadcastBlockMessages().get(0).getNumber());
     }
 }

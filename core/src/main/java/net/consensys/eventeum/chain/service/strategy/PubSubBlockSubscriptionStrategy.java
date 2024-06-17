@@ -16,6 +16,7 @@ package net.consensys.eventeum.chain.service.strategy;
 
 import io.reactivex.disposables.Disposable;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.chain.service.BlockchainException;
 import net.consensys.eventeum.chain.service.block.BlockNumberService;
 import net.consensys.eventeum.chain.service.domain.Block;
@@ -32,8 +33,8 @@ import org.web3j.protocol.websocket.events.NewHead;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Optional;
 
+@Slf4j
 public class PubSubBlockSubscriptionStrategy extends AbstractBlockSubscriptionStrategy<NewHead> {
 
     private static final String PUB_SUB_EXECUTOR_NAME = "PUBSUB";
@@ -44,9 +45,10 @@ public class PubSubBlockSubscriptionStrategy extends AbstractBlockSubscriptionSt
 
     public PubSubBlockSubscriptionStrategy(Web3j web3j,
                                            String nodeName,
+                                           String nodeType,
                                            AsyncTaskService asyncService,
                                            BlockNumberService blockNumberService) {
-        super(web3j, nodeName, asyncService, blockNumberService);
+        super(web3j, nodeName, nodeType, asyncService, blockNumberService);
 
         this.asyncService = asyncService;
     }

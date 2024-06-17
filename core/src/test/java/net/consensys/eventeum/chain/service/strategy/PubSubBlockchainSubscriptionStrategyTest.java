@@ -15,14 +15,14 @@
 package net.consensys.eventeum.chain.service.strategy;
 
 import io.reactivex.Flowable;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.processors.PublishProcessor;
 import net.consensys.eventeum.chain.block.BlockListener;
 import net.consensys.eventeum.chain.service.block.BlockNumberService;
 import net.consensys.eventeum.chain.service.domain.Block;
+import net.consensys.eventeum.chain.settings.NodeType;
 import net.consensys.eventeum.testutils.DummyAsyncTaskService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.Request;
@@ -35,8 +35,8 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.math.BigInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 public class PubSubBlockchainSubscriptionStrategyTest {
@@ -69,7 +69,7 @@ public class PubSubBlockchainSubscriptionStrategyTest {
     private BlockNumberService mockBlockNumberService;
 
 
-    @Before
+    @BeforeEach
     public void init() throws IOException {
         this.mockWeb3j = mock(Web3j.class);
 
@@ -99,7 +99,7 @@ public class PubSubBlockchainSubscriptionStrategyTest {
 
         when(mockBlockNumberService.getStartBlockForNode(NODE_NAME)).thenReturn(BigInteger.ONE);
 
-        underTest = new PubSubBlockSubscriptionStrategy(mockWeb3j, NODE_NAME,
+        underTest = new PubSubBlockSubscriptionStrategy(mockWeb3j, NODE_NAME, NodeType.NORMAL.getNodeName(),
                 new DummyAsyncTaskService(), mockBlockNumberService);
     }
 

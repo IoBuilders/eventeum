@@ -37,6 +37,7 @@ public class DefaultTransactionDetailsFactory implements TransactionDetailsFacto
         transactionDetails.setNodeName(block.getNodeName());
         transactionDetails.setTimestamp(block.getTimestamp());
         transactionDetails.setStatus(status);
+        transactionDetails.setBlockTimestamp(block.getTimestamp().toString());
 
         if (transaction.getCreates() != null) {
             transactionDetails.setContractAddress(Keys.toChecksumAddress(transaction.getCreates()));

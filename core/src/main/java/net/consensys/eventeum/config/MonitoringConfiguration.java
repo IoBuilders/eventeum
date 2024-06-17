@@ -27,22 +27,20 @@ import org.springframework.core.env.Environment;
 @Configuration
 public class MonitoringConfiguration {
 
+    @ConditionalOnProperty(name="management.endpoint.metrics.enabled", havingValue = "true")
     public class PrometheusConfiguration {
 
         @Bean
-        @ConditionalOnProperty(name="management.endpoint.metrics.enabled", havingValue = "true")
         public MeterRegistryCustomizer<MeterRegistry> metricsCommonTags(Environment environment) {
             return registry -> registry.config().commonTags("application", "Eventeum", "environment", getProfileName(environment));
         }
 
         @Bean
-        @ConditionalOnProperty(name="management.endpoint.metrics.enabled", havingValue = "true")
         public EventeumValueMonitor eventeumValueMonitor(MeterRegistry meterRegistry) {
             return new MicrometerValueMonitor(meterRegistry);
         }
 
         @Bean
-        @ConditionalOnProperty(name="management.endpoint.prometheus.enabled", havingValue = "true")
         public PrometheusMeterRegistry.Config configurePrometheus(MeterRegistry meterRegistry) {
             return meterRegistry.config().namingConvention(new CustomNamingConvention());
         }

@@ -14,10 +14,10 @@
 
 package net.consensys.eventeum.dto.event.parameter;
 
-import javax.persistence.Embeddable;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import javax.persistence.Embeddable;
 
 /**
  * A textual based EventParameter, represented by a String.

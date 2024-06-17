@@ -65,6 +65,9 @@ public class KafkaSettings {
     @Value("${kafka.topic.transactionEvents}")
     private String transactionEventsTopic;
 
+    @Value("${kafka.topic.messageEvents}")
+    private String messageEventsTopic;
+
     @Value("${kafka.topic.partitions:3}")
     private Integer partitions;
 
@@ -91,5 +94,25 @@ public class KafkaSettings {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getEventeumEventsTopic() {
+        return eventeumEventsTopic;
+    }
+
+    public String getContractEventsTopic() {
+        return contractEventsTopic;
+    }
+
+    public String getBlockEventsTopic() {
+        return blockEventsTopic;
+    }
+
+    public String getTransactionEventsTopic() {
+        return transactionEventsTopic;
+    }
+
+    public String getMessageEventsTopic() {
+        return messageEventsTopic;
     }
 }

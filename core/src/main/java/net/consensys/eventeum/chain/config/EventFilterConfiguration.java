@@ -53,7 +53,7 @@ public class EventFilterConfiguration {
         List<ContractEventFilter> filtersToReturn = new ArrayList<>();
 
         if (eventFilters != null) {
-            final ModelMapper mapper = ModelMapperFactory.getInstance().createModelMapper();
+            final ModelMapper mapper = ModelMapperFactory.getInstance().getModelMapper();
 
             eventFilters.forEach((configFilter) -> {
                 final ContractEventFilter contractEventFilter = new ContractEventFilter();

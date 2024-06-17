@@ -14,8 +14,8 @@
 
 package net.consensys.eventeum.integration.eventstore;
 
-import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
+import net.consensys.eventeum.dto.message.MessageDetails;
 import net.consensys.eventeum.model.LatestBlock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,4 +34,6 @@ public interface EventStore {
     Optional<LatestBlock> getLatestBlockForNode(String nodeName);
 
     boolean isPagingZeroIndexed();
+
+    Optional<MessageDetails> getLatestMessageFromTopic(String nodeName, String topicId);
 }

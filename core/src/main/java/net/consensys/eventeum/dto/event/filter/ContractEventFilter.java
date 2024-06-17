@@ -18,15 +18,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.consensys.eventeum.constant.Constants;
+import net.consensys.eventeum.dto.converter.HashMapConverter;
 import net.consensys.eventeum.dto.event.filter.correlationId.CorrelationIdStrategy;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.math.BigInteger;
-
+import javax.persistence.Convert;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-
-import org.springframework.data.mongodb.core.mapping.Document;
+import java.math.BigInteger;
+import java.util.Map;
 
 /**
  * Represents the details of a contract event filter.
@@ -54,4 +55,7 @@ public class ContractEventFilter {
     private CorrelationIdStrategy correlationIdStrategy;
 
     private BigInteger startBlock;
+
+    @Convert(converter = HashMapConverter.class)
+    private Map<String, Object> extension;
 }

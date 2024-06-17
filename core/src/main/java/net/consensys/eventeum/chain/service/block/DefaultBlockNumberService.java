@@ -14,12 +14,12 @@
 
 package net.consensys.eventeum.chain.service.block;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
 import net.consensys.eventeum.chain.settings.NodeSettings;
 import net.consensys.eventeum.model.LatestBlock;
 import net.consensys.eventeum.service.EventStoreService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -29,7 +29,6 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@AllArgsConstructor
 public class DefaultBlockNumberService implements BlockNumberService {
 
     private NodeSettings settings;
@@ -39,6 +38,14 @@ public class DefaultBlockNumberService implements BlockNumberService {
     private ChainServicesContainer chainServices;
 
     private Map<String, BigInteger> currentBlockAtStartup = new HashMap<>();
+
+    public DefaultBlockNumberService(NodeSettings settings, EventStoreService eventStoreService, @Lazy ChainServicesContainer chainServices,
+            Map<String, BigInteger> currentBlockAtStartup) {
+        this.settings = settings;
+        this.eventStoreService = eventStoreService;
+        this.chainServices = chainServices;
+        this.currentBlockAtStartup = currentBlockAtStartup;
+    }
 
     @Override
     public BigInteger getStartBlockForNode(String nodeName) {

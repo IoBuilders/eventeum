@@ -15,6 +15,7 @@
 package net.consensys.eventeum.service;
 
 import net.consensys.eventeum.dto.event.ContractEventDetails;
+import net.consensys.eventeum.dto.message.MessageDetails;
 import net.consensys.eventeum.integration.eventstore.EventStore;
 import net.consensys.eventeum.model.LatestBlock;
 import org.springframework.data.domain.Page;
@@ -47,8 +48,8 @@ public class DefaultEventStoreService implements EventStoreService {
             String eventSignature, String contractAddress) {
         int page = eventStore.isPagingZeroIndexed() ? 0 : 1;
 
-        final PageRequest pagination = new PageRequest(page,
-                1, new Sort(Sort.Direction.DESC, "blockNumber"));
+        final PageRequest pagination = PageRequest.of(page,
+                1, Sort.by(Sort.Direction.DESC, "blockNumber"));
 
         final Page<ContractEventDetails> eventsPage =
                 eventStore.getContractEventsForSignature(eventSignature, contractAddress, pagination);
@@ -70,5 +71,10 @@ public class DefaultEventStoreService implements EventStoreService {
     public Optional<LatestBlock> getLatestBlock(String nodeName) {
 
         return eventStore.getLatestBlockForNode(nodeName);
+    }
+
+    @Override
+    public Optional<MessageDetails> getLatestMessageFromTopic(String nodeName, String topicId) {
+        return eventStore.getLatestMessageFromTopic(nodeName, topicId);
     }
 }

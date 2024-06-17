@@ -54,6 +54,14 @@ public class StubHttpConsumer {
                 .willReturn(aResponse()
                         .withStatus(responseStatus.value())).build());
 
+        wireMockServer.addStubMapping(post(urlPathEqualTo("/consumer/transaction-event"))
+                .willReturn(aResponse()
+                        .withStatus(responseStatus.value())).build());
+
+        wireMockServer.addStubMapping(post(urlPathEqualTo("/consumer/message-event"))
+                .willReturn(aResponse()
+                        .withStatus(responseStatus.value())).build());
+
         wireMockServer.addMockServiceRequestListener((request, response) -> {
             if (request.getUrl().contains("/consumer/contract-event")) {
                 final String body = request.getBodyAsString();

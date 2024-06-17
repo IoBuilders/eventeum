@@ -14,13 +14,11 @@
 
 package net.consensys.eventeum.integration;
 
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Value;
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import lombok.Data;
+import java.util.Map;
 
 @Configuration
 @ConfigurationProperties(prefix = "pulsar")
@@ -39,6 +37,8 @@ public class PulsarSettings {
 		private String contractEvents;
 
 		private String transactionEvents;
+
+		private String messageEvents;
 	}
 
 	private Map<String, Object> config;

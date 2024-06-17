@@ -14,22 +14,22 @@
 
 package net.consensys.eventeum.chain;
 
+import net.consensys.eventeum.chain.block.BlockListener;
+import net.consensys.eventeum.chain.config.EventFilterConfiguration;
 import net.consensys.eventeum.chain.config.TransactionFilterConfiguration;
+import net.consensys.eventeum.chain.service.BlockchainService;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.factory.ContractEventFilterFactory;
 import net.consensys.eventeum.model.TransactionMonitoringSpec;
 import net.consensys.eventeum.repository.ContractEventFilterRepository;
 import net.consensys.eventeum.repository.TransactionMonitoringSpecRepository;
 import net.consensys.eventeum.service.SubscriptionService;
-import net.consensys.eventeum.chain.block.BlockListener;
-import net.consensys.eventeum.chain.config.EventFilterConfiguration;
-import net.consensys.eventeum.chain.service.BlockchainService;
 import net.consensys.eventeum.service.TransactionMonitoringService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,7 +38,7 @@ import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ChainBootstrapperTest {
 
     @Mock
@@ -71,7 +71,7 @@ public class ChainBootstrapperTest {
 
     private ChainBootstrapper underTest;
 
-    @Before
+    @BeforeEach
     public void init() {
         underTest = new ChainBootstrapper(mockSubscriptionService, mockTransactionMonitoringService, mockConfig,
                 mockFilterRepository, mockTransactionMonitoringRepository,
@@ -80,7 +80,6 @@ public class ChainBootstrapperTest {
 
     @Test
     public void testThatEventFiltersAreRegistered() throws Exception {
-
         final List<ContractEventFilter> mockConfiguredFilters =
                 Arrays.asList(mock(ContractEventFilter.class), mock(ContractEventFilter.class));
         final List<ContractEventFilter> mockFilterFactoryFilters =
@@ -93,6 +92,31 @@ public class ChainBootstrapperTest {
 
         verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockConfiguredFilters.get(0), true);
         verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockConfiguredFilters.get(1), true);
+        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.get(0), true);
+        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.get(1), true);
+    }
+
+    @Test
+    public void testThatAlreadyExistingEventFiltersAreRemoved() throws Exception {
+        ContractEventFilter contractEventFilter = new ContractEventFilter();
+        contractEventFilter.setId("id1");
+
+        final List<ContractEventFilter> mockExistingEventFilters =
+                Arrays.asList(contractEventFilter, mock(ContractEventFilter.class));
+        final List<ContractEventFilter> mockConfiguredFilters =
+                Collections.singletonList(contractEventFilter);
+        final List<ContractEventFilter> mockFilterFactoryFilters =
+                Arrays.asList(mock(ContractEventFilter.class), mock(ContractEventFilter.class));
+
+        when(mockConfig.getConfiguredEventFilters()).thenReturn(mockConfiguredFilters);
+        when(mockFilterRepository.findAll()).thenReturn(mockExistingEventFilters);
+        when(mockFilterFactory.build()).thenReturn(mockFilterFactoryFilters);
+
+        doBootstrap();
+
+        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockConfiguredFilters.get(0), true);
+        verify(mockSubscriptionService, times(0)).registerContractEventFilterWithRetries(mockExistingEventFilters.get(0), false);
+        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockExistingEventFilters.get(1), false);
         verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.get(0), true);
         verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.get(1), true);
     }

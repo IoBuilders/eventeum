@@ -15,6 +15,7 @@
 package net.consensys.eventeum.service;
 
 import net.consensys.eventeum.dto.event.ContractEventDetails;
+import net.consensys.eventeum.dto.message.MessageDetails;
 import net.consensys.eventeum.model.LatestBlock;
 
 import java.util.Optional;
@@ -42,4 +43,12 @@ public interface EventStoreService {
      * @return The block details
      */
     Optional<LatestBlock> getLatestBlock(String nodeName);
+
+    /**
+     * Returns the latest message, for the specified node
+     * @param node The node name
+     * @param topicId The topic ID
+     * @return The message details
+     */
+    Optional<MessageDetails> getLatestMessageFromTopic(String node, String topicId);
 }

@@ -14,25 +14,27 @@
 
 package net.consensys.eventeum.chain.factory;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import net.consensys.eventeum.chain.converter.EventParameterConverter;
+import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
 import net.consensys.eventeum.chain.settings.Node;
 import net.consensys.eventeum.chain.util.Web3jUtil;
-import net.consensys.eventeum.chain.converter.EventParameterConverter;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.dto.event.filter.ContractEventSpecification;
 import net.consensys.eventeum.dto.event.filter.ParameterDefinition;
 import net.consensys.eventeum.dto.event.parameter.EventParameter;
+import org.springframework.util.StringUtils;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.Utils;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.Keys;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -52,7 +54,41 @@ public class DefaultContractEventDetailsFactory implements ContractEventDetailsF
     }
 
     @Override
-    public ContractEventDetails createEventDetails(ContractEventFilter eventFilter, Log log) {
+    public ContractEventDetails createEventDetails(ContractEventFilter eventFilter, Log log, EthBlock ethBlock, TransactionReceipt transactionReceipt) {
+        ContractEventDetails eventDetails = createContractEventDetails(eventFilter, log);
+        BigInteger timeStamp = null;
+
+        while (timeStamp == null) {
+            try {
+                EthBlock.Block block = ethBlock.getBlock();
+                timeStamp = block.getTimestamp();
+            } catch (Exception ex) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        eventDetails.setTimestamp(timeStamp);
+        eventDetails.setBlockTimestamp(timeStamp);
+        eventDetails.setFrom(transactionReceipt.getFrom());
+
+        return eventDetails;
+    }
+
+    @Override
+    public ContractEventDetails createEventDetails(ContractEventFilter eventFilter, Log log,
+                                                   BigInteger blockTimestamp, String fromTransactionReceipt) {
+        ContractEventDetails eventDetails = createContractEventDetails(eventFilter, log);
+        eventDetails.setTimestamp(blockTimestamp);
+        eventDetails.setBlockTimestamp(blockTimestamp);
+        eventDetails.setFrom(fromTransactionReceipt);
+
+        return eventDetails;
+    }
+
+    private ContractEventDetails createContractEventDetails(ContractEventFilter eventFilter, Log log) {
         final ContractEventSpecification eventSpec = eventFilter.getEventSpecification();
 
         final List<EventParameter> nonIndexed = typeListToParameterList(getNonIndexedParametersFromLog(eventSpec, log));
@@ -71,6 +107,7 @@ public class DefaultContractEventDetailsFactory implements ContractEventDetailsF
         eventDetails.setEventSpecificationSignature(Web3jUtil.getSignature(eventSpec));
         eventDetails.setNetworkName(this.networkName);
         eventDetails.setNodeName(eventFilter.getNode());
+        eventDetails.setExtensionData(eventFilter.getExtension());
 
         if (log.isRemoved()) {
             eventDetails.setStatus(ContractEventStatus.INVALIDATED);
@@ -96,6 +133,11 @@ public class DefaultContractEventDetailsFactory implements ContractEventDetailsF
     }
 
     private List<Type> getNonIndexedParametersFromLog(ContractEventSpecification eventSpec, Log log) {
+        if (!StringUtils.isEmpty(eventSpec.getWeb3EventSmartContractClass())) {
+            return FunctionReturnDecoder.decode(
+                    log.getData(),
+                    Web3jUtil.getEventFromWeb3SmartContractClassName(eventSpec.getWeb3EventSmartContractClass(), eventSpec.getEventName()).getNonIndexedParameters());
+        }
         if (isNullOrEmpty(eventSpec.getNonIndexedParameterDefinitions())) {
             return Collections.EMPTY_LIST;
         }
@@ -110,6 +152,11 @@ public class DefaultContractEventDetailsFactory implements ContractEventDetailsF
     }
 
     private List<Type> getIndexedParametersFromLog(ContractEventSpecification eventSpec, Log log) {
+        if (!StringUtils.isEmpty(eventSpec.getWeb3EventSmartContractClass())) {
+            return FunctionReturnDecoder.decode(
+                    log.getData(),
+                    Web3jUtil.getEventFromWeb3SmartContractClassName(eventSpec.getWeb3EventSmartContractClass(), eventSpec.getEventName()).getIndexedParameters());
+        }
         if (isNullOrEmpty(eventSpec.getIndexedParameterDefinitions())) {
             return Collections.EMPTY_LIST;
         }

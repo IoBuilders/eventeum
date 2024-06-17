@@ -21,8 +21,8 @@ import net.consensys.eventeum.integration.KafkaSettings;
 import net.consensys.eventeum.integration.PulsarSettings;
 import net.consensys.eventeum.integration.RabbitSettings;
 import net.consensys.eventeum.integration.broadcast.blockchain.*;
-import org.apache.pulsar.client.api.PulsarClientException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,11 +92,16 @@ public class BlockchainEventBroadcasterConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(name=BROADCASTER_PROPERTY, havingValue="PULSAR")
-    public BlockchainEventBroadcaster pulsarBlockChainEventBroadcaster(PulsarSettings settings, ObjectMapper mapper) throws PulsarClientException {
-    	final BlockchainEventBroadcaster broadcaster =
-    			new PulsarBlockChainEventBroadcaster(settings, mapper);
+    public BlockchainEventBroadcaster pulsarBlockChainEventBroadcaster(PulsarSettings settings, ObjectMapper mapper) {
+        final BlockchainEventBroadcaster broadcaster;
+        try {
+            broadcaster = new PulsarBlockChainEventBroadcaster(settings, mapper);
+        }
+        catch (Exception e) {
+            throw new BeanCreationException("Error creating pulsar broadcaster", e);
+        }
 
-    	return onlyOnceWrap(broadcaster);
+        return onlyOnceWrap(broadcaster);
     }
 
 

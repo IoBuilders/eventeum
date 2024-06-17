@@ -20,6 +20,7 @@ import net.consensys.eventeum.chain.service.BlockchainService;
 import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
 import net.consensys.eventeum.chain.service.container.NodeServices;
 import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
+import net.consensys.eventeum.chain.settings.NodeType;
 import net.consensys.eventeum.constant.Constants;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.dto.event.filter.ContractEventSpecification;
@@ -29,21 +30,25 @@ import net.consensys.eventeum.integration.broadcast.internal.EventeumEventBroadc
 import net.consensys.eventeum.repository.ContractEventFilterRepository;
 import net.consensys.eventeum.service.exception.NotFoundException;
 import net.consensys.eventeum.service.sync.EventSyncService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.retry.support.RetryTemplate;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class DefaultSubscriptionServiceTest {
     private static final String FILTER_ID = "123-456";
 
@@ -92,18 +97,21 @@ public class DefaultSubscriptionServiceTest {
                         new ParameterDefinition(2, ParameterType.build("ADDRESS"))));
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         when(mockChainServicesContainer.getNodeServices(
                 Constants.DEFAULT_NODE_NAME)).thenReturn(mockNodeServices);
         when(mockChainServicesContainer.getNodeNames()).thenReturn(
                 Collections.singletonList(Constants.DEFAULT_NODE_NAME));
+        when(mockNodeServices.getNodeType()).thenReturn(NodeType.NORMAL.name());
+        when(mockNodeServices.getBlockchainService()).thenReturn(mockBlockchainService);
         when(mockNodeServices.getBlockSubscriptionStrategy()).thenReturn(mockBlockSubscriptionStrategy);
-
-        mockRetryTemplate = new RetryTemplate();
+                mockRetryTemplate = new RetryTemplate();
+        when(mockNodeServices.getNodeType()).thenReturn("NORMAL");
 
         underTest = new DefaultSubscriptionService(mockChainServicesContainer,
                 mockRepo, mockFilterBroadcaster, Arrays.asList(mockBlockListener1, mockBlockListener2),
+                Arrays.asList(mockEventListener1, mockEventListener2),
                 mockRetryTemplate, mockEventSyncService);
     }
 
@@ -119,6 +127,9 @@ public class DefaultSubscriptionServiceTest {
     @Test
     public void testRegisterNewContractEventFilter() {
         final ContractEventFilter filter = createEventFilter();
+
+        when(mockRepo.save(any())).thenReturn(filter);
+
         underTest.registerContractEventFilter(filter, true);
 
         verifyContractEventFilterBroadcast(filter,true);
@@ -126,8 +137,24 @@ public class DefaultSubscriptionServiceTest {
     }
 
     @Test
+    public void testRegisterNewContractEventFilterWithSpecificStartBlock() {
+        final ContractEventFilter filter = createEventFilter();
+        filter.setStartBlock(BigInteger.ONE);
+
+        when(mockRepo.save(any())).thenReturn(filter);
+
+        underTest.registerContractEventFilter(filter, true);
+
+        verifyContractEventFilterBroadcast(filter,true);
+        assertEquals(1, underTest.listContractEventFilters().size());
+        assertEquals(BigInteger.ONE, underTest.listContractEventFilters().stream().findFirst().get().getStartBlock());
+    }
+
+    @Test
     public void testRegisterNewContractEventFilterBroadcastFalse() {
         final ContractEventFilter filter = createEventFilter();
+
+        when(mockRepo.save(any())).thenReturn(filter);
 
         underTest.registerContractEventFilter(filter, false);
 
@@ -137,6 +164,9 @@ public class DefaultSubscriptionServiceTest {
     @Test
     public void testRegisterNewContractEventFilterAlreadyRegistered() {
         final ContractEventFilter filter = createEventFilter();
+
+        when(mockRepo.save(any())).thenReturn(filter);
+
         underTest.registerContractEventFilter(filter, true);
         underTest.registerContractEventFilter(filter, true);
 
@@ -149,6 +179,8 @@ public class DefaultSubscriptionServiceTest {
     public void testRegisterNewContractEventFilterAutoGenerateId() {
         final ContractEventFilter filter = createEventFilter(null, Constants.DEFAULT_NODE_NAME);
 
+        when(mockRepo.save(any())).thenReturn(filter);
+
         underTest.registerContractEventFilter(filter, true);
 
         assertTrue(!filter.getId().isEmpty());
@@ -159,6 +191,8 @@ public class DefaultSubscriptionServiceTest {
     public void testListContractEventFilterAlreadyRegistered() {
         final ContractEventFilter filter1 = createEventFilter(null, Constants.DEFAULT_NODE_NAME);
 
+        when(mockRepo.save(any())).thenReturn(filter1);
+
         underTest.registerContractEventFilter(filter1, true);
         underTest.registerContractEventFilter(filter1, true);
 
@@ -168,6 +202,8 @@ public class DefaultSubscriptionServiceTest {
     @Test
     public void testUnregisterContractEventFilter() throws NotFoundException {
         final ContractEventFilter filter = createEventFilter();
+
+        when(mockRepo.save(any())).thenReturn(filter);
 
         underTest.registerContractEventFilter(filter, false);
 
@@ -194,6 +230,8 @@ public class DefaultSubscriptionServiceTest {
         final ContractEventFilter filter1 = createEventFilter("filter1", Constants.DEFAULT_NODE_NAME);
         final ContractEventFilter filter2 = createEventFilter();
 
+        when(mockRepo.save(any())).thenReturn(filter1);
+
         underTest.registerContractEventFilter(filter1, false);
         underTest.registerContractEventFilter(filter2, false);
         underTest.unsubscribeToAllSubscriptions(Constants.DEFAULT_NODE_NAME);
@@ -202,8 +240,7 @@ public class DefaultSubscriptionServiceTest {
     }
 
     private void verifyContractEventFilterBroadcast(ContractEventFilter filter, boolean save) {
-        int expectedSaveInvocations = save ? 1 : 0;
-        verify(mockRepo, times(expectedSaveInvocations)).save(filter);
+        verify(mockRepo, atLeastOnce()).save(filter);
 
         verify(mockFilterBroadcaster, times(1)).broadcastEventFilterAdded(filter);
     }

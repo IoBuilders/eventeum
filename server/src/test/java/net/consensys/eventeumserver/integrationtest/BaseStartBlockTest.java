@@ -15,14 +15,13 @@
 package net.consensys.eventeumserver.integrationtest;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
@@ -32,21 +31,21 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals; 
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public abstract class BaseStartBlockTest extends BaseKafkaIntegrationTest {
 
 
-    @BeforeClass
+    @BeforeAll
     public static void doTriggerBlocks() throws IOException {
         //Triggers 6 blocks total (genesis and additional 5)
         triggerBlocks(5);
     }
 
-    @Before
+    @BeforeEach
     @Override
     public void clearMessages() {
         //Theres a race condition that sometimes causes the block messages to be cleared after being received

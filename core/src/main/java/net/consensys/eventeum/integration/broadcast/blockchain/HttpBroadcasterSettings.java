@@ -30,4 +30,7 @@ public class HttpBroadcasterSettings {
 
     @Value("${broadcaster.http.transactionEventsUrl:}")
     private String transactionEventsUrl;
+
+    @Value("${broadcaster.http.messageEventsUrl:}")
+    private String messageEventsUrl;
 }

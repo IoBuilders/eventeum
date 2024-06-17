@@ -27,9 +27,9 @@ import net.consensys.eventeum.integration.eventstore.db.MongoEventStore;
 import net.consensys.eventeum.integration.eventstore.db.SqlEventStore;
 import net.consensys.eventeum.integration.eventstore.db.repository.ContractEventDetailsRepository;
 import net.consensys.eventeum.integration.eventstore.db.repository.LatestBlockRepository;
+import net.consensys.eventeum.integration.eventstore.db.repository.MessageDetailsRepository;
 import net.consensys.eventeum.integration.eventstore.rest.RESTEventStore;
 import net.consensys.eventeum.integration.eventstore.rest.client.EventStoreClient;
-
 import net.consensys.eventeum.monitoring.EventeumValueMonitor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -52,9 +52,11 @@ public class EventStoreConfiguration {
 		@Bean
 		public SaveableEventStore dbEventStore(
 				ContractEventDetailsRepository contractEventRepository,
+				MessageDetailsRepository messageDetailsRepository,
 				LatestBlockRepository latestBlockRepository,
 				MongoTemplate mongoTemplate) {
-			return new MongoEventStore(contractEventRepository, latestBlockRepository, mongoTemplate);
+			return new MongoEventStore(
+					contractEventRepository, messageDetailsRepository, latestBlockRepository, mongoTemplate);
 		}
 
 		@Bean
@@ -79,9 +81,11 @@ public class EventStoreConfiguration {
 		@Bean
 		public SaveableEventStore dbEventStore(
 				ContractEventDetailsRepository contractEventRepository,
+				MessageDetailsRepository messageDetailsRepository,
 				LatestBlockRepository latestBlockRepository,
 				JdbcTemplate jdbcTemplate) {
-			return new SqlEventStore(contractEventRepository, latestBlockRepository, jdbcTemplate);
+			return new SqlEventStore(
+					contractEventRepository, messageDetailsRepository, latestBlockRepository, jdbcTemplate);
 		}
 
 		@Bean

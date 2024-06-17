@@ -16,10 +16,7 @@ package net.consensys.eventeum.integration.broadcast.blockchain;
 
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
-import net.consensys.eventeum.dto.message.BlockEvent;
-import net.consensys.eventeum.dto.message.ContractEvent;
-import net.consensys.eventeum.dto.message.EventeumMessage;
-import net.consensys.eventeum.dto.message.TransactionEvent;
+import net.consensys.eventeum.dto.message.*;
 import net.consensys.eventeum.dto.transaction.TransactionDetails;
 import net.consensys.eventeum.integration.RabbitSettings;
 import net.consensys.eventeum.utils.JSON;
@@ -94,6 +91,22 @@ public class RabbitBlockChainEventBroadcaster implements BlockchainEventBroadcas
         );
     }
 
+    @Override
+    public void broadcastMessage(MessageDetails messageDetails) {
+        final EventeumMessage<MessageDetails> message = createMessageEventMessage(messageDetails);
+        rabbitTemplate.convertAndSend(this.rabbitSettings.getExchange(),
+                String.format("%s.%s", this.rabbitSettings.getMessageEventsRoutingKey(), messageDetails.getTopicId()),
+                message);
+
+        LOG.info(String.format("New message event sent: [%s] to exchange [%s] with routing key [%s.%s]",
+                        JSON.stringify(message),
+                        this.rabbitSettings.getExchange(),
+                        this.rabbitSettings.getMessageEventsRoutingKey(),
+                        messageDetails.getTopicId()
+                )
+        );
+    }
+
     protected EventeumMessage<BlockDetails> createBlockEventMessage(BlockDetails blockDetails) {
         return new BlockEvent(blockDetails);
     }
@@ -104,6 +117,10 @@ public class RabbitBlockChainEventBroadcaster implements BlockchainEventBroadcas
 
     protected EventeumMessage<TransactionDetails> createTransactionEventMessage(TransactionDetails transactionDetails) {
         return new TransactionEvent(transactionDetails);
+    }
+
+    protected EventeumMessage<MessageDetails> createMessageEventMessage(MessageDetails messageDetails) {
+        return new MessageEvent(messageDetails);
     }
 
 }

@@ -40,9 +40,9 @@ public class TransactionFilterConfiguration {
                     configFilter.getType(),
                     configFilter.getTransactionIdentifierValue(),
                     configFilter.getNodeName(),
-                    configFilter.getStatuses()
+                    configFilter.getStatuses(),
+                    configFilter.getExtension()
             );
-
             filtersToReturn.add(contractTransactionFilter);
         });
 

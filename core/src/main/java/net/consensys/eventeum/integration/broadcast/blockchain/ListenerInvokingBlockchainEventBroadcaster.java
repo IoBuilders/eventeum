@@ -17,6 +17,7 @@ package net.consensys.eventeum.integration.broadcast.blockchain;
 import lombok.AllArgsConstructor;
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
+import net.consensys.eventeum.dto.message.MessageDetails;
 import net.consensys.eventeum.dto.transaction.TransactionDetails;
 
 @AllArgsConstructor
@@ -39,6 +40,11 @@ import net.consensys.eventeum.dto.transaction.TransactionDetails;
         listener.onTransactionEvent(transactionDetails);
     }
 
+    @Override
+    public void broadcastMessage(MessageDetails messageDetails) {
+        listener.onMessageEvent(messageDetails);
+    }
+
     public interface OnBlockchainEventListener {
 
         void onNewBlock(BlockDetails block);
@@ -46,6 +52,8 @@ import net.consensys.eventeum.dto.transaction.TransactionDetails;
         void onContractEvent(ContractEventDetails eventDetails);
 
         void onTransactionEvent(TransactionDetails transactionDetails);
+
+        void onMessageEvent(MessageDetails messageDetails);
     }
 
 }

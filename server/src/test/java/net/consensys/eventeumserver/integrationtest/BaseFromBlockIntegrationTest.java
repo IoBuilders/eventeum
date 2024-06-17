@@ -18,16 +18,13 @@ import net.consensys.eventeum.chain.service.Web3jService;
 import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
 import net.consensys.eventeum.chain.service.container.NodeServices;
 import net.consensys.eventeum.constant.Constants;
-import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
-import org.web3j.protocol.core.methods.request.EthFilter;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -41,7 +38,7 @@ public class BaseFromBlockIntegrationTest extends BaseKafkaIntegrationTest {
 
     private Web3j web3j;
 
-    @Before
+    @BeforeEach
     public void spyOnWeb3j() {
         final NodeServices nodeServices = chainServicesContainer.getNodeServices(
                 Constants.DEFAULT_NODE_NAME);

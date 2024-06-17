@@ -33,7 +33,11 @@ public abstract class SingleValueMatchingCriteria<T> implements TransactionMatch
 
     @Override
     public boolean isAMatch(TransactionDetails tx) {
-        return valueToMatch.equals(getValueFromTx(tx));
+        T value = getValueFromTx(tx);
+        if (String.class.isAssignableFrom(valueToMatch.getClass())) {
+            return value != null && valueToMatch.toString().equalsIgnoreCase(value.toString());
+        }
+        return valueToMatch.equals(value);
     }
 
     protected abstract T getValueFromTx(TransactionDetails tx);

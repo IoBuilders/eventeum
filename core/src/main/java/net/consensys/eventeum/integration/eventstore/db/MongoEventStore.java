@@ -14,18 +14,13 @@
 
 package net.consensys.eventeum.integration.eventstore.db;
 
-import java.util.List;
-import java.util.Optional;
-
-import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
-import net.consensys.eventeum.factory.EventStoreFactory;
+import net.consensys.eventeum.dto.message.MessageDetails;
 import net.consensys.eventeum.integration.eventstore.SaveableEventStore;
 import net.consensys.eventeum.integration.eventstore.db.repository.ContractEventDetailsRepository;
 import net.consensys.eventeum.integration.eventstore.db.repository.LatestBlockRepository;
+import net.consensys.eventeum.integration.eventstore.db.repository.MessageDetailsRepository;
 import net.consensys.eventeum.model.LatestBlock;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -35,7 +30,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * A saveable event store that stores contract events in a db repository.
@@ -46,14 +43,18 @@ public class MongoEventStore implements SaveableEventStore {
 
     private ContractEventDetailsRepository eventDetailsRepository;
 
+    private MessageDetailsRepository messageDetailsRepository;
+
     private LatestBlockRepository latestBlockRepository;
 
     private MongoTemplate mongoTemplate;
 
     public MongoEventStore(
             ContractEventDetailsRepository eventDetailsRepository,
+            MessageDetailsRepository messageDetailsRepository,
             LatestBlockRepository latestBlockRepository,
             MongoTemplate mongoTemplate) {
+        this.messageDetailsRepository = messageDetailsRepository;
         this.eventDetailsRepository = eventDetailsRepository;
         this.latestBlockRepository = latestBlockRepository;
         this.mongoTemplate = mongoTemplate;
@@ -68,7 +69,7 @@ public class MongoEventStore implements SaveableEventStore {
                 .is(eventSignature)
                 .and("address")
                 .is(contractAddress))
-            .with(new Sort(Direction.DESC, "blockNumber"))
+            .with(Sort.by(Direction.DESC, "blockNumber"))
             .collation(Collation.of("en").numericOrderingEnabled());
 
         final long totalResults = mongoTemplate.count(query, ContractEventDetails.class);
@@ -96,6 +97,15 @@ public class MongoEventStore implements SaveableEventStore {
     }
 
     @Override
+    public Optional<MessageDetails> getLatestMessageFromTopic(String nodeName, String topicId) {
+        final Query query = new Query(Criteria.where("topicId").is(topicId).and("nodeName").is(nodeName))
+                .with(Sort.by(Direction.DESC, "timestamp"))
+                .collation(Collation.of("en").numericOrderingEnabled());
+        final MessageDetails result = mongoTemplate.findOne(query, MessageDetails.class);
+        return result != null ? Optional.of(result) : Optional.empty();
+    }
+
+    @Override
     public void save(ContractEventDetails contractEventDetails) {
         eventDetailsRepository.save(contractEventDetails);
     }
@@ -103,5 +113,10 @@ public class MongoEventStore implements SaveableEventStore {
     @Override
     public void save(LatestBlock latestBlock) {
         latestBlockRepository.save(latestBlock);
+    }
+
+    @Override
+    public void save(MessageDetails messageDetails) {
+        messageDetailsRepository.save(messageDetails);
     }
 }

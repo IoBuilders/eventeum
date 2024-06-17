@@ -15,11 +15,13 @@
 package net.consensys.eventeum.chain.service.domain.wrapper;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import net.consensys.eventeum.chain.service.domain.Transaction;
 import net.consensys.eventeum.utils.ModelMapperFactory;
 import org.modelmapper.ModelMapper;
 
 @Data
+@NoArgsConstructor
 public class Web3jTransaction implements Transaction {
 
     private String hash;
@@ -42,7 +44,7 @@ public class Web3jTransaction implements Transaction {
 
     public Web3jTransaction(org.web3j.protocol.core.methods.response.Transaction web3jTransaction) {
 
-        final ModelMapper modelMapper = ModelMapperFactory.getInstance().createModelMapper();
+        final ModelMapper modelMapper = ModelMapperFactory.getInstance().getModelMapper();
         modelMapper.map(web3jTransaction, this);
     }
 }

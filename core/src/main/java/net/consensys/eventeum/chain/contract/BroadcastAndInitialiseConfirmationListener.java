@@ -22,12 +22,12 @@ import net.consensys.eventeum.chain.service.BlockchainService;
 import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
 import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
 import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
+import net.consensys.eventeum.chain.settings.ChainType;
 import net.consensys.eventeum.chain.settings.Node;
 import net.consensys.eventeum.chain.settings.NodeSettings;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.integration.broadcast.blockchain.BlockchainEventBroadcaster;
-import net.consensys.eventeum.service.AsyncTaskService;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
@@ -51,10 +51,12 @@ public class BroadcastAndInitialiseConfirmationListener implements ContractEvent
 
     @Override
     public void onEvent(ContractEventDetails eventDetails) {
-        if (eventDetails.getStatus() == ContractEventStatus.UNCONFIRMED) {
+        final Node node = nodeSettings.getNode(eventDetails.getNodeName());
+        final ChainType chainType = node.getChainType();
+
+        if (eventDetails.getStatus() == ContractEventStatus.UNCONFIRMED && chainType.equals(ChainType.ETHEREUM)) {
 
             final BlockSubscriptionStrategy blockSubscription = getBlockSubscriptionStrategy(eventDetails);
-            final Node node = nodeSettings.getNode(eventDetails.getNodeName());
 
             if (shouldInstantlyConfirm(eventDetails)) {
                 eventDetails.setStatus(ContractEventStatus.CONFIRMED);
@@ -65,6 +67,10 @@ public class BroadcastAndInitialiseConfirmationListener implements ContractEvent
 
             log.info("Registering an EventConfirmationBlockListener for event: {}", eventDetails.getId());
             blockSubscription.addBlockListener(createEventConfirmationBlockListener(eventDetails, node));
+        }
+
+        if (chainType.equals(ChainType.HASHGRAPH)) {
+            eventDetails.setStatus(ContractEventStatus.CONFIRMED);
         }
 
         eventBroadcaster.broadcastContractEvent(eventDetails);

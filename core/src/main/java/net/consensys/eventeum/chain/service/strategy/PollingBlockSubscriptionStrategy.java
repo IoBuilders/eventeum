@@ -16,26 +16,48 @@ package net.consensys.eventeum.chain.service.strategy;
 
 import io.reactivex.disposables.Disposable;
 import lombok.extern.slf4j.Slf4j;
+import net.consensys.eventeum.chain.service.HederaService;
 import net.consensys.eventeum.chain.service.block.BlockNumberService;
 import net.consensys.eventeum.chain.service.domain.Block;
 import net.consensys.eventeum.chain.service.domain.wrapper.Web3jBlock;
+import net.consensys.eventeum.chain.settings.NodeType;
 import net.consensys.eventeum.service.AsyncTaskService;
 import net.consensys.eventeum.utils.JSON;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
+import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
 import java.math.BigInteger;
-import java.util.Optional;
+import java.util.Objects;
 
 @Slf4j
 public class PollingBlockSubscriptionStrategy extends AbstractBlockSubscriptionStrategy<EthBlock> {
 
+    private final HederaService hederaService;
+    private final Long pollingInterval;
+
     public PollingBlockSubscriptionStrategy(Web3j web3j,
                                             String nodeName,
+                                            String nodeType,
                                             AsyncTaskService asyncService,
-                                            BlockNumberService blockNumberService) {
-        super(web3j, nodeName, asyncService, blockNumberService);
+                                            BlockNumberService blockNumberService,
+                                            Long pollingInterval) {
+        super(web3j, nodeName, nodeType, asyncService, blockNumberService);
+        this.hederaService = null;
+        this.pollingInterval = pollingInterval;
+    }
+
+    public PollingBlockSubscriptionStrategy(Web3j web3j,
+                                            String nodeName,
+                                            String nodeType,
+                                            AsyncTaskService asyncService,
+                                            BlockNumberService blockNumberService,
+                                            HederaService hederaService,
+                                            Long pollingInterval) {
+        super(web3j, nodeName, nodeType, asyncService, blockNumberService);
+        this.hederaService = hederaService;
+        this.pollingInterval = pollingInterval;
     }
 
     @Override
@@ -47,10 +69,22 @@ public class PollingBlockSubscriptionStrategy extends AbstractBlockSubscriptionS
 
         final DefaultBlockParameter blockParam = DefaultBlockParameter.valueOf(startBlock);
 
-        blockSubscription = web3j
-                .replayPastAndFutureBlocksFlowable(blockParam, true)
-                .doOnError((error) -> onError(blockSubscription, error))
-                .subscribe(block -> triggerListeners(block), (error) -> onError(blockSubscription, error));
+        switch (NodeType.valueOf(nodeType)) {
+            case NORMAL:
+                blockSubscription = web3j
+                        .replayPastAndFutureBlocksFlowable(blockParam, true)
+                        .doOnError((error) -> onError(blockSubscription, error))
+                        .subscribe(this::triggerListeners, (error) -> onError(blockSubscription, error));
+                break;
+            case MIRROR:
+                blockSubscription = Objects.requireNonNull(hederaService)
+                        .blocksFlowable(((DefaultBlockParameterNumber) blockParam).getBlockNumber(), pollingInterval)
+                        .doOnError((error) -> onError(blockSubscription, error))
+                        .subscribe(this::triggerListeners, (error) -> onError(blockSubscription, error));
+                break;
+            default:
+                break;
+        }
 
 
         return blockSubscription;
@@ -58,7 +92,7 @@ public class PollingBlockSubscriptionStrategy extends AbstractBlockSubscriptionS
 
     @Override
     Block convertToEventeumBlock(EthBlock blockObject) {
-        //Infura is sometimes returning null blocks...just ignore in this case.
+        // Infura is sometimes returning null blocks...just ignore in this case.
         if (blockObject == null || blockObject.getBlock() == null) {
             return null;
         }
@@ -70,4 +104,5 @@ public class PollingBlockSubscriptionStrategy extends AbstractBlockSubscriptionS
             throw t;
         }
     }
+
 }

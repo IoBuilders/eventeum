@@ -19,6 +19,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -26,8 +27,12 @@ import java.math.BigInteger;
 public class Node {
 
     private String name;
-
+    private NodeType nodeType;
+    private ChainType chainType;
     private String url;
+    private Map<String, String> headers;
+    private BigInteger limitPerRequest = BigInteger.valueOf(100);
+    private BigInteger callRetries;
     private Long pollingInterval;
     private String username;
     private String password;
@@ -45,4 +50,6 @@ public class Node {
     private BigInteger initialStartBlock;
     private BigInteger numBlocksToReplay;
     private BigInteger maxBlocksToSync;
+    private Map<String, Object> extension;
+    private BigInteger limitMirrorNodeResults;
 }

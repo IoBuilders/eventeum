@@ -21,6 +21,7 @@ import lombok.*;
 import net.consensys.eventeum.dto.TransactionBasedDetails;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 @Data
 @ToString
@@ -35,6 +36,7 @@ public class TransactionDetails implements TransactionBasedDetails {
     private String nonce;
     private String blockHash;
     private String blockNumber;
+    private String blockTimestamp;
     private String transactionIndex;
     private String from;
     private String to;
@@ -50,5 +52,9 @@ public class TransactionDetails implements TransactionBasedDetails {
     @JsonIgnore
     public String getTransactionHash() {
         return hash;
+    }
+
+    public boolean isSuccess() {
+        return status != null && Arrays.asList(TransactionStatus.CONFIRMED, TransactionStatus.UNCONFIRMED).contains(status);
     }
 }

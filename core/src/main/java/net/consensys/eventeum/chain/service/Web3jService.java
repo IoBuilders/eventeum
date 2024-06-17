@@ -21,6 +21,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.chain.contract.ContractEventListener;
 import net.consensys.eventeum.chain.factory.ContractEventDetailsFactory;
+import net.consensys.eventeum.chain.service.block.EventBlockManagementService;
 import net.consensys.eventeum.chain.service.domain.Block;
 import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
 import net.consensys.eventeum.chain.service.domain.wrapper.Web3jBlock;
@@ -31,9 +32,9 @@ import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.dto.event.filter.ContractEventSpecification;
 import net.consensys.eventeum.model.FilterSubscription;
 import net.consensys.eventeum.service.AsyncTaskService;
-import net.consensys.eventeum.utils.ExecutorNameFactory;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
+import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
@@ -63,14 +64,23 @@ public class Web3jService implements BlockchainService {
     private ContractEventDetailsFactory eventDetailsFactory;
     private AsyncTaskService asyncTaskService;
 
+    private EventBlockManagementService blockManagement;
+
     public Web3jService(String nodeName,
                         Web3j web3j,
                         ContractEventDetailsFactory eventDetailsFactory,
-                        AsyncTaskService asyncTaskService) {
+                        AsyncTaskService asyncTaskService,
+                        EventBlockManagementService blockManagement) {
         this.nodeName = nodeName;
         this.web3j = web3j;
         this.eventDetailsFactory = eventDetailsFactory;
         this.asyncTaskService = asyncTaskService;
+        this.blockManagement = blockManagement;
+    }
+
+    @Override
+    public String getNodeName() {
+        return this.nodeName;
     }
 
     @Override
@@ -82,66 +92,60 @@ public class Web3jService implements BlockchainService {
         final EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(startBlock),
                 new DefaultBlockParameterNumber(endBlock), eventFilter.getContractAddress());
 
-
         if (eventFilter.getEventSpecification() != null) {
             ethFilter.addSingleTopic(Web3jUtil.getSignature(eventSpec));
         }
 
         try {
-            final EthLog logs = web3j.ethGetLogs(ethFilter).send();
-            return logs.getLogs()
-                    .stream()
-                    .map(logResult -> eventDetailsFactory.createEventDetails(eventFilter, (Log) logResult.get()))
-                    .collect(Collectors.toList());
-
+            return extractEventDetailsFromLogs(ethFilter, eventFilter, endBlock);
         } catch (IOException e) {
             throw new BlockchainException("Error obtaining logs", e);
         }
     }
+
 
     /**
      * {inheritDoc}
      */
     @Override
     public FilterSubscription registerEventListener(ContractEventFilter eventFilter,
-                                                    ContractEventListener eventListener,
-                                                    BigInteger startBlock,
-                                                    BigInteger endBlock,
-                                                    Optional<Runnable> onCompletion) {
+                                                    ContractEventListener eventListener) {
+
         log.debug("Registering event filter for event: {}", eventFilter.getId());
         final ContractEventSpecification eventSpec = eventFilter.getEventSpecification();
 
-        final EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(startBlock),
-                new DefaultBlockParameterNumber(endBlock), eventFilter.getContractAddress());
+        final BigInteger startBlock = getStartBlockForEventFilter(eventFilter);
 
+        final EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(startBlock),
+                DefaultBlockParameterName.LATEST, eventFilter.getContractAddress());
 
         if (eventFilter.getEventSpecification() != null) {
             ethFilter.addSingleTopic(Web3jUtil.getSignature(eventSpec));
         }
 
-        final Flowable<Log> flowable = web3j
-                .ethLogFlowable(ethFilter)
-                .doOnComplete(() -> {
-                    if (onCompletion.isPresent()) {
-                        onCompletion.get().run();
-                    }
-                });
+        final Flowable<Log> flowable = createEthLogFlowable(ethFilter, eventFilter, null);
 
         final Disposable sub = flowable.subscribe(theLog -> {
-            asyncTaskService.execute(ExecutorNameFactory.build(EVENT_EXECUTOR_NAME, eventFilter.getNode()), () -> {
-                log.debug("Dispatching log: {}", theLog);
+            if (theLog != null) {
+                asyncTaskService.execute(EVENT_EXECUTOR_NAME, () -> {
+                    try {
+                        BigInteger blockNumber = theLog.getBlockNumber();
+                        DefaultBlockParameterNumber blockParameterNumber = new DefaultBlockParameterNumber(blockNumber);
+                        EthBlock ethBlock = this.web3j.ethGetBlockByNumber(blockParameterNumber, false).send();
+                        TransactionReceipt transactionReceipt = getTransactionReceipt(theLog);
 
-                //Check signatures match
-                if (ethFilter.getTopics() == null
-                        || ethFilter.getTopics().isEmpty()
-                        || ethFilter.getTopics().get(0).getValue().equals(theLog.getTopics().get(0))) {
-                    eventListener.onEvent(
-                            eventDetailsFactory.createEventDetails(eventFilter, theLog));
-                } else {
-                    log.warn("Filter topic doesn't match  log!");
-                }
-            });
-        });
+                        log.debug("Dispatching log: {}", theLog);
+                        eventListener.onEvent(
+                                eventDetailsFactory.createEventDetails(eventFilter, theLog, ethBlock, transactionReceipt));
+                    } catch (IOException exception) {
+                        log.warn(exception.getMessage());
+                    }
+
+                });
+            } else {
+                log.info("Null log event");
+            }
+        }, error -> log.error("Error registering event listener", error));
 
         if (sub.isDisposed()) {
             //There was an error subscribing
@@ -150,6 +154,21 @@ public class Web3jService implements BlockchainService {
         }
 
         return new FilterSubscription(eventFilter, sub, startBlock);
+    }
+
+    private TransactionReceipt getTransactionReceipt(Log theLog) {
+        TransactionReceipt transactionReceipt = null;
+
+        while (transactionReceipt == null) {
+            try {
+                transactionReceipt = this.getTransactionReceipt(theLog.getTransactionHash());
+            } catch (BlockchainException blockchainException) {
+                log.debug("Retrying to recover transaction receipt of {} because '{}'", theLog.getTransactionHash(),
+                        blockchainException.getMessage());
+            }
+        }
+
+        return transactionReceipt;
     }
 
     /**
@@ -169,7 +188,7 @@ public class Web3jService implements BlockchainService {
      * {inheritDoc}
      */
     @Override
-    public TransactionReceipt getTransactionReceipt(String txId) {
+    public TransactionReceipt getTransactionReceipt(String txId) { //Overwritten in eea
         try {
             final EthGetTransactionReceipt response = web3j.ethGetTransactionReceipt(txId).send();
 
@@ -215,7 +234,6 @@ public class Web3jService implements BlockchainService {
 
         try {
             final ContractEventSpecification eventSpec = filter.getEventSpecification();
-
             EthFilter ethFilter = new EthFilter(
                     new DefaultBlockParameterNumber(blockNumber),
                     new DefaultBlockParameterNumber(blockNumber), filter.getContractAddress());
@@ -224,12 +242,7 @@ public class Web3jService implements BlockchainService {
                 ethFilter = ethFilter.addSingleTopic(Web3jUtil.getSignature(eventSpec));
             }
 
-            final EthLog ethLog = web3j.ethGetLogs(ethFilter).send();
-
-            return ethLog.getLogs()
-                    .stream()
-                    .map(log -> eventDetailsFactory.createEventDetails(filter, (Log) log))
-                    .collect(Collectors.toList());
+            return extractEventDetailsFromLogs(ethFilter, filter, blockNumber);
         } catch (IOException e) {
             throw new BlockchainException("Error when obtaining logs from block: " + blockNumber, e);
         }
@@ -245,5 +258,39 @@ public class Web3jService implements BlockchainService {
         } catch (IOException e) {
             throw new BlockchainException("Error getting the revert reason", e);
         }
+    }
+
+    protected List<ContractEventDetails> extractEventDetailsFromLogs(
+            EthFilter ethFilter,
+            ContractEventFilter eventFilter,
+            BigInteger blockNumber
+    ) throws IOException {
+
+        final EthLog logs = web3j.ethGetLogs(ethFilter).send();
+        DefaultBlockParameterNumber blockParameterNumber = new DefaultBlockParameterNumber(blockNumber);
+        EthBlock ethBlock = this.web3j.ethGetBlockByNumber(blockParameterNumber, false).send();
+
+        return logs.getLogs()
+                .stream()
+                .map(logResult -> eventDetailsFactory.createEventDetails(eventFilter, (Log) logResult.get(), ethBlock, getTransactionReceipt((Log) logResult.get())))
+                .collect(Collectors.toList());
+    }
+
+    protected Flowable<Log> createEthLogFlowable(
+            EthFilter ethFilter,
+            ContractEventFilter eventFilter,
+            Optional<Runnable> onCompletion) {
+        log.debug("Creating EthLog flowable for filter {}", eventFilter.getId());
+        return web3j
+                .ethLogFlowable(ethFilter)
+                .doOnComplete(() -> {
+                    if (onCompletion.isPresent()) {
+                        onCompletion.get().run();
+                    }
+                });
+    }
+
+    private BigInteger getStartBlockForEventFilter(ContractEventFilter filter) {
+        return blockManagement.getLatestBlockForEvent(filter);
     }
 }

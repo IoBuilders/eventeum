@@ -17,10 +17,7 @@ package net.consensys.eventeum.integration.broadcast.blockchain;
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
-import net.consensys.eventeum.dto.message.BlockEvent;
-import net.consensys.eventeum.dto.message.ContractEvent;
-import net.consensys.eventeum.dto.message.EventeumMessage;
-import net.consensys.eventeum.dto.message.TransactionEvent;
+import net.consensys.eventeum.dto.message.*;
 import net.consensys.eventeum.dto.transaction.TransactionDetails;
 import net.consensys.eventeum.integration.KafkaSettings;
 import net.consensys.eventeum.utils.JSON;
@@ -84,6 +81,14 @@ public class KafkaBlockchainEventBroadcaster implements BlockchainEventBroadcast
         kafkaTemplate.send(kafkaSettings.getTransactionEventsTopic(), transactionDetails.getBlockHash(), message);
     }
 
+    @Override
+    public void broadcastMessage(MessageDetails messageDetails) {
+        final EventeumMessage<MessageDetails> message = createMessageEventMessage(messageDetails);
+        LOG.info("Sending event message: " + JSON.stringify(message));
+
+        kafkaTemplate.send(kafkaSettings.getMessageEventsTopic(), messageDetails.getTopicId(), message);
+    }
+
     protected EventeumMessage<BlockDetails> createBlockEventMessage(BlockDetails blockDetails) {
         return new BlockEvent(blockDetails);
     }
@@ -94,6 +99,10 @@ public class KafkaBlockchainEventBroadcaster implements BlockchainEventBroadcast
 
     protected EventeumMessage<TransactionDetails> createTransactionEventMessage(TransactionDetails transactionDetails) {
         return new TransactionEvent(transactionDetails);
+    }
+
+    protected EventeumMessage<MessageDetails> createMessageEventMessage(MessageDetails messageDetails) {
+        return new MessageEvent(messageDetails);
     }
 
     private String getContractEventCorrelationId(EventeumMessage<ContractEventDetails> message) {

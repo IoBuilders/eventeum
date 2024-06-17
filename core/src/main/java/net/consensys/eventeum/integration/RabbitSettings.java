@@ -45,6 +45,9 @@ public class RabbitSettings {
     @Value("${rabbitmq.routingKey.transactionEvents}")
     private String transactionEventsRoutingKey;
 
+    @Value("${rabbitmq.routingKey.messageEvents}")
+    private String messageEventsRoutingKey;
+
     @Bean
     Jackson2JsonMessageConverter producerJackson2MessageConverter() {
         return new Jackson2JsonMessageConverter();

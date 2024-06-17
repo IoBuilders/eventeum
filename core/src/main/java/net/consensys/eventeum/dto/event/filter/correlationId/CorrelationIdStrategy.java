@@ -14,13 +14,13 @@
 
 package net.consensys.eventeum.dto.event.filter.correlationId;
 
-import javax.persistence.Embeddable;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
+
+import javax.persistence.Embeddable;
 
 /**
  * A strategy for obtaining a correlation id for a given contract event.

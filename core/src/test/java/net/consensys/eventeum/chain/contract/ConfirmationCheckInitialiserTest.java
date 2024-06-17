@@ -20,6 +20,7 @@ import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
 import net.consensys.eventeum.chain.service.container.NodeServices;
 import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
 import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
+import net.consensys.eventeum.chain.settings.ChainType;
 import net.consensys.eventeum.chain.settings.Node;
 import net.consensys.eventeum.chain.settings.NodeSettings;
 import net.consensys.eventeum.constant.Constants;
@@ -28,8 +29,8 @@ import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.integration.broadcast.blockchain.BlockchainEventBroadcaster;
 import net.consensys.eventeum.service.AsyncTaskService;
 import net.consensys.eventeum.testutils.DummyAsyncTaskService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
@@ -51,7 +52,7 @@ public class ConfirmationCheckInitialiserTest {
      private AsyncTaskService asyncTaskService = new DummyAsyncTaskService();
      private BigInteger currentBlock = BigInteger.valueOf(2000);
 
-     @Before
+     @BeforeEach
      public void init() {
 
          mockBlockchainService = mock(BlockchainService.class);
@@ -68,6 +69,7 @@ public class ConfirmationCheckInitialiserTest {
          when(mockNodeServices.getBlockSubscriptionStrategy()).thenReturn(mockBlockSubscriptionStrategy);
          when(mockBlockchainService.getCurrentBlockNumber()).thenReturn(currentBlock);
          Node node = new Node();
+         node.setChainType(ChainType.ETHEREUM);
          node.setBlocksToWaitForConfirmation(BigInteger.valueOf(10));
          node.setBlocksToWaitForMissingTx(BigInteger.valueOf(100));
          node.setBlocksToWaitBeforeInvalidating(BigInteger.valueOf(5));

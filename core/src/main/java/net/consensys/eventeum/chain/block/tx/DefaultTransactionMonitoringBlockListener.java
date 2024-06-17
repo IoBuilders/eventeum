@@ -19,29 +19,34 @@ import net.consensys.eventeum.chain.block.tx.criteria.TransactionMatchingCriteri
 import net.consensys.eventeum.chain.factory.TransactionDetailsFactory;
 import net.consensys.eventeum.chain.service.block.BlockCache;
 import net.consensys.eventeum.chain.service.BlockchainService;
+import net.consensys.eventeum.chain.service.block.BlockCache;
 import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
 import net.consensys.eventeum.chain.service.domain.Block;
 import net.consensys.eventeum.chain.service.domain.Transaction;
 import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
+import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
+import net.consensys.eventeum.chain.service.domain.io.ContractResultResponse;
+import net.consensys.eventeum.chain.service.domain.io.StateChangeResponse;
+import net.consensys.eventeum.chain.service.domain.wrapper.HederaBlock;
 import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
 import net.consensys.eventeum.chain.settings.Node;
 import net.consensys.eventeum.chain.settings.NodeSettings;
 import net.consensys.eventeum.dto.transaction.TransactionDetails;
 import net.consensys.eventeum.dto.transaction.TransactionStatus;
 import net.consensys.eventeum.integration.broadcast.blockchain.BlockchainEventBroadcaster;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -125,12 +130,34 @@ public class DefaultTransactionMonitoringBlockListener implements TransactionMon
                 .forEach(tx -> broadcastIfMatched(tx, block));
     }
 
-    private void broadcastIfMatched(Transaction tx, Block block, List<TransactionMatchingCriteria> criteriaToCheck) {
+    protected void broadcastIfMatched(Transaction tx, Block block, List<TransactionMatchingCriteria> criteriaToCheck) {
 
         final TransactionDetails txDetails = transactionDetailsFactory.createTransactionDetails(
-                tx, TransactionStatus.CONFIRMED, block);
+                tx, TransactionStatus.CONFIRMED, block);   // CONFIRMED by default
 
-        //Only broadcast once, even if multiple matching criteria apply
+        if (block instanceof HederaBlock && tx.getTo() == null) {
+            List<String> addresses = ((HederaBlock) block).getContractResults()
+                    .stream()
+                    .map(ContractResultResponse::getStateChanges)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList())
+                    .stream()
+                    .map(StateChangeResponse::getAddress)
+                    .distinct()
+                    .collect(Collectors.toList());
+            addresses.stream().forEach(address -> {
+                txDetails.setTo(address);
+                //Only broadcast once, even if multiple matching criteria apply
+                checkTxCriteria(criteriaToCheck, txDetails);
+            });
+        } else {
+            //Only broadcast once, even if multiple matching criteria apply
+            checkTxCriteria(criteriaToCheck, txDetails);
+        }
+
+    }
+
+    private void checkTxCriteria(List<TransactionMatchingCriteria> criteriaToCheck, TransactionDetails txDetails) {
         criteriaToCheck
                 .stream()
                 .filter(matcher -> matcher.isAMatch(txDetails))
@@ -144,7 +171,7 @@ public class DefaultTransactionMonitoringBlockListener implements TransactionMon
         }
     }
 
-    private void onTransactionMatched(TransactionDetails txDetails, TransactionMatchingCriteria matchingCriteria) {
+    protected void onTransactionMatched(TransactionDetails txDetails, TransactionMatchingCriteria matchingCriteria) {
 
         final Node node = nodeSettings.getNode(txDetails.getNodeName());
         final BlockchainService blockchainService = getBlockchainService(txDetails.getNodeName());
@@ -156,7 +183,7 @@ public class DefaultTransactionMonitoringBlockListener implements TransactionMon
             txDetails.setStatus(TransactionStatus.UNCONFIRMED);
 
             blockSubscription.addBlockListener(new TransactionConfirmationBlockListener(txDetails,
-                    blockchainService, blockSubscription, broadcaster,node,
+                    blockchainService, blockSubscription, broadcaster, node,
                     matchingCriteria.getStatuses(),
                     () -> onConfirmed(txDetails, matchingCriteria)));
 
@@ -190,6 +217,10 @@ public class DefaultTransactionMonitoringBlockListener implements TransactionMon
     }
 
     private boolean isSuccessTransaction(TransactionDetails txDetails) {
+        /*if (txDetails.getStatus() != null) {
+            return txDetails.isSuccess();
+        }*/
+
         final TransactionReceipt receipt = getBlockchainService(txDetails.getNodeName())
                 .getTransactionReceipt(txDetails.getHash());
 
@@ -229,7 +260,7 @@ public class DefaultTransactionMonitoringBlockListener implements TransactionMon
     private String getRevertReason(TransactionDetails txDetails) {
         Node node = nodeSettings.getNode(txDetails.getNodeName());
 
-        if (!node.getAddTransactionRevertReason()) {
+        if (!node.getAddTransactionRevertReason() || txDetails.getRevertReason() != null) {
             return null;
         }
 

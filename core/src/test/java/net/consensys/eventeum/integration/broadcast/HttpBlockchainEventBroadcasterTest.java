@@ -20,12 +20,14 @@ import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.dto.event.parameter.NumberParameter;
 import net.consensys.eventeum.dto.event.parameter.StringParameter;
+import net.consensys.eventeum.dto.message.MessageDetails;
+import net.consensys.eventeum.dto.transaction.TransactionDetails;
 import net.consensys.eventeum.integration.broadcast.blockchain.HttpBlockchainEventBroadcaster;
 import net.consensys.eventeum.integration.broadcast.blockchain.HttpBroadcasterSettings;
 import net.consensys.eventeum.testutils.StubHttpConsumer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
@@ -38,7 +40,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HttpBlockchainEventBroadcasterTest {
 
@@ -46,11 +48,13 @@ public class HttpBlockchainEventBroadcasterTest {
 
     private StubHttpConsumer httpConsumer;
 
-    @Before
+    @BeforeEach
     public void init() {
         final HttpBroadcasterSettings settings = new HttpBroadcasterSettings();
         settings.setBlockEventsUrl("http://localhost:8082/consumer/block-event");
         settings.setContractEventsUrl("http://localhost:8082/consumer/contract-event");
+        settings.setTransactionEventsUrl("http://localhost:8082/consumer/transaction-event");
+        settings.setMessageEventsUrl("http://localhost:8082/consumer/message-event");
 
         RetryTemplate retryTemplate = new RetryTemplate();
 
@@ -65,7 +69,7 @@ public class HttpBlockchainEventBroadcasterTest {
         underTest = new HttpBlockchainEventBroadcaster(settings, retryTemplate);
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         httpConsumer.stop();
     }
@@ -100,6 +104,39 @@ public class HttpBlockchainEventBroadcasterTest {
         BlockDetails broadcastBlock = mapper.readValue(httpConsumer.getLatestRequestBody(), BlockDetails.class);
 
         assertEquals(block, broadcastBlock);
+    }
+
+    @Test
+    public void testBroadcasterTransactionEvent() throws IOException {
+        httpConsumer = new StubHttpConsumer(HttpStatus.OK);
+
+        final TransactionDetails transaction = new TransactionDetails();
+        transaction.setHash("0xc2141b870536473fdea321893bc084eb3244cc56ea8d4b77de240dfeac6604d2");
+
+        httpConsumer.start(null);
+        underTest.broadcastTransaction(transaction);
+
+        ObjectMapper mapper = new ObjectMapper();
+        TransactionDetails transactionDetails = mapper.readValue(httpConsumer.getLatestRequestBody(), TransactionDetails.class);
+
+        assertEquals(transaction, transactionDetails);
+    }
+
+    @Test
+    public void testBroadcasterMessageEvent() throws IOException {
+        httpConsumer = new StubHttpConsumer(HttpStatus.OK);
+
+        final MessageDetails message = new MessageDetails();
+        message.setMessage("Hello world!");
+        message.setTopicId("0.0.1");
+
+        httpConsumer.start(null);
+        underTest.broadcastMessage(message);
+
+        ObjectMapper mapper = new ObjectMapper();
+        MessageDetails messageDetails = mapper.readValue(httpConsumer.getLatestRequestBody(), MessageDetails.class);
+
+        assertEquals(message, messageDetails);
     }
 
     private ContractEventDetails createContractEventDetails() {

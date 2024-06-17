@@ -15,6 +15,7 @@
 package net.consensys.eventeum.chain.factory;
 
 import net.consensys.eventeum.chain.converter.EventParameterConverter;
+import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
 import net.consensys.eventeum.chain.settings.Node;
 import net.consensys.eventeum.chain.util.Web3jUtil;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
@@ -24,8 +25,8 @@ import net.consensys.eventeum.dto.event.filter.ContractEventSpecification;
 import net.consensys.eventeum.dto.event.filter.ParameterDefinition;
 import net.consensys.eventeum.dto.event.filter.ParameterType;
 import net.consensys.eventeum.dto.event.parameter.EventParameter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.Keys;
@@ -34,7 +35,7 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -62,6 +63,14 @@ public class DefaultContractEventDetailsFactoryTest {
 
     private static final String NETWORK_NAME = "ThisIsANetworkName";
 
+    private static final BigInteger BLOCK_TIMESTAMP = BigInteger.TEN;
+
+    public static final String NONCE = "0";
+
+    public static final String EMPTY = "empty";
+
+    private static final String FROM_ADDRESS = "0x5fd30686247835ee5e96567e29d88bD9A83dca52";
+
     private DefaultContractEventDetailsFactory underTest;
 
     private EventParameterConverter mockParameterCoverter;
@@ -71,6 +80,10 @@ public class DefaultContractEventDetailsFactoryTest {
     private static ContractEventSpecification eventSpec;
 
     private ContractEventFilter filter;
+
+    private EthBlock mockEthBlock;
+
+    private TransactionReceipt mockTransactionReceipt;
 
     static {
         eventSpec = new ContractEventSpecification();
@@ -84,11 +97,15 @@ public class DefaultContractEventDetailsFactoryTest {
                 new ParameterDefinition(3, ParameterType.build("INT256"))));
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         mockParameterCoverter = mock(EventParameterConverter.class);
 
         mockLog = mock(org.web3j.protocol.core.methods.response.Log.class);
+        mockEthBlock = mock(EthBlock.class);
+        EthBlock.Block mockBlock = mock(EthBlock.Block.class);
+        mockTransactionReceipt = mock(TransactionReceipt.class);
+
         when(mockLog.getData()).thenReturn(LOG_DATA);
         when(mockLog.getTopics()).thenReturn(Arrays.asList(null, INDEXED_PARAM));
         when(mockLog.getAddress()).thenReturn(ADDRESS);
@@ -96,6 +113,9 @@ public class DefaultContractEventDetailsFactoryTest {
         when(mockLog.getTransactionHash()).thenReturn(TX_HASH);
         when(mockLog.getBlockNumber()).thenReturn(BLOCK_NUMBER);
         when(mockLog.getBlockHash()).thenReturn(BLOCK_HASH);
+        when(mockEthBlock.getBlock()).thenReturn(mockBlock);
+        when(mockBlock.getTimestamp()).thenReturn(BLOCK_TIMESTAMP);
+        when(mockTransactionReceipt.getFrom()).thenReturn(FROM_ADDRESS);
 
         filter = new ContractEventFilter();
         filter.setContractAddress(CONTRACT_ADDRESS);
@@ -106,7 +126,7 @@ public class DefaultContractEventDetailsFactoryTest {
     public void testValuesCorrect() {
         DefaultContractEventDetailsFactory underTest = createFactory(BigInteger.TEN);
 
-        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog);
+        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog, mockEthBlock, mockTransactionReceipt);
 
         assertEquals(eventDetails.getName(), eventSpec.getEventName());
         assertEquals(filter.getId(), eventDetails.getFilterId());
@@ -118,6 +138,8 @@ public class DefaultContractEventDetailsFactoryTest {
         assertEquals(Web3jUtil.getSignature(eventSpec), eventDetails.getEventSpecificationSignature());
         assertEquals(ContractEventStatus.UNCONFIRMED, eventDetails.getStatus());
         assertEquals(NETWORK_NAME,eventDetails.getNetworkName());
+        assertEquals(BLOCK_TIMESTAMP, eventDetails.getTimestamp());
+        assertEquals(FROM_ADDRESS, eventDetails.getFrom());
     }
 
     @Test
@@ -126,7 +148,7 @@ public class DefaultContractEventDetailsFactoryTest {
 
         DefaultContractEventDetailsFactory underTest = createFactory(BigInteger.TEN);
 
-        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog);
+        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog, mockEthBlock, mockTransactionReceipt);
 
         assertEquals(ContractEventStatus.INVALIDATED, eventDetails.getStatus());
     }
@@ -135,7 +157,7 @@ public class DefaultContractEventDetailsFactoryTest {
     public void testStatusWhenZeroConfirmationsConfigured() {
         DefaultContractEventDetailsFactory underTest = createFactory(BigInteger.ZERO);
 
-        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog);
+        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog, mockEthBlock, mockTransactionReceipt);
 
         assertEquals(ContractEventStatus.CONFIRMED, eventDetails.getStatus());
     }
@@ -148,7 +170,7 @@ public class DefaultContractEventDetailsFactoryTest {
         final ArgumentCaptor<Type> argumentCaptor = ArgumentCaptor.forClass(Type.class);
         when(mockParameterCoverter.convert(argumentCaptor.capture())).thenReturn(mockParam1);
 
-        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog);
+        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog, mockEthBlock, mockTransactionReceipt);
 
         assertEquals(Arrays.asList(mockParam1), eventDetails.getIndexedParameters());
         assertEquals(BigInteger.valueOf(456), argumentCaptor.getAllValues().get(3).getValue());
@@ -163,7 +185,7 @@ public class DefaultContractEventDetailsFactoryTest {
         final ArgumentCaptor<Type> argumentCaptor = ArgumentCaptor.forClass(Type.class);
         when(mockParameterCoverter.convert(argumentCaptor.capture())).thenReturn(mockParam1);
 
-        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog);
+        final ContractEventDetails eventDetails = underTest.createEventDetails(filter, mockLog, mockEthBlock, mockTransactionReceipt);
 
         assertEquals(Arrays.asList(mockParam1, mockParam1, mockParam1), eventDetails.getNonIndexedParameters());
         assertEquals(BigInteger.valueOf(123), argumentCaptor.getAllValues().get(0).getValue());

@@ -14,21 +14,24 @@
 
 package net.consensys.eventeumserver.integrationtest;
 
-import org.junit.ClassRule;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @TestPropertySource(locations="classpath:application-test-sql-event-sync.properties")
 @ContextConfiguration(initializers = {SqlEventSyncIT.Initializer.class})
+@Testcontainers
 public class SqlEventSyncIT extends BaseEventCatchupTest {
 
-    @ClassRule
+    @Container
     public static MSSQLServerContainer mssqlserver = new MSSQLServerContainer()
-            .withPassword("reallyStrongPwd123");
+            .withPassword("reallyStrongPwd123")
+            .acceptLicense();
 
     static class Initializer
             implements ApplicationContextInitializer<ConfigurableApplicationContext> {

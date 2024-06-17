@@ -20,5 +20,7 @@ public enum TransactionIdentifierType {
 
     TO_ADDRESS,
 
-    FROM_ADDRESS;
+    FROM_ADDRESS,
+
+    TOPIC
 }

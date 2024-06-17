@@ -21,19 +21,22 @@ import net.consensys.eventeum.dto.transaction.TransactionDetails;
 import net.consensys.eventeum.integration.PulsarSettings;
 import net.consensys.eventeumserver.integrationtest.container.PulsarContainer;
 import org.apache.pulsar.client.api.*;
-import org.junit.*;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestPropertySource(locations = "classpath:application-test-db-pulsar.properties")
@@ -52,7 +55,7 @@ public class PulsarBroadcasterIT extends BroadcasterSmokeTest {
 
     private BackgroundPulsarConsumer<TransactionDetails> transactionBackgroundConsumer;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         pulsarContainer = new PulsarContainer();
         pulsarContainer.start();
@@ -66,14 +69,14 @@ public class PulsarBroadcasterIT extends BroadcasterSmokeTest {
         System.setProperty("PULSAR_URL", pulsarContainer.getPlainTextServiceUrl());
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDown() {
         pulsarContainer.stop();
 
         System.clearProperty("PULSAR_URL");
     }
 
-    @Before
+    @BeforeEach
     public void configureConsumer() throws PulsarClientException {
         client = PulsarClient.builder()
                 .serviceUrl(pulsarContainer.getPlainTextServiceUrl())
@@ -92,7 +95,7 @@ public class PulsarBroadcasterIT extends BroadcasterSmokeTest {
         transactionBackgroundConsumer.start(event -> onTransactionMessageReceived(event));
     }
 
-    @After
+    @AfterEach
     public void teardownConsumers() throws PulsarClientException {
         blockBackgroundConsumer.stop();
         eventBackgroundConsumer.stop();

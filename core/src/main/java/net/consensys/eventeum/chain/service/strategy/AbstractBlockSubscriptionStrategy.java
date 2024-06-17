@@ -44,6 +44,7 @@ public abstract class AbstractBlockSubscriptionStrategy<T> implements BlockSubsc
     protected Disposable blockSubscription;
     protected Web3j web3j;
     protected String nodeName;
+    protected String nodeType;
     protected AsyncTaskService asyncService;
     protected BlockNumberService blockNumberService;
     protected AtomicLong lastBlockNumberProcessed = new AtomicLong(0);
@@ -52,10 +53,12 @@ public abstract class AbstractBlockSubscriptionStrategy<T> implements BlockSubsc
 
     public AbstractBlockSubscriptionStrategy(Web3j web3j,
                                              String nodeName,
+                                             String nodeType,
                                              AsyncTaskService asyncService,
                                              BlockNumberService blockNumberService) {
         this.web3j = web3j;
         this.nodeName = nodeName;
+        this.nodeType = nodeType;
         this.asyncService = asyncService;
         this.blockNumberService = blockNumberService;
     }

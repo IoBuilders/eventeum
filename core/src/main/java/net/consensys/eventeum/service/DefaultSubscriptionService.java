@@ -16,22 +16,33 @@ package net.consensys.eventeum.service;
 
 import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.chain.block.BlockListener;
+import net.consensys.eventeum.chain.contract.ContractEventListener;
 import net.consensys.eventeum.chain.service.BlockchainService;
 import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
+import net.consensys.eventeum.chain.service.container.NodeServices;
 import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
+import net.consensys.eventeum.chain.settings.NodeType;
+import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.integration.broadcast.internal.EventeumEventBroadcaster;
+import net.consensys.eventeum.model.FilterSubscription;
 import net.consensys.eventeum.repository.ContractEventFilterRepository;
 import net.consensys.eventeum.service.exception.NotFoundException;
 import net.consensys.eventeum.service.sync.EventSyncService;
+import net.consensys.eventeum.utils.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * {@inheritDoc}
@@ -56,6 +67,8 @@ public class DefaultSubscriptionService implements SubscriptionService {
 
     private EventSyncService eventSyncService;
 
+    private List<ContractEventListener> contractEventListeners;
+
     private SubscriptionServiceState state = SubscriptionServiceState.UNINITIALISED;
 
     @Autowired
@@ -63,8 +76,10 @@ public class DefaultSubscriptionService implements SubscriptionService {
                                       ContractEventFilterRepository eventFilterRepository,
                                       EventeumEventBroadcaster eventeumEventBroadcaster,
                                       List<BlockListener> blockListeners,
+                                      List<ContractEventListener> contractEventListeners,
                                       @Qualifier("eternalRetryTemplate") RetryTemplate retryTemplate,
                                       EventSyncService eventSyncService) {
+        this.contractEventListeners = contractEventListeners;
         this.chainServices = chainServices;
         this.eventFilterRepository = eventFilterRepository;
         this.eventeumEventBroadcaster = eventeumEventBroadcaster;
@@ -72,9 +87,9 @@ public class DefaultSubscriptionService implements SubscriptionService {
         this.retryTemplate = retryTemplate;
         this.eventSyncService = eventSyncService;
 
-        filterSubscriptions = new HashMap<>();
+        filterSubscriptions = StreamSupport.stream(eventFilterRepository.findAll().spliterator(), false)
+                .collect(Collectors.toMap(ContractEventFilter::getId, filter -> filter));
     }
-
 
     public void init(List<ContractEventFilter> initFilters) {
 
@@ -90,8 +105,13 @@ public class DefaultSubscriptionService implements SubscriptionService {
             }
         }
 
-        chainServices.getNodeNames().forEach(nodeName -> subscribeToNewBlockEvents(
-                chainServices.getNodeServices(nodeName).getBlockSubscriptionStrategy(), blockListeners));
+        chainServices.getNodeNames().forEach(nodeName -> {
+            final NodeServices nodeServices = chainServices.getNodeServices(nodeName);
+            final String nodeType = nodeServices.getNodeType();
+            if (nodeType.equals(NodeType.NORMAL.name()) || nodeType.equals(NodeType.MIRROR.name())) {
+                subscribeToNewBlockEvents(nodeServices.getBlockSubscriptionStrategy(), blockListeners);
+            }
+        });
 
         state = SubscriptionServiceState.SUBSCRIBED;
     }
@@ -118,7 +138,7 @@ public class DefaultSubscriptionService implements SubscriptionService {
      */
     @Override
     public List<ContractEventFilter> listContractEventFilters() {
-      return new ArrayList<>(filterSubscriptions.values());
+        return new ArrayList<>(filterSubscriptions.values());
     }
 
     /**
@@ -169,23 +189,31 @@ public class DefaultSubscriptionService implements SubscriptionService {
     private ContractEventFilter doRegisterContractEventFilter(ContractEventFilter filter, boolean broadcast) {
         try {
             populateIdIfMissing(filter);
+            boolean isAlreadyRegistered = isFilterRegistered(filter);
 
-            if (!isFilterRegistered(filter)) {
-                filterSubscriptions.put(filter.getId(), filter);
+            if (!isAlreadyRegistered ) {
+                log.info("Registering filter: " + JSON.stringify(filter));
 
-                //TODO start block replay
+                if (filter.getStartBlock() != null) {
+                    final FilterSubscription sub = registerContractEventFilter(filter);
 
-                saveContractEventFilter(filter);
-
-                if (broadcast) {
-                    broadcastContractEventFilterAdded(filter);
+                    if (sub != null) {
+                        filter.setStartBlock(sub.getStartBlock());
+                    }
                 }
-
-                return filter;
-            } else {
-                log.info("Already registered contract event filter with id: " + filter.getId());
-                return getRegisteredFilter(filter.getId());
             }
+
+            filter = saveContractEventFilter(filter);
+            filterSubscriptions.put(filter.getId(), filter);
+
+            if (isAlreadyRegistered) {
+                log.info("Updated contract event filter with id: " + filter.getId());
+            } else if (broadcast){
+                broadcastContractEventFilterAdded(filter);
+
+                log.debug("Registered filters: {}", JSON.stringify(filterSubscriptions));
+            }
+            return filter;
         } catch (Exception e) {
             log.error("Error registering filter " + filter.getId(), e);
             throw e;
@@ -217,6 +245,33 @@ public class DefaultSubscriptionService implements SubscriptionService {
 
     private boolean isFilterRegistered(ContractEventFilter contractEventFilter) {
         return (getRegisteredFilter(contractEventFilter.getId()) != null);
+    }
+
+    private FilterSubscription registerContractEventFilter(ContractEventFilter filter) {
+        final NodeServices nodeServices = chainServices.getNodeServices(filter.getNode());
+
+        if (nodeServices == null) {
+            log.warn("No node configured with name {}, not registering filter", filter.getNode());
+            return null;
+        }
+
+        final BlockchainService blockchainService = nodeServices.getBlockchainService();
+
+        final FilterSubscription sub = blockchainService.registerEventListener(filter, contractEvent -> {
+            contractEventListeners.forEach(
+                    listener -> triggerListener(listener, contractEvent));
+        });
+
+        return sub;
+    }
+
+    private void triggerListener(ContractEventListener listener, ContractEventDetails contractEventDetails) {
+        try {
+            listener.onEvent(contractEventDetails);
+        } catch (Throwable t) {
+            log.error(String.format(
+                    "An error occurred when processing contractEvent with id %s", contractEventDetails.getId()), t);
+        }
     }
 
     private ContractEventFilter getRegisteredFilter(String filterId) {

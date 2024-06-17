@@ -16,6 +16,7 @@ package net.consensys.eventeum.chain.service.container;
 
 import lombok.Data;
 import net.consensys.eventeum.chain.service.BlockchainService;
+import net.consensys.eventeum.chain.service.HederaService;
 import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
 import org.web3j.protocol.Web3j;
 
@@ -24,9 +25,13 @@ public class NodeServices {
 
     private String nodeName;
 
+    private String nodeType;
+
     private Web3j web3j;
 
     private BlockchainService blockchainService;
 
     private BlockSubscriptionStrategy blockSubscriptionStrategy;
+
+    private HederaService hederaService;
 }

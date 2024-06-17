@@ -16,6 +16,7 @@ package net.consensys.eventeum.integration.broadcast.blockchain;
 
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
+import net.consensys.eventeum.dto.message.MessageDetails;
 import net.consensys.eventeum.dto.transaction.TransactionDetails;
 
 /**
@@ -32,7 +33,7 @@ public interface BlockchainEventBroadcaster {
     void broadcastNewBlock(BlockDetails block);
 
     /**
-     * Broadcasts details of a new smart contract event that has been emitted from the ethereum blockchain.
+     * Broadcasts details of a new smart contract event that has been emitted from the blockchain.
      * @param eventDetails
      */
     void broadcastContractEvent(ContractEventDetails eventDetails);
@@ -42,4 +43,10 @@ public interface BlockchainEventBroadcaster {
      * @param transactionDetails
      */
     void broadcastTransaction(TransactionDetails transactionDetails);
+
+    /**
+     * Broadcasts details of a message that has been emitted from the blockchain
+     * @param messageDetails
+     */
+    void broadcastMessage(MessageDetails messageDetails);
 }

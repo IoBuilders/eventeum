@@ -17,9 +17,16 @@ package net.consensys.eventeum.chain.contract;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.chain.service.BlockchainService;
+import net.consensys.eventeum.chain.service.HederaService;
 import net.consensys.eventeum.chain.service.container.ChainServicesContainer;
+import net.consensys.eventeum.chain.service.container.NodeServices;
 import net.consensys.eventeum.chain.service.domain.Block;
+import net.consensys.eventeum.chain.service.domain.io.ContractResultResponse;
+import net.consensys.eventeum.chain.service.domain.io.HederaLogResponse;
+import net.consensys.eventeum.chain.service.domain.wrapper.HederaBlock;
+import net.consensys.eventeum.chain.settings.NodeType;
 import net.consensys.eventeum.chain.util.BloomFilterUtil;
+import net.consensys.eventeum.chain.util.Web3jUtil;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.service.AsyncTaskService;
@@ -33,9 +40,9 @@ import java.util.List;
 @AllArgsConstructor
 public class DefaultContractEventProcessor implements ContractEventProcessor {
 
-    private static final String EVENT_EXECUTOR_NAME = "EVENT";
+    public static final String EVENT_EXECUTOR_NAME = "EVENT";
 
-    private ChainServicesContainer chainServices;
+    protected ChainServicesContainer chainServices;
 
     private AsyncTaskService asyncTaskService;
 
@@ -44,10 +51,17 @@ public class DefaultContractEventProcessor implements ContractEventProcessor {
     @Override
     public void processLogsInBlock(Block block, List<ContractEventFilter> contractEventFilters) {
         asyncTaskService.executeWithCompletableFuture(ExecutorNameFactory.build(EVENT_EXECUTOR_NAME, block.getNodeName()), () -> {
-            final BlockchainService blockchainService = getBlockchainService(block.getNodeName());
-
-            contractEventFilters
-                    .forEach(filter -> processLogsForFilter(filter, block, blockchainService));
+            final NodeServices nodeServices = this.chainServices.getNodeServices(block.getNodeName());
+            switch (NodeType.valueOf(nodeServices.getNodeType())) {
+                case MIRROR:
+                    this.processLogsInMirrorNodeBlock(block, contractEventFilters);
+                    break;
+                case NORMAL:
+                    contractEventFilters.forEach(filter ->
+                            processLogsForFilter(filter, block, nodeServices.getBlockchainService())
+                    );
+                    break;
+            }
         }).join();
     }
 
@@ -56,6 +70,35 @@ public class DefaultContractEventProcessor implements ContractEventProcessor {
         asyncTaskService.executeWithCompletableFuture(
                 ExecutorNameFactory.build(EVENT_EXECUTOR_NAME, contractEventDetails.getNodeName()),
                 () -> triggerListeners(contractEventDetails)).join();
+    }
+
+    protected boolean isEventFilterInBloomFilter(ContractEventFilter filter, String logsBloom) {
+        final BloomFilterUtil.BloomFilterBits bloomBits = BloomFilterUtil.getBloomBits(filter);
+
+        return BloomFilterUtil.bloomFilterMatch(logsBloom, bloomBits);
+    }
+
+    protected BlockchainService getBlockchainService(String nodeName) {
+        return chainServices.getNodeServices(nodeName).getBlockchainService();
+    }
+
+    protected HederaService getHederaService(String nodeName) {
+        return chainServices.getNodeServices(nodeName).getHederaService();
+    }
+
+    protected void processLogsInMirrorNodeBlock(Block block, List<ContractEventFilter> contractEventFilters) {
+        final HederaService hederaService = getHederaService(block.getNodeName());
+        List<ContractResultResponse> contractResultResponseList = ((HederaBlock) block).getContractResults();
+        if (contractResultResponseList != null && !contractResultResponseList.isEmpty()) {
+            contractResultResponseList.forEach(res -> {
+                processTransactionData(hederaService, res, contractEventFilters);
+            });
+        }
+    }
+
+    protected void triggerListeners(ContractEventDetails contractEvent) {
+        contractEventListeners.forEach(
+                listener -> triggerListener(listener, contractEvent));
     }
 
     private void processLogsForFilter(ContractEventFilter filter,
@@ -68,24 +111,10 @@ public class DefaultContractEventProcessor implements ContractEventProcessor {
                     .getEventsForFilter(filter, block.getNumber())
                     .forEach(event -> {
                         event.setTimestamp(block.getTimestamp());
+                        event.setBlockTimestamp(block.getTimestamp());
                         triggerListeners(event);
                     });
         }
-    }
-
-    private boolean isEventFilterInBloomFilter(ContractEventFilter filter, String logsBloom) {
-        final BloomFilterUtil.BloomFilterBits bloomBits = BloomFilterUtil.getBloomBits(filter);
-
-        return BloomFilterUtil.bloomFilterMatch(logsBloom, bloomBits);
-    }
-
-    private BlockchainService getBlockchainService(String nodeName) {
-        return chainServices.getNodeServices(nodeName).getBlockchainService();
-    }
-
-    private void triggerListeners(ContractEventDetails contractEvent) {
-        contractEventListeners.forEach(
-                listener -> triggerListener(listener, contractEvent));
     }
 
     private void triggerListener(ContractEventListener listener, ContractEventDetails contractEventDetails) {
@@ -97,4 +126,29 @@ public class DefaultContractEventProcessor implements ContractEventProcessor {
             throw t;
         }
     }
+
+    private void processMirrorLogsForFilter(ContractEventFilter filter, HederaService hederaService,
+                                            HederaLogResponse hederaLogResponse, ContractResultResponse contractResult) {
+        triggerListeners(hederaService.getEventForFilter(filter, hederaLogResponse, contractResult));
+    }
+
+    private void processTransactionData(HederaService hederaService, ContractResultResponse contractResult, List<ContractEventFilter> contractEventFilters) {
+        contractResult.getLogs().forEach(hederaLogResponse -> contractEventFilters.forEach(filter -> {
+            if (isEventFilterInTopic(hederaLogResponse, filter) && isContractFromEventFilter(hederaLogResponse, filter)) {
+                processMirrorLogsForFilter(filter, hederaService, hederaLogResponse, contractResult);
+            }
+        }));
+    }
+
+    private boolean isEventFilterInTopic(HederaLogResponse log,
+                                         ContractEventFilter filter) {
+        String eventSignature = Web3jUtil.getSignature(filter.getEventSpecification());
+        return log.getTopics().get(0).equals(eventSignature);
+    }
+
+    private boolean isContractFromEventFilter(HederaLogResponse log,
+                                              ContractEventFilter filter) {
+        return filter.getContractAddress().equalsIgnoreCase(log.getAddress());
+    }
+
 }
