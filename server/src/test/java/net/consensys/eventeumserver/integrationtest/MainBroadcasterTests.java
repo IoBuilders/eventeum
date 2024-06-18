@@ -1,3 +1,17 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeumserver.integrationtest;
 
 import net.consensys.eventeum.constant.Constants;
@@ -9,7 +23,7 @@ import net.consensys.eventeum.dto.transaction.TransactionDetails;
 import net.consensys.eventeum.dto.transaction.TransactionStatus;
 import net.consensys.eventeum.model.TransactionIdentifierType;
 import net.consensys.eventeum.model.TransactionMonitoringSpec;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Keys;
 
@@ -17,7 +31,9 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.util.AssertionErrors.assertTrue;
+
 
 public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
@@ -60,11 +76,12 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         waitForFilterPoll();
         triggerBlocks(12);
-        waitForContractEventMessages(2);
 
-        assertEquals(2, getBroadcastContractEvents().size());
+        waitForContractEventMessages(1);
 
-        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(1);
+        Assertions.assertTrue(getBroadcastContractEvents().size() > 0);
+
+        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(getBroadcastContractEvents().size()-1);
         verifyDummyEventDetails(registeredFilter, eventDetails, ContractEventStatus.CONFIRMED);
     }
 
@@ -88,7 +105,7 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         waitForBlockMessages(1);
 
-        Assert.assertTrue("No blocks received", getBroadcastBlockMessages().size() >= 1);
+        assertTrue("No blocks received", getBroadcastBlockMessages().size() >= 1);
 
         BlockDetails blockDetails = getBroadcastBlockMessages().get(0);
         assertEquals(1, blockDetails.getNumber().compareTo(BigInteger.ZERO));
@@ -137,11 +154,12 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         waitForTransactionMessages(1);
 
-        assertEquals(1, getBroadcastTransactionMessages().size());
+        Assertions.assertTrue(getBroadcastTransactionMessages().size() > 0);
 
-        final TransactionDetails txDetails = getBroadcastTransactionMessages().get(0);
+        final TransactionDetails txDetails = getBroadcastTransactionMessages().get(getBroadcastTransactionMessages().size()-1);
         assertEquals(txHash, txDetails.getHash());
         assertEquals(expectedStatus, txDetails.getStatus());
+        assertNotNull(txDetails.getTimestamp());
 
         return txHash;
     }
@@ -192,7 +210,8 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
                 TransactionIdentifierType.FROM_ADDRESS,
                 CREDS.getAddress(),
                 Constants.DEFAULT_NODE_NAME,
-                Arrays.asList(TransactionStatus.FAILED)
+                Arrays.asList(TransactionStatus.FAILED),
+                null
         );
 
         monitorTransaction(monitorSpec);

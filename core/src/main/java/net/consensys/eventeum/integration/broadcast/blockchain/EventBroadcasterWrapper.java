@@ -1,10 +1,24 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeum.integration.broadcast.blockchain;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
-import net.consensys.eventeum.dto.message.ContractEvent;
+import net.consensys.eventeum.dto.message.MessageDetails;
 import net.consensys.eventeum.dto.transaction.TransactionDetails;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -26,7 +40,7 @@ public class EventBroadcasterWrapper implements BlockchainEventBroadcaster {
 
     private Cache<Integer, TransactionDetails> transactionCache;
 
-    private Cache<Integer, TransactionDetails> transactionDetailsCache;
+    private Cache<Integer, MessageDetails> messageCache;
 
     private Long expirationTimeMillis;
 
@@ -40,6 +54,7 @@ public class EventBroadcasterWrapper implements BlockchainEventBroadcaster {
         this.expirationTimeMillis = expirationTimeMillis;
         this.contractEventCache = createCache(ContractEventDetails.class);
         this.transactionCache = createCache(TransactionDetails.class);
+        this.messageCache = createCache(MessageDetails.class);
         this.wrapped = toWrap;
         this.enableBlockNotifications = enableBlockNotifications;
     }
@@ -69,6 +84,16 @@ public class EventBroadcasterWrapper implements BlockchainEventBroadcaster {
             if (transactionCache.getIfPresent(Integer.valueOf(transactionDetails.hashCode())) == null) {
                 transactionCache.put(Integer.valueOf(transactionDetails.hashCode()), transactionDetails);
                 wrapped.broadcastTransaction(transactionDetails);
+            }
+        }
+    }
+
+    @Override
+    public void broadcastMessage(MessageDetails messageDetails) {
+        synchronized (this) {
+            if (messageCache.getIfPresent(Integer.valueOf(messageDetails.hashCode())) == null) {
+                messageCache.put(Integer.valueOf(messageDetails.hashCode()), messageDetails);
+                wrapped.broadcastMessage(messageDetails);
             }
         }
     }

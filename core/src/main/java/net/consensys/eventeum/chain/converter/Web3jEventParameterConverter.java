@@ -1,3 +1,17 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeum.chain.converter;
 
 import net.consensys.eventeum.dto.event.parameter.ArrayParameter;
@@ -6,9 +20,8 @@ import net.consensys.eventeum.dto.event.parameter.NumberParameter;
 import net.consensys.eventeum.dto.event.parameter.StringParameter;
 import net.consensys.eventeum.settings.EventeumSettings;
 import org.springframework.stereotype.Component;
-import org.web3j.abi.datatypes.DynamicArray;
+import org.web3j.abi.datatypes.Array;
 import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.crypto.Keys;
 import org.web3j.utils.Numeric;
 
@@ -43,6 +56,9 @@ public class Web3jEventParameterConverter implements EventParameterConverter<Typ
         typeConverters.put("string",
                 (type) -> new StringParameter(type.getTypeAsString(),
                         trim((String)type.getValue())));
+        typeConverters.put("bytes",
+                (type) -> new StringParameter(type.getTypeAsString(),
+                        Numeric.toHexString((byte[])type.getValue())));
 
         this.settings = settings;
     }
@@ -53,9 +69,9 @@ public class Web3jEventParameterConverter implements EventParameterConverter<Typ
 
         if (typeConverter == null) {
             //Type might be an array, in which case the type will be the array type class
-            if (toConvert instanceof DynamicArray){
-                final DynamicArray<?> theArray = (DynamicArray<?>) toConvert;
-                return convertDynamicArray(theArray);
+            if (toConvert instanceof Array){
+                final Array<?> theArray = (Array<?>) toConvert;
+                return convertArray(theArray);
             }
 
             throw new TypeConversionException("Unsupported type: " + toConvert.getTypeAsString());
@@ -78,12 +94,12 @@ public class Web3jEventParameterConverter implements EventParameterConverter<Typ
         }
     }
 
-    private EventParameter<?> convertDynamicArray(DynamicArray<?> toConvert) {
+    private EventParameter<?> convertArray(Array<?> toConvert) {
         final ArrayList<EventParameter<?>> convertedArray = new ArrayList<>();
 
         toConvert.getValue().forEach(arrayEntry -> convertedArray.add(convert(arrayEntry)));
 
-        return new ArrayParameter(toConvert.getValue().get(0).getTypeAsString().toLowerCase(),
+        return new ArrayParameter(toConvert.getTypeAsString().replace("[]", "").toLowerCase(),
                 toConvert.getComponentType(), convertedArray);
     }
 

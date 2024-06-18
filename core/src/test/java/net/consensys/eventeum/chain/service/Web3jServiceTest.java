@@ -1,17 +1,32 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeum.chain.service;
 
 import io.reactivex.Flowable;
-import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
-import net.consensys.eventeum.chain.service.domain.Log;
 import net.consensys.eventeum.chain.contract.ContractEventListener;
 import net.consensys.eventeum.chain.factory.ContractEventDetailsFactory;
-import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
+import net.consensys.eventeum.chain.service.block.EventBlockManagementService;
+import net.consensys.eventeum.chain.service.domain.Log;
+import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
+import net.consensys.eventeum.chain.service.domain.wrapper.Web3jTransactionReceipt;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
-
 import net.consensys.eventeum.testutils.DummyAsyncTaskService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.reactivestreams.Subscriber;
 import org.web3j.protocol.Web3j;
@@ -28,14 +43,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
 
 public class Web3jServiceTest {
 
@@ -51,23 +61,18 @@ public class Web3jServiceTest {
 
     private Web3j mockWeb3j;
 
-    private EventBlockManagementService mockBlockManagement;
-
     private ContractEventDetailsFactory mockContractEventDetailsFactory;
 
     private ContractEventDetails mockContractEventDetails;
 
-    private BlockSubscriptionStrategy mockBlockSubscriptionStrategy;
+    private EventBlockManagementService mockBlockManagement;
 
-    @Before
+    @BeforeEach
     public void init() throws IOException {
         mockWeb3j = mock(Web3j.class);
-        mockBlockManagement = mock(EventBlockManagementService.class);
         mockContractEventDetailsFactory = mock(ContractEventDetailsFactory.class);
         mockContractEventDetails = mock(ContractEventDetails.class);
-        mockBlockSubscriptionStrategy = mock(BlockSubscriptionStrategy.class);
-
-        when(mockBlockManagement.getLatestBlockForEvent(any(ContractEventFilter.class))).thenReturn(BLOCK_NUMBER);
+        mockBlockManagement = mock(EventBlockManagementService.class);
 
         //Wire up getBlockNumber
         final Request<?, EthBlockNumber> mockRequest = mock(Request.class);
@@ -76,8 +81,9 @@ public class Web3jServiceTest {
         when(mockRequest.send()).thenReturn(blockNumber);
         doReturn(mockRequest).when(mockWeb3j).ethBlockNumber();
 
-        underTest = new Web3jService("test", mockWeb3j, mockContractEventDetailsFactory,
-                mockBlockManagement, mockBlockSubscriptionStrategy, new DummyAsyncTaskService());
+        when(mockBlockManagement.getLatestBlockForEvent(any(ContractEventFilter.class))).thenReturn(BLOCK_NUMBER);
+
+        underTest = new Web3jService("test", mockWeb3j, mockContractEventDetailsFactory, new DummyAsyncTaskService(), mockBlockManagement);
     }
 
     @Test
@@ -108,14 +114,16 @@ public class Web3jServiceTest {
         assertEquals("Version 1.0", underTest.getClientVersion());
     }
 
-    @Test(expected = BlockchainException.class)
+    @Test
     public void testGetClientVersionIOException() throws IOException {
         final Request<?, Web3ClientVersion> mockRequest = mock(Request.class);
 
         when(mockRequest.send()).thenThrow(new IOException());
         doReturn(mockRequest).when(mockWeb3j).web3ClientVersion();
 
-        underTest.getClientVersion();
+        Assertions.assertThrows(BlockchainException.class, () ->
+                underTest.getClientVersion()
+        );
     }
 
     @Test
@@ -133,14 +141,16 @@ public class Web3jServiceTest {
         checkTransactionReceipt(underTest.getTransactionReceipt(TX_HASH));
     }
 
-    @Test(expected = BlockchainException.class)
+    @Test
     public void testGetTransactionReceiptIOException() throws IOException {
         final Request<?, EthGetTransactionReceipt> mockRequest = mock(Request.class);
 
         when(mockRequest.send()).thenThrow(new IOException());
         doReturn(mockRequest).when(mockWeb3j).ethGetTransactionReceipt(TX_HASH);
 
-        underTest.getTransactionReceipt(TX_HASH);
+        Assertions.assertThrows(BlockchainException.class, () ->
+                underTest.getTransactionReceipt(TX_HASH)
+        );
     }
 
     @Test
@@ -155,13 +165,16 @@ public class Web3jServiceTest {
         assertEquals(BigInteger.TEN, underTest.getCurrentBlockNumber());
     }
 
-    @Test(expected = BlockchainException.class)
+    @Test
     public void testGetCurrentBlockNumberIOException() throws IOException {
         final Request<?, EthBlockNumber> mockRequest = mock(Request.class);
 
         when(mockRequest.send()).thenThrow(new IOException());
         doReturn(mockRequest).when(mockWeb3j).ethBlockNumber();
-        underTest.getCurrentBlockNumber();
+
+        Assertions.assertThrows(BlockchainException.class, () ->
+                underTest.getCurrentBlockNumber()
+        );
     }
 
     @Test
@@ -183,9 +196,26 @@ public class Web3jServiceTest {
         final Flowable<org.web3j.protocol.core.methods.response.Log> flowable = new DummyFlowable<>(mockLog);
         when(mockWeb3j.ethLogFlowable(any(EthFilter.class))).thenReturn(flowable);
 
+        final Request<?, EthBlock> mockRequest = mock(Request.class);
+        final EthBlock mockBlock = mock(EthBlock.class);
+
+        final Request<?, EthGetTransactionReceipt> mockRequestGetTransactionReceipt = mock(Request.class);
+        final EthGetTransactionReceipt mockGetTransactionReceipt = mock(EthGetTransactionReceipt.class);
+        final Optional<org.web3j.protocol.core.methods.response.TransactionReceipt> optionalTransactionReceipt =
+                Optional.of(mock(org.web3j.protocol.core.methods.response.TransactionReceipt.class));
+
+        when(mockRequest.send()).thenReturn(mockBlock);
+        doReturn(mockRequest).when(mockWeb3j).ethGetBlockByNumber(any(DefaultBlockParameterNumber.class), eq(false));
+
+        when(mockLog.getTransactionHash()).thenReturn(TX_HASH);
+        when(mockRequestGetTransactionReceipt.send()).thenReturn(mockGetTransactionReceipt);
+        when(mockGetTransactionReceipt.getTransactionReceipt()).thenReturn(optionalTransactionReceipt);
+        doReturn(mockRequestGetTransactionReceipt).when(mockWeb3j).ethGetTransactionReceipt(TX_HASH);
+
         final ContractEventFilter filter = new ContractEventFilter();
 
-        when(mockContractEventDetailsFactory.createEventDetails(filter, mockLog)).thenReturn(mockContractEventDetails);
+        doReturn(mockContractEventDetails).when(mockContractEventDetailsFactory).createEventDetails(eq(filter), eq(mockLog), eq(mockBlock),
+                any(Web3jTransactionReceipt.class));
 
         final ContractEventListener mockEventListener = mock(ContractEventListener.class);
         underTest.registerEventListener(filter, mockEventListener);

@@ -1,3 +1,17 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.consensys.eventeum.chain.util;
 
 import lombok.AllArgsConstructor;
@@ -8,7 +22,6 @@ import net.consensys.eventeum.dto.event.filter.ParameterType;
 import net.consensys.eventeum.service.exception.ValidationException;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.Utils;
 import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Bytes1;
 
@@ -28,6 +41,7 @@ public class Web3jUtil {
     private static final String BOOL = "BOOL";
     private static final String STRING = "STRING";
     private static final String BYTE = "BYTE";
+    private static final String BYTES = "BYTES";
 
     static {
         addUintMappings(8, 256);
@@ -48,6 +62,7 @@ public class Web3jUtil {
         typeMappings.put(ParameterType.build(STRING), new TypeMapping(new TypeReference<Utf8String>() {}, Utf8String.class));
         typeMappings.put(ParameterType.build(STRING + "[]"),
                 new TypeMapping(new TypeReference<DynamicArray<Utf8String>>() {}, DynamicArray.class));
+        typeMappings.put(ParameterType.build(BYTES), new TypeMapping(new TypeReference<DynamicBytes>() {}, DynamicBytes.class));
     }
 
     public static List<TypeReference<?>> getTypeReferencesFromParameterDefinitions(
@@ -75,6 +90,9 @@ public class Web3jUtil {
     }
 
     public static String getSignature(ContractEventSpecification spec) {
+        if (spec.getEventSignature() != null) {
+            return EventEncoder.buildEventSignature(spec.getEventName() + spec.getEventSignature());
+        }
 
         final List<ParameterDefinition> allParameterDefinitions = new ArrayList<>();
         addAllDefinitions(allParameterDefinitions, spec.getIndexedParameterDefinitions());
@@ -85,6 +103,15 @@ public class Web3jUtil {
                 getTypeReferencesFromParameterDefinitions(allParameterDefinitions));
 
         return EventEncoder.encode(event);
+    }
+
+    public static Event getEventFromWeb3SmartContractClassName(String className, String eventName) {
+        try {
+            return (Event) Class.forName(className)
+                    .getDeclaredField(eventName.toUpperCase() + "_EVENT").get(null);
+        } catch (IllegalAccessException | NoSuchFieldException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void addUintMappings(int interval, int max) {
