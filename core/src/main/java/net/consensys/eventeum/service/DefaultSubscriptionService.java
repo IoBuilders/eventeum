@@ -34,14 +34,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -130,8 +130,10 @@ public class DefaultSubscriptionService implements SubscriptionService {
      */
     @Override
     @Async
-    public ContractEventFilter registerContractEventFilterWithRetries(ContractEventFilter filter, boolean broadcast) {
-        return retryTemplate.execute((context) -> doRegisterContractEventFilter(filter, broadcast));
+    public Future<ContractEventFilter> registerContractEventFilterWithRetries(ContractEventFilter filter, boolean broadcast) {
+        return AsyncResult.forValue(
+                retryTemplate.execute((context) -> doRegisterContractEventFilter(filter, broadcast))
+        );
     }
 
     /**
@@ -192,7 +194,7 @@ public class DefaultSubscriptionService implements SubscriptionService {
             populateIdIfMissing(filter);
             boolean isAlreadyRegistered = isFilterRegistered(filter);
 
-            if (!isAlreadyRegistered ) {
+            if (!isAlreadyRegistered) {
                 log.info("Registering filter: " + JSON.stringify(filter));
 
                 if (filter.getStartBlock() != null) {
@@ -209,7 +211,7 @@ public class DefaultSubscriptionService implements SubscriptionService {
 
             if (isAlreadyRegistered) {
                 log.info("Updated contract event filter with id: " + filter.getId());
-            } else if (broadcast){
+            } else if (broadcast) {
                 broadcastContractEventFilterAdded(filter);
 
                 log.debug("Registered filters: {}", JSON.stringify(filterSubscriptions));

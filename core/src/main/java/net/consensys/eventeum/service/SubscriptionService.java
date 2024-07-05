@@ -18,6 +18,7 @@ import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.service.exception.NotFoundException;
 
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * A service for manageing contract event subscriptions within the Eventeum instance.
@@ -53,7 +54,7 @@ public interface SubscriptionService {
      * @param broadcast Specifies if the added filter event should be broadcast to other Eventeum instances.
      * @return The registered contract event filter
      */
-    ContractEventFilter registerContractEventFilterWithRetries(ContractEventFilter filter, boolean broadcast);
+    Future<ContractEventFilter> registerContractEventFilterWithRetries(ContractEventFilter filter, boolean broadcast);
     /**
      * List all registered contract event filters.
      *

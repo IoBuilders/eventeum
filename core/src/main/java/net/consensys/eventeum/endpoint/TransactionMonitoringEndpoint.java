@@ -21,7 +21,7 @@ import net.consensys.eventeum.service.TransactionMonitoringService;
 import net.consensys.eventeum.service.exception.NotFoundException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**

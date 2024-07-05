@@ -15,6 +15,7 @@
 package net.consensys.eventeum.chain.config;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import net.consensys.eventeum.dto.event.filter.correlationId.CorrelationIdStrategy;
 import net.consensys.eventeum.dto.event.filter.correlationId.IndexedParameterCorrelationIdStrategy;
@@ -72,6 +73,7 @@ public class EventFilterConfiguration {
     }
 
     @Data
+    @EqualsAndHashCode(callSuper = true)
     public static class EventFilterConfig extends ContractEventFilter {
         private CorrelationId correlationId;
     }

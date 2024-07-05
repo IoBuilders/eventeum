@@ -15,9 +15,10 @@
 package net.consensys.eventeum.dto.event.parameter;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 import java.math.BigInteger;
 
 /**
@@ -25,9 +26,10 @@ import java.math.BigInteger;
  *
  * @author Craig Williams <craig.williams@consensys.net>
  */
-@Embeddable
 @Data
+@Embeddable
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class NumberParameter extends AbstractEventParameter<BigInteger> {
 
     public NumberParameter(String type, BigInteger value) {

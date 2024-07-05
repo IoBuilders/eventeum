@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Keys;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

@@ -15,9 +15,9 @@
 package net.consensys.eventeum.config;
 
 
+import io.micrometer.common.lang.Nullable;
 import io.micrometer.core.instrument.Meter.Type;
 import io.micrometer.core.instrument.config.NamingConvention;
-import io.micrometer.core.lang.Nullable;
 
 import java.util.regex.Pattern;
 

@@ -44,7 +44,7 @@ import org.web3j.protocol.websocket.WebSocketClient;
 import org.web3j.protocol.websocket.WebSocketService;
 import org.web3j.utils.Async;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.net.*;
 import java.util.HashMap;
 import java.util.List;
@@ -157,7 +157,8 @@ public class NodeBeanRegistrationStrategy {
     }
 
     private String registerBlockchainServiceBean(Node node, Web3j web3j, BeanDefinitionRegistry registry) {
-        Class<? extends BlockchainService> blockchainService = net.consensys.eventeum.chain.service.Web3jService.class;;
+        Class<? extends BlockchainService> blockchainService = net.consensys.eventeum.chain.service.Web3jService.class;
+        ;
 
         final BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(
                 blockchainService);
@@ -269,11 +270,11 @@ public class NodeBeanRegistrationStrategy {
             ConnectionPool pool = new ConnectionPool(node.getMaxIdleConnections(), node.getKeepAliveDuration(), TimeUnit.MILLISECONDS);
             OkHttpClient client = globalOkHttpClient.newBuilder()
                     .connectionPool(pool)
-                    . cookieJar(new JavaNetCookieJar(cookieManager))
-                    .readTimeout(node.getReadTimeout(),TimeUnit.MILLISECONDS)
-                    .connectTimeout(node.getConnectionTimeout(),TimeUnit.MILLISECONDS)
+                    .cookieJar(new JavaNetCookieJar(cookieManager))
+                    .readTimeout(node.getReadTimeout(), TimeUnit.MILLISECONDS)
+                    .connectTimeout(node.getConnectionTimeout(), TimeUnit.MILLISECONDS)
                     .build();
-            HttpService httpService = new HttpService(node.getUrl(),client,false);
+            HttpService httpService = new HttpService(node.getUrl(), client, false);
             if (authHeaders != null) {
                 httpService.addHeaders(authHeaders);
             }

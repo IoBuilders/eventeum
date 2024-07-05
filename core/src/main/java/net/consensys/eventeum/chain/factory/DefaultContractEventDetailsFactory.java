@@ -133,7 +133,7 @@ public class DefaultContractEventDetailsFactory implements ContractEventDetailsF
     }
 
     private List<Type> getNonIndexedParametersFromLog(ContractEventSpecification eventSpec, Log log) {
-        if (!StringUtils.isEmpty(eventSpec.getWeb3EventSmartContractClass())) {
+        if (StringUtils.hasLength(eventSpec.getWeb3EventSmartContractClass())) {
             return FunctionReturnDecoder.decode(
                     log.getData(),
                     Web3jUtil.getEventFromWeb3SmartContractClassName(eventSpec.getWeb3EventSmartContractClass(), eventSpec.getEventName()).getNonIndexedParameters());
@@ -152,7 +152,7 @@ public class DefaultContractEventDetailsFactory implements ContractEventDetailsF
     }
 
     private List<Type> getIndexedParametersFromLog(ContractEventSpecification eventSpec, Log log) {
-        if (!StringUtils.isEmpty(eventSpec.getWeb3EventSmartContractClass())) {
+        if (StringUtils.hasLength(eventSpec.getWeb3EventSmartContractClass())) {
             return FunctionReturnDecoder.decode(
                     log.getData(),
                     Web3jUtil.getEventFromWeb3SmartContractClassName(eventSpec.getWeb3EventSmartContractClass(), eventSpec.getEventName()).getIndexedParameters());

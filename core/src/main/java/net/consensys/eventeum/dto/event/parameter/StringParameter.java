@@ -15,17 +15,19 @@
 package net.consensys.eventeum.dto.event.parameter;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * A textual based EventParameter, represented by a String.
  *
  * @author Craig Williams <craig.williams@consensys.net>
  */
-@Embeddable
 @Data
+@Embeddable
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class StringParameter extends AbstractEventParameter<String> {
 

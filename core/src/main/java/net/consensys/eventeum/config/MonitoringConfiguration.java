@@ -15,7 +15,7 @@
 package net.consensys.eventeum.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import net.consensys.eventeum.monitoring.EventeumValueMonitor;
 import net.consensys.eventeum.monitoring.MicrometerValueMonitor;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;

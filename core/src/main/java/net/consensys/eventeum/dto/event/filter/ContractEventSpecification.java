@@ -17,8 +17,8 @@ package net.consensys.eventeum.dto.event.filter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

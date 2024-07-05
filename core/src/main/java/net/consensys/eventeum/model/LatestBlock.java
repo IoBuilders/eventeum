@@ -20,7 +20,7 @@ import net.consensys.eventeum.dto.block.BlockDetails;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 import java.math.BigInteger;
 
 @Document
@@ -36,7 +36,7 @@ public class LatestBlock {
         this.timestamp = blockDetails.getTimestamp();
     }
 
-    @javax.persistence.Id
+    @jakarta.persistence.Id
     @Id
     private String nodeName;
 
