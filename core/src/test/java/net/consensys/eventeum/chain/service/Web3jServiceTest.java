@@ -219,8 +219,7 @@ public class Web3jServiceTest {
                 any(Web3jTransactionReceipt.class));
 
         final ContractEventListener mockEventListener = mock(ContractEventListener.class);
-        underTest.registerEventListener(filter, mockEventListener,
-                BigInteger.ZERO, BigInteger.valueOf(9999L), null);
+        underTest.registerEventListener(filter, mockEventListener);
 
         final ArgumentCaptor<ContractEventDetails> captor = ArgumentCaptor.forClass(ContractEventDetails.class);
         verify(mockEventListener).onEvent(captor.capture());

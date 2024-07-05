@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -61,17 +62,13 @@ public class DefaultSubscriptionService implements SubscriptionService {
 
     private List<BlockListener> blockListeners;
 
-    private Map<String, ContractEventFilter> filterSubscriptions;
-
     private RetryTemplate retryTemplate;
 
-    private Map<String, FilterSubscription> filterSubscriptions = new ConcurrentHashMap<>();
+    private Map<String, ContractEventFilter> filterSubscriptions;
 
     private List<ContractEventListener> contractEventListeners;
 
     private EventSyncService eventSyncService;
-
-    private List<ContractEventListener> contractEventListeners;
 
     private SubscriptionServiceState state = SubscriptionServiceState.UNINITIALISED;
 

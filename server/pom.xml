@@ -26,7 +26,7 @@
     </parent>
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>${java.version}</java.version>
         <skipIntegrationTests>true</skipIntegrationTests>
     </properties>
 

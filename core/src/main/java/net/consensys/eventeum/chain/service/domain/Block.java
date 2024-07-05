@@ -42,7 +42,7 @@ public interface Block {
     List<String> getUncles();
     List<String> getSealFields();
 
-    //Eventeum specific
+    // Eventeum specific
     String getNodeName();
 }
 

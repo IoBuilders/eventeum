@@ -56,7 +56,9 @@ public class Web3jService implements BlockchainService {
 
     private static final String EVENT_EXECUTOR_NAME = "EVENT";
 
-    private final Web3j web3j;
+    @Getter
+    @Setter
+    private Web3j web3j;
     private final String nodeName;
     private final AsyncTaskService asyncTaskService;
     private final EventBlockManagementService blockManagement;
