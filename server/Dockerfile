@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim
 ADD target/eventeum-server.jar eventeum-server.jar
 ADD docker-scripts/start-eventeum.sh start-eventeum.sh
 ENV CONF ""
