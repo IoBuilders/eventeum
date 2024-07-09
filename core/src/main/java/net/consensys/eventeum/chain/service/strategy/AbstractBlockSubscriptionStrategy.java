@@ -27,7 +27,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collection;

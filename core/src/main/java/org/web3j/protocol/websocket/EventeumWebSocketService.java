@@ -14,24 +14,24 @@
 
 package org.web3j.protocol.websocket;
 
-import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Web3j seems to fail when closing websocket in pubsub mode.  This causes
  * a deadlock when attempting to reconnect to the node, as the close latch in WebSocketClient
  * never gets released and the reconnection block indefinitely.
- *
+ * <p>
  * This is workaround until web3j 4 which should hopefully have built in reconnections.
  */
 @Slf4j
-@Data
+@Getter
 public class EventeumWebSocketService extends WebSocketService {
 
-    private WebSocketClient webSocketClient;
+    private final WebSocketClient webSocketClient;
 
     public EventeumWebSocketService(WebSocketClient webSocketClient,
-                            boolean includeRawResponses) {
+                                    boolean includeRawResponses) {
         super(webSocketClient, includeRawResponses);
 
         this.webSocketClient = webSocketClient;

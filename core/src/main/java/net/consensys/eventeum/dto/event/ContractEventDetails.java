@@ -24,7 +24,7 @@ import net.consensys.eventeum.dto.converter.HashMapConverter;
 import net.consensys.eventeum.dto.event.parameter.EventParameter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;

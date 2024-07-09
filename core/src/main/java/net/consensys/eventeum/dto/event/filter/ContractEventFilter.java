@@ -22,10 +22,10 @@ import net.consensys.eventeum.dto.converter.HashMapConverter;
 import net.consensys.eventeum.dto.event.filter.correlationId.CorrelationIdStrategy;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.Convert;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import java.math.BigInteger;
 import java.util.Map;
 

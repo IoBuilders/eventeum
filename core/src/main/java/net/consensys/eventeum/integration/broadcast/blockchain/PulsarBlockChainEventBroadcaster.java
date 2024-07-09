@@ -26,7 +26,7 @@ import net.consensys.eventeum.integration.PulsarSettings.Authentication;
 import net.consensys.eventeum.integration.broadcast.BroadcastException;
 import org.apache.pulsar.client.api.*;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 
 @Slf4j
 public class PulsarBlockChainEventBroadcaster implements BlockchainEventBroadcaster {

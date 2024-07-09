@@ -16,9 +16,10 @@ package net.consensys.eventeum.dto.event.parameter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 import java.util.ArrayList;
 
 /**
@@ -27,9 +28,10 @@ import java.util.ArrayList;
  *
  * @author Craig Williams <craig.williams@consensys.net>
  */
-@Embeddable
 @Data
+@Embeddable
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class ArrayParameter<T extends EventParameter<?>> extends AbstractEventParameter<ArrayList<T>> {
 
     @JsonIgnore

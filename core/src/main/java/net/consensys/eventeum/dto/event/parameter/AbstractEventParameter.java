@@ -19,7 +19,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 
 @Embeddable

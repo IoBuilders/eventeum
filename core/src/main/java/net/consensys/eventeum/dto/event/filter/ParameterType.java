@@ -20,7 +20,7 @@ import lombok.*;
 import net.consensys.eventeum.service.exception.ValidationException;
 import org.springframework.data.annotation.PersistenceConstructor;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 import java.util.HashMap;
 import java.util.Map;
 
