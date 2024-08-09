@@ -30,6 +30,7 @@
     <modules>
         <module>core</module>
         <module>server</module>
+        <module>privacy-plugin</module>
     </modules>
 
     <properties>
