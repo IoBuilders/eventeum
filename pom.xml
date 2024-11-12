@@ -51,6 +51,7 @@
         <hedera.hashgraph.version>2.24.1</hedera.hashgraph.version>
         <grpc.netty.shaded.version>1.40.0</grpc.netty.shaded.version>
         <lombok.version>1.18.34</lombok.version>
+        <spotless.version>2.43.0</spotless.version>
     </properties>
 
     <distributionManagement>
@@ -81,4 +82,29 @@
             <url>https://repo1.maven.org/maven2/</url>
         </pluginRepository>
     </pluginRepositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                    </java>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
