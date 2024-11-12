@@ -6,4 +6,4 @@ if [[ -n "$CONF" ]]; then
 fi
 
 echo "Starting eventeum with command: $command"
-eval $command
+eval "$command"

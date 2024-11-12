@@ -39,7 +39,6 @@
         <web3j.version>4.12.0</web3j.version>
         <springcloud.version>4.1.2</springcloud.version>
         <modelmapper.version>3.1.0</modelmapper.version>
-        <kotlin.version>2.0.0</kotlin.version>
         <pulsar.version>3.3.0</pulsar.version>
         <micrometer.version>1.13.1</micrometer.version>
         <reflections.version>0.10.2</reflections.version>

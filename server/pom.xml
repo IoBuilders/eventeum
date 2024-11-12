@@ -13,9 +13,9 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>eventeum-server</artifactId>
     <version>${revision}</version>
 
@@ -43,12 +43,6 @@
             <groupId>io.eventeum</groupId>
             <artifactId>eventeum-core</artifactId>
             <version>${revision}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>kotlin-stdlib</artifactId>
-                    <groupId>org.jetbrains.kotlin</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -100,32 +94,17 @@
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.pulsar</groupId>
             <artifactId>pulsar-client</artifactId>
             <version>${pulsar.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>besu</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>kotlin-stdlib-common</artifactId>
-                    <groupId>org.jetbrains.kotlin</groupId>
-                </exclusion>
-            </exclusions>
             <version>${web3j.version}</version>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -164,32 +143,6 @@
                     <skipITs>${skipIntegrationTests}</skipITs>
                 </configuration>
             </plugin>
-            <!--<plugin>-->
-                <!--<groupId>org.web3j</groupId>-->
-                <!--<artifactId>web3j-maven-plugin</artifactId>-->
-                <!--<version>0.3.7</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>generate-sources</id>-->
-                        <!--<phase>generate-sources</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>generate-sources</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<packageName>net.consensys.eventeumserver.integrationtest</packageName>-->
-                            <!--<sourceDestination>src/test/java</sourceDestination>-->
-                            <!--<nativeJavaType>true</nativeJavaType>-->
-                            <!--<outputFormat>java</outputFormat>-->
-                            <!--<soliditySourceFiles>-->
-                                <!--<directory>${basedir}/src/test/resources</directory>-->
-                                <!--<includes>-->
-                                    <!--<include>**/*.sol</include>-->
-                                <!--</includes>-->
-                            <!--</soliditySourceFiles>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

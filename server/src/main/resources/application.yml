@@ -25,7 +25,7 @@ database:
 spring:
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
-    virtualHost: ${RABBIT_VIRTUALHOST:default}
+    virtualHost: /
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASSWORD:guest}
     connectionTimeout: 30000
@@ -46,17 +46,17 @@ broadcaster:
     expirationMillis: 6000000
   event:
     confirmation:
-      numBlocksToWait: 12
+      numBlocksToWait: 0
       numBlocksToWaitForMissingTx: 100
       numBlocksToWaitBeforeInvalidating: 2
   multiInstance: false
   enableBlockNotifications: false
 
 rabbitmq:
-  exchange: adm
+  exchange: my_exchange
   blockNotification: false
   routingKey:
-    contractEvents: adm
+    contractEvents: my_queue
     blockEvents: adm.block
     transactionEvents: adm.transaction
     messageEvents: adm.message
@@ -96,38 +96,40 @@ management:
       prometheus:
         enabled: true
 
-# Hedera RPC config
+  # Hedera RPC config
 
-#ethereum:
-#  nodes:
-#    - name: ${ETH_NODE:hedera}
-#      url: ${ETH_HOST:https://testnet.hashio.io/api}
-#      url: ${ETH_HOST:http://localhost:7546/api}
-#      blockStrategy: ${ETH_BLOCK_STRATEGY:POLL}
-#      pollInterval: 1000
-#      addTransactionRevertReason: true
-#      maxIdleConnections: 10
-#      keepAliveDuration: 15000
-#      connectionTimeout: 7000
-#      readTimeout: 180000
-#      healthcheckInterval: 10000
-#      numBlocksToWait: 0
-#      numBlocksToWaitForMissingTx: 0
-#      numBlocksToWaitBeforeInvalidating: 0
-#      maxUnsyncedBlocksForFilter: 600
+  #ethereum:
+  #  nodes:
+  #    - name: ${ETH_NODE:hedera}
+  #      url: ${ETH_HOST:https://testnet.hashio.io/api}
+  #      url: ${ETH_HOST:http://localhost:7546/api}
+  #      blockStrategy: ${ETH_BLOCK_STRATEGY:POLL}
+  #      pollInterval: 1000
+  #      addTransactionRevertReason: true
+  #      maxIdleConnections: 10
+  #      keepAliveDuration: 15000
+  #      connectionTimeout: 7000
+  #      readTimeout: 180000
+  #      healthcheckInterval: 10000
+  #      numBlocksToWait: 0
+  #      numBlocksToWaitForMissingTx: 0
+  #      numBlocksToWaitBeforeInvalidating: 0
+  #      maxUnsyncedBlocksForFilter: 600
 
-# Base ETH node
+  # Base ETH node
 
-#ethereum:
-#  nodes:
-#    - name: default
-#      url: ${ETHEREUM_NODE_URL:http://localhost:8545}
-#      blockStrategy: POLL
-#      syncingThreshold: 100
-#      healthcheckInterval: 3000
-#  healthcheck:
-#    pollInterval: 2000
-#  blockStrategy: POLL
+ethereum:
+  nodes:
+    - name: default
+      url: wss://eth-sepolia.g.alchemy.com/v2/qHQnYZKv3T4S4VAEiOB1V87fu7hsZ9GJ
+      blockStrategy: PUBSUB
+      syncingThreshold: 100
+      healthcheckInterval: 3000
+      initialStartBlock: 7057395
+      maxBlocksToSync: 2
+  healthcheck:
+    pollInterval: 2000
+  blockStrategy: PUBSUB
 
 
 # Hedera mirror node config
@@ -280,3 +282,52 @@ management:
 #    type: "TO_ADDRESS"
 #    transactionIdentifierValue: ${HEDERA_EMONEY_ADDRESS:0000000000000000000000000000000000341c99}
 #    statuses: ['FAILED']
+
+eventFilters:
+  - id: DummyStructCreated
+    node: default
+    contractAddress: "0x38a5385011Cc1B729EfBb3e9b03C5369c497AcBb"
+    eventSpecification:
+      eventName: DummyStructCreated
+      nonIndexedParameterDefinitions:
+        - position: 0
+          type: UINT256
+        - position: 1
+          type: UINT256
+        - position: 2
+          type: INT256
+        - position: 3
+          type: BOOL
+        - position: 4
+          type: ADDRESS
+        - position: 5
+          type: STRING
+        - position: 6
+          type: BYTES32
+    correlationId:
+      type: NON_INDEXED_PARAMETER
+      index: 0
+
+  - id: DummyStructUpdated
+    node: default
+    contractAddress: "0x38a5385011Cc1B729EfBb3e9b03C5369c497AcBb"
+    eventSpecification:
+      eventName: DummyStructUpdated
+      nonIndexedParameterDefinitions:
+        - position: 0
+          type: UINT256
+        - position: 1
+          type: UINT256
+        - position: 2
+          type: INT256
+        - position: 3
+          type: BOOL
+        - position: 4
+          type: ADDRESS
+        - position: 5
+          type: STRING
+        - position: 6
+          type: BYTES32
+    correlationId:
+      type: NON_INDEXED_PARAMETER
+      index: 0

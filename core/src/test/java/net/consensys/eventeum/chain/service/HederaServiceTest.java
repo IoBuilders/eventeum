@@ -1,7 +1,6 @@
 package net.consensys.eventeum.chain.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.consensys.eventeum.chain.block.message.MessageListener;
 import net.consensys.eventeum.chain.factory.ContractEventDetailsFactory;
 import net.consensys.eventeum.chain.service.block.EventBlockManagementService;
 import net.consensys.eventeum.chain.service.domain.io.*;
@@ -38,8 +37,6 @@ class HederaServiceTest {
 
     private ContractEventDetailsFactory contractEventDetailsFactory;
 
-    private ScheduledExecutorService executorService;
-
     private ObjectMapper objectMapper;
 
     private HederaService hederaService;
@@ -52,18 +49,17 @@ class HederaServiceTest {
     public void init() {
         final EventStoreService eventStoreService = mock(EventStoreService.class);
         contractEventDetailsFactory = mock(ContractEventDetailsFactory.class);
-        final MessageListener messageListener = mock(MessageListener.class);
         final OkHttpClient okHttpClient = mock(OkHttpClient.class);
-        executorService = mock(ScheduledExecutorService.class);
+        ScheduledExecutorService executorService = mock(ScheduledExecutorService.class);
         final SubscriptionService mockSubscriptionService = mock(SubscriptionService.class);
         final ModelMapper modelMapper = new ModelMapper();
         objectMapper = new ObjectMapper();
         Node node = new Node();
         node.setName(NODE_NAME);
         node.setUrl(NODE_URL);
-        this.hederaService = new HederaService(contractEventDetailsFactory, eventStoreService, messageListener,
-                objectMapper, null, node, executorService, modelMapper,
-                okHttpClient, mockBlockManagement, new DummyAsyncTaskService(), mockSubscriptionService
+        this.hederaService = new HederaService(
+                contractEventDetailsFactory, eventStoreService, objectMapper, node, executorService,
+                modelMapper, okHttpClient, mockBlockManagement, new DummyAsyncTaskService(), mockSubscriptionService
         );
 
         remoteCall = mock(Call.class);
