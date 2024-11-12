@@ -103,7 +103,7 @@ public class MongoEventStore implements SaveableEventStore {
                 .with(Sort.by(Direction.DESC, "timestamp"))
                 .collation(Collation.of("en").numericOrderingEnabled());
         final MessageDetails result = mongoTemplate.findOne(query, MessageDetails.class);
-        return result != null ? Optional.of(result) : Optional.empty();
+        return Optional.ofNullable(result);
     }
 
     @Override

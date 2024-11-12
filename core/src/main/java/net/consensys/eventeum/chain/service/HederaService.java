@@ -2,13 +2,11 @@ package net.consensys.eventeum.chain.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hedera.hashgraph.sdk.Client;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import net.consensys.eventeum.chain.block.message.MessageListener;
 import net.consensys.eventeum.chain.contract.ContractEventListener;
 import net.consensys.eventeum.chain.factory.ContractEventDetailsFactory;
 import net.consensys.eventeum.chain.service.block.EventBlockManagementService;
@@ -29,7 +27,10 @@ import net.consensys.eventeum.service.EventStoreService;
 import net.consensys.eventeum.service.SubscriptionService;
 import net.consensys.eventeum.service.exception.NotFoundException;
 import net.consensys.eventeum.utils.AtomicBigInteger;
-import okhttp3.*;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
@@ -48,11 +49,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class HederaService implements BlockchainService {
 
-    private static final String API_VERSION_PATH = "/api/v1";
-    private static final String CONTRACT_RESULTS_PATH = "/contracts/results";
-    private static final String BLOCKS_PATH = "/blocks";
-    private static final String LOGS_PATH = "/contracts/{Contract}/results/logs";
-    private static final String CLIENT_VERSION = "v1";
     public static final String CONTRACT_VAR = "{Contract}";
     public static final String TIMESTAMP = "timestamp";
     public static final String LTE = "lte";
@@ -60,6 +56,11 @@ public class HederaService implements BlockchainService {
     public static final String LIMIT = "limit";
     public static final String ORDER = "order";
     public static final String ASC = "asc";
+    private static final String API_VERSION_PATH = "/api/v1";
+    private static final String CONTRACT_RESULTS_PATH = "/contracts/results";
+    private static final String BLOCKS_PATH = "/blocks";
+    private static final String LOGS_PATH = "/contracts/{Contract}/results/logs";
+    private static final String CLIENT_VERSION = "v1";
     private static final String EVENT_EXECUTOR_NAME = "EVENT";
     private static final String BLOCK_NUMBER = "block.number";
     private static final String NEXT = "next";
@@ -67,8 +68,6 @@ public class HederaService implements BlockchainService {
     private final ContractEventDetailsFactory eventDetailsFactory;
 
     private final EventStoreService eventStoreService;
-
-    private final MessageListener messageListener;
 
     private final OkHttpClient okHttpClient;
 
@@ -84,21 +83,18 @@ public class HederaService implements BlockchainService {
 
     private final BigInteger maxRetries;
 
-    private final Client client;
     private final ModelMapper modelMapper;
     private final ScheduledExecutorService scheduledExecutorService;
 
-    private EventBlockManagementService blockManagement;
+    private final EventBlockManagementService blockManagement;
 
-    private AsyncTaskService asyncTaskService;
+    private final AsyncTaskService asyncTaskService;
 
-    private SubscriptionService subscriptionService;
+    private final SubscriptionService subscriptionService;
 
     public HederaService(ContractEventDetailsFactory eventDetailsFactory,
                          EventStoreService eventStoreService,
-                         MessageListener messageListener,
                          ObjectMapper objectMapper,
-                         Client client,
                          Node node,
                          ScheduledExecutorService scheduledExecutorService,
                          ModelMapper modelMapper,
@@ -109,7 +105,6 @@ public class HederaService implements BlockchainService {
         this.scheduledExecutorService = scheduledExecutorService;
         this.eventDetailsFactory = eventDetailsFactory;
         this.eventStoreService = eventStoreService;
-        this.messageListener = messageListener;
         this.objectMapper = objectMapper;
         this.okHttpClient = okHttpClient;
         this.modelMapper = modelMapper;
@@ -118,7 +113,6 @@ public class HederaService implements BlockchainService {
         this.nodeHeaders = node.getHeaders();
         this.maxRetries = node.getCallRetries();
         this.nodeLimitPerRequest = node.getLimitPerRequest().toString();
-        this.client = client;
         this.blockManagement = blockManagement;
         this.asyncTaskService = asyncTaskService;
         this.subscriptionService = subscriptionService;
@@ -126,7 +120,8 @@ public class HederaService implements BlockchainService {
 
     /**
      * Controls all calls of the class
-     * @param request Request to do
+     *
+     * @param request       Request to do
      * @param typeReference Type to convert the response to
      * @return Returns an object of typeReference
      */
@@ -179,8 +174,9 @@ public class HederaService implements BlockchainService {
     /**
      * Controls retries of the call to contract results (multiple)
      * It is used from the getContractResultsByBlock method
+     *
      * @param httpBuilder Call formed
-     * @param tries Number of retries made
+     * @param tries       Number of retries made
      * @param blockNumber Block number to filter
      * @return Returns an object of ContractResultsResponse
      */
@@ -198,7 +194,7 @@ public class HederaService implements BlockchainService {
                 response.setResults(new ArrayList<ContractResultResponse>());
             }
         } catch (NotFoundException | IOException ignored) {
-            log.debug(String.format("There was an error getting the results in block number %s, retrying (%s)...", blockNumber, tries));
+            log.debug("There was an error getting the results in block number {}, retrying ({})...", blockNumber, tries);
             Thread.sleep(500);
             if (tries.compareTo(maxRetries) > 0) {
                 String errorMsg = String.format("Max number of retries exceeded when try to recover contract result (try %s) in block number %s", tries, blockNumber);
@@ -213,6 +209,7 @@ public class HederaService implements BlockchainService {
 
     /**
      * Call for contract result (single)
+     *
      * @param transactionId Transaction identifier for filter
      * @return Returns an object of ContractResultResponse
      */
@@ -227,6 +224,7 @@ public class HederaService implements BlockchainService {
     /**
      * Gets the contract results of a specific block
      * Controls extra calls if paging exists
+     *
      * @param blockNumber Block number for filter
      * @return Returns a list of total contractResults by block number
      */
@@ -254,7 +252,8 @@ public class HederaService implements BlockchainService {
     /**
      * Controls retries of the call to contract result (single)
      * It is used from the filterAndGetContractResults method
-     * @param res Response of the previous response
+     *
+     * @param res   Response of the previous response
      * @param tries Number of retries
      * @return Returns a single ContractResultResponse
      */
@@ -264,7 +263,7 @@ public class HederaService implements BlockchainService {
             tries = tries.add(BigInteger.ONE);
             response = this.getContractResult(res.getHash());
         } catch (NotFoundException | IOException err) {
-            log.debug(String.format("There was an error getting the results of the transaction %s, retrying...", res.getHash()));
+            log.debug("There was an error getting the results of the transaction {}, retrying...", res.getHash());
             log.warn("Error ocurring getting the results: ", err);
             Thread.sleep(500);
             if (tries.compareTo(maxRetries) > 0) {
@@ -280,8 +279,9 @@ public class HederaService implements BlockchainService {
 
     /**
      * Filter and get contract results (multiple)
+     *
      * @param responses List of contract results not filtered
-     * @return Returns a list of ContractResultReponse
+     * @return Returns a list of ContractResultResponse
      */
     public List<ContractResultResponse> filterAndGetContractResults(List<ContractResultResponse> responses) throws IOException {
         List<ContractResultResponse> txs = new ArrayList<>();
@@ -291,18 +291,20 @@ public class HederaService implements BlockchainService {
                         eventFilters.stream().anyMatch(possibleMatch ->
                                 possibleMatch.getContractAddress().equalsIgnoreCase(response.getTo()) ||
                                         possibleMatch.getContractAddress().equalsIgnoreCase(response.getAddress())))
-                .collect(Collectors.toList());
+                .toList();
 
         responsesFiltered.parallelStream().forEach(res -> {
             try {
                 txs.add(callToContractResult(res, BigInteger.ZERO));
-            } catch (MirrorUnexpectedException | InterruptedException ignored) { }
+            } catch (MirrorUnexpectedException | InterruptedException ignored) {
+            }
         });
         return txs;
     }
 
     /**
      * Method to manage a block and search for its possible events
+     *
      * @param block Block to manage
      */
     public void processBlock(HederaBlock block) {
@@ -311,8 +313,7 @@ public class HederaService implements BlockchainService {
         block.setTimestamp(new BigInteger(ethTimestamp));
         try {
             List<ContractResultResponse> responses = this.getContractResultsByBlock(block.getNumber()).getResults();
-            log.debug(String.format("Contract results: %s, Block Number: %s, From timestamp: %s, To timestamp: %s",
-                    responses.size(), block.getNumber(), block.getFromTimestamp(), block.getToTimestamp()));
+            log.debug("Contract results: {}, Block Number: {}, From timestamp: {}, To timestamp: {}", responses.size(), block.getNumber(), block.getFromTimestamp(), block.getToTimestamp());
 
             List<ContractResultResponse> responsesFiltered = this.filterAndGetContractResults(responses);
 
@@ -323,7 +324,7 @@ public class HederaService implements BlockchainService {
                             .map(el -> this.modelMapper.map(el, Web3jTransaction.class))
                             .collect(Collectors.toList())
             );
-            log.debug(String.format("Contract results filtered: %s, Block Number: %s", responsesFiltered.size(), block.getNumber()));
+            log.debug("Contract results filtered: {}, Block Number: {}", responsesFiltered.size(), block.getNumber());
         } catch (NotFoundException | IOException exception) {
             log.warn(exception.getMessage());
         }
@@ -331,6 +332,7 @@ public class HederaService implements BlockchainService {
 
     /**
      * This method obtains a block by number
+     *
      * @param blockNumber Number of a block
      * @return Returns a Block object
      */
@@ -345,12 +347,13 @@ public class HederaService implements BlockchainService {
         if (blocksResponse.getBlocks().isEmpty()) {
             throw new NotFoundException(String.format("Block %d not found!", blockNumber));
         }
-        return blocksResponse.getBlocks().get(0);
+        return blocksResponse.getBlocks().getFirst();
     }
 
     /**
-     * Create a flowable object for retrying blocks sequencially
-     * @param startBlock Start block for get
+     * Create a flowable object for retrying blocks sequentially
+     *
+     * @param startBlock      Start block for get
      * @param pollingInterval Time between retries
      * @return Returns a flowable HederaBlock
      */
@@ -360,7 +363,7 @@ public class HederaService implements BlockchainService {
             try {
                 HederaBlock block = this.modelMapper.map(getBlock(currentBlock.get()), HederaBlock.class);
                 this.processBlock(block);
-                currentBlock.incrementAndGet();
+                currentBlock.increment();
                 subscriber.onNext(block);
             } catch (NotFoundException notFoundException) {
                 if (currentBlock.get().compareTo(startBlock) > 0) {
@@ -376,9 +379,10 @@ public class HederaService implements BlockchainService {
 
     /**
      * Obtains the details of a contract event
-     * @param filter Filter for event details
+     *
+     * @param filter            Filter for event details
      * @param hederaLogResponse Response of log
-     * @param contract Contract for event details
+     * @param contract          Contract for event details
      * @return Returns an object of ContractEventDetails
      */
     public ContractEventDetails getEventForFilter(ContractEventFilter filter, HederaLogResponse hederaLogResponse,
@@ -420,6 +424,7 @@ public class HederaService implements BlockchainService {
 
     /**
      * Obtains the actual node name configured
+     *
      * @return The ethereum node name that this service is connected to.
      */
     @Override
@@ -429,6 +434,7 @@ public class HederaService implements BlockchainService {
 
     /**
      * Retrieves all events for a specified event filter.
+     *
      * @param eventFilter The contract event filter that should be matched.
      * @param startBlock  The start block
      * @param endBlock    The end block
@@ -454,7 +460,7 @@ public class HederaService implements BlockchainService {
 
             if (eventFilter.getEventSpecification() != null) {
                 logsHederaMirrorNode = logsHederaMirrorNode.stream().
-                        filter(f -> Web3jUtil.getSignature(eventSpec).contentEquals(f.getTopics().get(0))).
+                        filter(f -> Web3jUtil.getSignature(eventSpec).contentEquals(f.getTopics().getFirst())).
                         collect(Collectors.toList());
             }
 
@@ -471,9 +477,10 @@ public class HederaService implements BlockchainService {
 
     /**
      * Call for obtains a log response
+     *
      * @param eventFilter Object for filter the logs
-     * @param startBlock Start block for filter
-     * @param endBlock End block for filter
+     * @param startBlock  Start block for filter
+     * @param endBlock    End block for filter
      * @return Returns a LogsResponseHederaMirrorNodeResponse object
      */
     private LogsResponseHederaMirrorNodeResponse getLogResponse(ContractEventFilter eventFilter, BigInteger startBlock, BigInteger endBlock) throws NotFoundException, IOException {
@@ -533,7 +540,7 @@ public class HederaService implements BlockchainService {
             BlocksResponse blocksResponse = null;
             blocksResponse = this.newCall(request, new TypeReference<BlocksResponse>() {
             });
-            return blocksResponse.getBlocks().get(0).getNumber();
+            return blocksResponse.getBlocks().getFirst().getNumber();
         } catch (IOException | NotFoundException e) {
             throw new BlockchainException("Error when obtaining the current block number", e);
         }
@@ -586,6 +593,7 @@ public class HederaService implements BlockchainService {
 
     /**
      * Obtain the latest block for start
+     *
      * @param filter Filter
      * @return Returns the number of block to start the obtaining method
      */
@@ -594,11 +602,12 @@ public class HederaService implements BlockchainService {
     }
 
     /**
-     * Creates a flowable of contract event details
+     * Creates flowable of contract event details
+     *
      * @param eventFilter Event filter for flowable
-     * @param startBlock Start block
-     * @param endBlock End block
-     * @return Returns a flowable of ContractEventDetails
+     * @param startBlock  Start block
+     * @param endBlock    End block
+     * @return Returns flowable of ContractEventDetails
      */
     private Flowable<ContractEventDetails> createContractEventFlowable(ContractEventFilter eventFilter, BigInteger startBlock, BigInteger endBlock) {
         return Flowable.create(emitter -> {
@@ -611,7 +620,7 @@ public class HederaService implements BlockchainService {
                     do {
                         if (eventFilter.getEventSpecification() != null) {
                             logResponse.getLogs().stream()
-                                    .filter(f -> Web3jUtil.getSignature(eventSpec).contentEquals(f.getTopics().get(0)))
+                                    .filter(f -> Web3jUtil.getSignature(eventSpec).contentEquals(f.getTopics().getFirst()))
                                     .forEach(it -> {
                                         ContractEventDetails details = eventDetailsFactory.createEventDetails
                                                 (eventFilter, buildLog(it), BigInteger.ZERO, eventFilter.getContractAddress());
