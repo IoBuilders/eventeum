@@ -24,7 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import java.math.BigInteger;
-import java.util.Arrays;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -43,7 +43,7 @@ public class StubEventStoreService {
         final LatestBlock dummyLatestBlock = new LatestBlock();
         dummyLatestBlock.setNumber(BigInteger.ZERO);
 
-        final Page<ContractEventDetails> dummyPage = new SimplePageImpl<>(Arrays.asList(dummyContractEventDetails), 1, 1, 1);
+        final Page<ContractEventDetails> dummyPage = new SimplePageImpl<>(List.of(dummyContractEventDetails), 1, 1, 1);
 
         wireMockServer.addStubMapping(get(urlPathEqualTo("/api/rest/v1/event"))
                 .willReturn(aResponse()

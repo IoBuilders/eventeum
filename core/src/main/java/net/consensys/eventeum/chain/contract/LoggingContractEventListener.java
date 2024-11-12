@@ -14,9 +14,10 @@
 
 package net.consensys.eventeum.chain.contract;
 
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.consensys.eventeum.integration.eventstore.EventStore;
 import org.springframework.stereotype.Component;
 
 /**
@@ -24,13 +25,28 @@ import org.springframework.stereotype.Component;
  *
  * @author Craig Williams <craig.williams@consensys.net>
  */
+@Slf4j
 @Component
-public class LoggingContractEventListener implements ContractEventListener{
+@AllArgsConstructor
+public class LoggingContractEventListener implements ContractEventListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(LoggingContractEventListener.class);
+    private EventStore eventStore;
 
     @Override
     public void onEvent(ContractEventDetails eventDetails) {
-        logger.info("Contract event fired: " + eventDetails.getName());
+        if (!isExistingEvent(eventDetails)) {
+            log.info("Contract event fired: {}", eventDetails.getName());
+        }
     }
+
+    private boolean isExistingEvent(ContractEventDetails eventDetails) {
+        return eventStore.getContractEvent(
+                eventDetails.getEventSpecificationSignature(),
+                eventDetails.getAddress(),
+                eventDetails.getBlockHash(),
+                eventDetails.getTransactionHash(),
+                eventDetails.getLogIndex()
+        ).isPresent();
+    }
+
 }

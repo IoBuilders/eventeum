@@ -41,23 +41,16 @@ public class NodeHealthCheckServiceTest {
 
     private static final Integer SYNCING_THRESHOLD = Integer.valueOf(60);
 
-    private static final Long HEALTH_CHECK_INTERVAL = 1000l;
-
+    private static final Long HEALTH_CHECK_INTERVAL = 1000L;
+    private final AtomicBoolean isConnected = new AtomicBoolean(false);
     private NodeHealthCheckService underTest;
-
     private BlockchainService mockBlockchainService;
-
     private BlockSubscriptionStrategy mockBlockSubscriptionStrategy;
-
     private ReconnectionStrategy mockReconnectionStrategy;
-
     private SubscriptionService mockSubscriptionService;
-
     private EventeumValueMonitor mockEventeumValueMonitor;
-
     private EventStoreService mockEventStoreService;
-
-    private ScheduledThreadPoolExecutor  mockTaskScheduler;
+    private ScheduledThreadPoolExecutor mockTaskScheduler;
 
     @BeforeEach
     public void init() throws Exception {
@@ -122,7 +115,6 @@ public class NodeHealthCheckServiceTest {
         verify(mockReconnectionStrategy, times(2)).reconnect();
         verify(mockReconnectionStrategy, never()).resubscribe();
     }
-
 
     @Test
     public void testNodeComesBackUpNotSubscribed() {
@@ -198,17 +190,11 @@ public class NodeHealthCheckServiceTest {
         }
     }
 
-    private AtomicBoolean isConnected = new AtomicBoolean(false);
-
     private void wireReconnectResult(boolean reconnectSuccess) {
         isConnected.set(false);
 
         doAnswer((invocation) -> {
-            if (reconnectSuccess) {
-                isConnected.set(true);
-            } else {
-                isConnected.set(false);
-            }
+            isConnected.set(reconnectSuccess);
             return null;
         }).when(mockReconnectionStrategy).reconnect();
 

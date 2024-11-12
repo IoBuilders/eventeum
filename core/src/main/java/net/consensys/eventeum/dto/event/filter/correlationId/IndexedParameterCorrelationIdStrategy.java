@@ -26,10 +26,8 @@ import net.consensys.eventeum.dto.event.ContractEventDetails;
 @NoArgsConstructor
 public class IndexedParameterCorrelationIdStrategy extends ParameterCorrelationIdStrategy {
 
-    public static final String TYPE = "INDEXED_PARAMETER";
-
     public IndexedParameterCorrelationIdStrategy(int parameterIndex) {
-        super(TYPE, parameterIndex);
+        super(CorrelationIdType.INDEXED_PARAMETER, parameterIndex);
     }
 
     @Override

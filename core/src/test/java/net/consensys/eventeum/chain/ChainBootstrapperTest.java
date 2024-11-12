@@ -41,34 +41,24 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ChainBootstrapperTest {
 
+    private final List<BlockListener> mockBlockListeners =
+            Arrays.asList(mock(BlockListener.class), mock(BlockListener.class));
     @Mock
     private BlockchainService mockBlockchainService;
-
     @Mock
     private EventFilterConfiguration mockConfig;
-
     @Mock
     private SubscriptionService mockSubscriptionService;
-
     @Mock
     private TransactionMonitoringService mockTransactionMonitoringService;
-
     @Mock
     private ContractEventFilterRepository mockFilterRepository;
-
     @Mock
     private TransactionMonitoringSpecRepository mockTransactionMonitoringRepository;
-
     @Mock
     private ContractEventFilterFactory mockFilterFactory;
-
     @Mock
     private TransactionFilterConfiguration transactionFilterConfiguration;
-
-
-    private List<BlockListener> mockBlockListeners =
-            Arrays.asList(mock(BlockListener.class), mock(BlockListener.class));
-
     private ChainBootstrapper underTest;
 
     @BeforeEach
@@ -90,9 +80,9 @@ public class ChainBootstrapperTest {
 
         doBootstrap();
 
-        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockConfiguredFilters.get(0), true);
+        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockConfiguredFilters.getFirst(), true);
         verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockConfiguredFilters.get(1), true);
-        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.get(0), true);
+        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.getFirst(), true);
         verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.get(1), true);
     }
 
@@ -114,10 +104,10 @@ public class ChainBootstrapperTest {
 
         doBootstrap();
 
-        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockConfiguredFilters.get(0), true);
-        verify(mockSubscriptionService, times(0)).registerContractEventFilterWithRetries(mockExistingEventFilters.get(0), false);
+        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockConfiguredFilters.getFirst(), true);
+        verify(mockSubscriptionService, times(0)).registerContractEventFilterWithRetries(mockExistingEventFilters.getFirst(), false);
         verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockExistingEventFilters.get(1), false);
-        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.get(0), true);
+        verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.getFirst(), true);
         verify(mockSubscriptionService, times(1)).registerContractEventFilterWithRetries(mockFilterFactoryFilters.get(1), true);
     }
 
@@ -131,7 +121,7 @@ public class ChainBootstrapperTest {
 
         doBootstrap();
 
-        verify(mockTransactionMonitoringService, times(1)).registerTransactionsToMonitor(mockMonitorSpecs.get(0), true);
+        verify(mockTransactionMonitoringService, times(1)).registerTransactionsToMonitor(mockMonitorSpecs.getFirst(), true);
         verify(mockTransactionMonitoringService, times(1)).registerTransactionsToMonitor(mockMonitorSpecs.get(1), true);
     }
 
@@ -145,9 +135,9 @@ public class ChainBootstrapperTest {
 
         doBootstrap();
 
-        verify(mockTransactionMonitoringService, times(1)).registerTransactionsToMonitor(mockConfiguredFilters.get(0), true);
+        verify(mockTransactionMonitoringService, times(1)).registerTransactionsToMonitor(mockConfiguredFilters.getFirst(), true);
         verify(mockTransactionMonitoringService, times(1)).registerTransactionsToMonitor(mockConfiguredFilters.get(1), true);
-     }
+    }
 
     private void doBootstrap() throws Exception {
         underTest.onApplicationEvent(null);

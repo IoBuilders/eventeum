@@ -28,6 +28,7 @@ import net.consensys.eventeum.chain.settings.NodeSettings;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.integration.broadcast.blockchain.BlockchainEventBroadcaster;
+import net.consensys.eventeum.integration.eventstore.EventStore;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
@@ -48,37 +49,48 @@ public class BroadcastAndInitialiseConfirmationListener implements ContractEvent
     private ChainServicesContainer chainServicesContainer;
     private BlockchainEventBroadcaster eventBroadcaster;
     private NodeSettings nodeSettings;
+    private EventStore eventStore;
 
     @Override
     public void onEvent(ContractEventDetails eventDetails) {
         final Node node = nodeSettings.getNode(eventDetails.getNodeName());
         final ChainType chainType = node.getChainType();
 
-        if (eventDetails.getStatus() == ContractEventStatus.UNCONFIRMED && chainType.equals(ChainType.ETHEREUM)) {
-
-            final BlockSubscriptionStrategy blockSubscription = getBlockSubscriptionStrategy(eventDetails);
-
-            if (shouldInstantlyConfirm(eventDetails)) {
-                eventDetails.setStatus(ContractEventStatus.CONFIRMED);
-                eventBroadcaster.broadcastContractEvent(eventDetails);
-
-                return;
+        if (!isExistingEvent(eventDetails)) {
+            switch (chainType) {
+                case ETHEREUM:
+                    if (eventDetails.getStatus() == ContractEventStatus.UNCONFIRMED && !shouldInstantlyConfirm(eventDetails)) {
+                        log.info("Registering an EventConfirmationBlockListener for event: {}", eventDetails.getEventIdentifier());
+                        getBlockSubscriptionStrategy(eventDetails)
+                                .addBlockListener(createEventConfirmationBlockListener(eventDetails, node));
+                        break;
+                    }
+                    eventDetails.setStatus(ContractEventStatus.CONFIRMED);
+                    eventBroadcaster.broadcastContractEvent(eventDetails);
+                    break;
+                case HASHGRAPH:
+                    eventDetails.setStatus(ContractEventStatus.CONFIRMED);
+                    eventBroadcaster.broadcastContractEvent(eventDetails);
+                    break;
+                default:
+                    break;
             }
-
-            log.info("Registering an EventConfirmationBlockListener for event: {}", eventDetails.getId());
-            blockSubscription.addBlockListener(createEventConfirmationBlockListener(eventDetails, node));
         }
-
-        if (chainType.equals(ChainType.HASHGRAPH)) {
-            eventDetails.setStatus(ContractEventStatus.CONFIRMED);
-        }
-
-        eventBroadcaster.broadcastContractEvent(eventDetails);
     }
 
     protected BlockListener createEventConfirmationBlockListener(ContractEventDetails eventDetails,Node node) {
         return new EventConfirmationBlockListener(eventDetails,
                 getBlockchainService(eventDetails), getBlockSubscriptionStrategy(eventDetails), eventBroadcaster, node);
+    }
+
+    private boolean isExistingEvent(ContractEventDetails eventDetails) {
+        return eventStore.getContractEvent(
+                eventDetails.getEventSpecificationSignature(),
+                eventDetails.getAddress(),
+                eventDetails.getBlockHash(),
+                eventDetails.getTransactionHash(),
+                eventDetails.getLogIndex()
+        ).isPresent();
     }
 
     private BlockchainService getBlockchainService(ContractEventDetails eventDetails) {

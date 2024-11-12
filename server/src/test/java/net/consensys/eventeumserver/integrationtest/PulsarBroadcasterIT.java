@@ -112,15 +112,13 @@ public class PulsarBroadcasterIT extends BroadcasterSmokeTest {
     }
 
     private class BackgroundPulsarConsumer<T> {
-        private Consumer<byte[]> pulsarConsumer;
+        private final Consumer<byte[]> pulsarConsumer;
 
-        private Class<T> entityClass;
+        private final Class<T> entityClass;
 
-        private ExecutorService executerService;
-
+        private final ExecutorService executerService;
+        private final ObjectMapper objectMapper = new ObjectMapper();
         private boolean stopped;
-
-        private ObjectMapper objectMapper = new ObjectMapper();
 
         private BackgroundPulsarConsumer(Consumer<byte[]> pulsarConsumer, Class<T> entityClass) {
             this.pulsarConsumer = pulsarConsumer;

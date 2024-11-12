@@ -15,6 +15,7 @@
 package net.consensys.eventeum.chain.service.strategy;
 
 import io.reactivex.disposables.Disposable;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.chain.block.BlockListener;
 import net.consensys.eventeum.chain.service.block.BlockNumberService;
@@ -22,12 +23,10 @@ import net.consensys.eventeum.chain.service.domain.Block;
 import net.consensys.eventeum.chain.service.domain.wrapper.Web3jBlock;
 import net.consensys.eventeum.service.AsyncTaskService;
 import net.consensys.eventeum.utils.ExecutorNameFactory;
-import net.consensys.eventeum.utils.JSON;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
-import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collection;
@@ -39,17 +38,15 @@ import java.util.concurrent.atomic.AtomicLong;
 public abstract class AbstractBlockSubscriptionStrategy<T> implements BlockSubscriptionStrategy {
 
     protected static final String BLOCK_EXECUTOR_NAME = "BLOCK";
-
-    protected Collection<BlockListener> blockListeners = new ConcurrentLinkedQueue<>();
+    protected final Web3j web3j;
+    protected final String nodeName;
+    protected final String nodeType;
+    protected final AsyncTaskService asyncService;
+    protected final BlockNumberService blockNumberService;
+    protected final AtomicLong lastBlockNumberProcessed = new AtomicLong(0);
+    protected final Collection<BlockListener> blockListeners = new ConcurrentLinkedQueue<>();
+    private final AtomicBoolean error = new AtomicBoolean(false);
     protected Disposable blockSubscription;
-    protected Web3j web3j;
-    protected String nodeName;
-    protected String nodeType;
-    protected AsyncTaskService asyncService;
-    protected BlockNumberService blockNumberService;
-    protected AtomicLong lastBlockNumberProcessed = new AtomicLong(0);
-
-    private AtomicBoolean errored = new AtomicBoolean(false);
 
     public AbstractBlockSubscriptionStrategy(Web3j web3j,
                                              String nodeName,
@@ -77,7 +74,7 @@ public abstract class AbstractBlockSubscriptionStrategy<T> implements BlockSubsc
             }
         } finally {
             blockSubscription = null;
-            errored.set(false);
+            error.set(false);
         }
     }
 
@@ -118,7 +115,7 @@ public abstract class AbstractBlockSubscriptionStrategy<T> implements BlockSubsc
                         missingBlocks, expectedBlock, eventeumBlock.getNumber());
 
                 //Get each missing block and process before continuing with block that was passed into method
-                for(int i = 0; i < missingBlocks; i++) {
+                for (int i = 0; i < missingBlocks; i++) {
                     final BigInteger nextBlock = expectedBlock.add(BigInteger.valueOf(i));
 
                     try {
@@ -139,7 +136,7 @@ public abstract class AbstractBlockSubscriptionStrategy<T> implements BlockSubsc
     }
 
     protected void triggerListener(BlockListener listener, Block block) {
-        if (!errored.get()) {
+        if (!error.get()) {
             try {
                 listener.onBlock(block);
             } catch (Throwable t) {
@@ -155,7 +152,7 @@ public abstract class AbstractBlockSubscriptionStrategy<T> implements BlockSubsc
     protected void onError(Disposable disposable, Throwable error) {
         log.error("There was an error when processing a block, disposing blocksubscription (will be reinitialised)", error);
 
-        errored.set(true);
+        this.error.set(true);
         disposable.dispose();
     }
 

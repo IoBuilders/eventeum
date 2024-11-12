@@ -16,6 +16,7 @@ package net.consensys.eventeum.integration.broadcast.blockchain;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
@@ -26,92 +27,90 @@ import net.consensys.eventeum.integration.PulsarSettings.Authentication;
 import net.consensys.eventeum.integration.broadcast.BroadcastException;
 import org.apache.pulsar.client.api.*;
 
-import jakarta.annotation.PreDestroy;
-
 @Slf4j
 public class PulsarBlockChainEventBroadcaster implements BlockchainEventBroadcaster {
-	private final ObjectMapper mapper;
-	private PulsarClient client;
-	private Producer<byte[]> blockEventProducer;
-	private Producer<byte[]> contractEventProducer;
-    private Producer<byte[]> transactionEventProducer;
-	private Producer<byte[]> messageEventProducer;
+    private final ObjectMapper mapper;
+    private final Producer<byte[]> transactionEventProducer;
+    private final Producer<byte[]> messageEventProducer;
+    private PulsarClient client;
+    private Producer<byte[]> blockEventProducer;
+    private Producer<byte[]> contractEventProducer;
 
-	public PulsarBlockChainEventBroadcaster(PulsarSettings settings, ObjectMapper mapper) throws PulsarClientException {
-		this.mapper = mapper;
+    public PulsarBlockChainEventBroadcaster(PulsarSettings settings, ObjectMapper mapper) throws PulsarClientException {
+        this.mapper = mapper;
 
-		ClientBuilder builder = PulsarClient.builder();
+        ClientBuilder builder = PulsarClient.builder();
 
-		if (settings.getConfig() != null) {
-			builder.loadConf(settings.getConfig());
-		}
+        if (settings.getConfig() != null) {
+            builder.loadConf(settings.getConfig());
+        }
 
-		Authentication authSettings = settings.getAuthentication();
-		if (authSettings != null) {
-			builder.authentication(
-					authSettings.getPluginClassName(),
-					authSettings.getParams());
-		}
+        Authentication authSettings = settings.getAuthentication();
+        if (authSettings != null) {
+            builder.authentication(
+                    authSettings.getPluginClassName(),
+                    authSettings.getParams());
+        }
 
-		client = builder.build();
+        client = builder.build();
 
-		blockEventProducer = createProducer(settings.getTopic().getBlockEvents());
-		contractEventProducer = createProducer(settings.getTopic().getContractEvents());
+        blockEventProducer = createProducer(settings.getTopic().getBlockEvents());
+        contractEventProducer = createProducer(settings.getTopic().getContractEvents());
         transactionEventProducer = createProducer(settings.getTopic().getTransactionEvents());
-		messageEventProducer = createProducer(settings.getTopic().getMessageEvents());
-	}
+        messageEventProducer = createProducer(settings.getTopic().getMessageEvents());
+    }
 
-	@PreDestroy
-	public void destroy() {
-		if (client != null) {
-			try {
-				client.close();
-			} catch (PulsarClientException e) {
-				log.warn("couldn't close Pulsar client", e);
-			} finally {
-				client = null;
-				blockEventProducer = null;
-				contractEventProducer = null;
-			}
-		}
-	}
+    @PreDestroy
+    public void destroy() {
+        if (client != null) {
+            try {
+                client.close();
+            } catch (PulsarClientException e) {
+                log.warn("couldn't close Pulsar client", e);
+            } finally {
+                client = null;
+                blockEventProducer = null;
+                contractEventProducer = null;
+            }
+        }
+    }
 
-	@Override
-	public void broadcastNewBlock(BlockDetails block) {
-		send(block, blockEventProducer);
-	}
+    @Override
+    public void broadcastNewBlock(BlockDetails block) {
+        send(block, blockEventProducer);
+    }
 
-	@Override
-	public void broadcastContractEvent(ContractEventDetails eventDetails) {
-		send(eventDetails, contractEventProducer);
-	}
+    @Override
+    public void broadcastContractEvent(ContractEventDetails eventDetails) {
+        send(eventDetails, contractEventProducer);
+    }
 
     @Override
     public void broadcastTransaction(TransactionDetails transactionDetails) {
         send(transactionDetails, transactionEventProducer);
     }
 
-	@Override
-	public void broadcastMessage(MessageDetails messageDetails) {
-		send(messageDetails, messageEventProducer);
-	}
+    @Override
+    public void broadcastMessage(MessageDetails messageDetails) {
+        send(messageDetails, messageEventProducer);
+    }
 
-	protected Producer<byte[]> createProducer(String topic) throws PulsarClientException {
-		return client.newProducer()
-				.topic(topic)
-				.compressionType(CompressionType.LZ4)
-				.create();
-	}
+    protected Producer<byte[]> createProducer(String topic) throws PulsarClientException {
+        return client.newProducer()
+                .topic(topic)
+                .compressionType(CompressionType.LZ4)
+                .create();
+    }
 
-	private void send(Object data, Producer<byte[]> producer) {
-		try {
-			producer.send(mapper.writeValueAsBytes(data));
-		} catch (PulsarClientException e) {
-			throw new BroadcastException("Unable to send message", e);
-		} catch (JsonProcessingException e) {
-			// shouldn't happen
-			throw new RuntimeException(e);
-		}
-	}
+    private void send(Object data, Producer<byte[]> producer) {
+        try {
+            producer.send(mapper.writeValueAsBytes(data));
+        } catch (PulsarClientException e) {
+            throw new BroadcastException("Unable to send message", e);
+        } catch (JsonProcessingException e) {
+            // shouldn't happen
+            throw new RuntimeException(e);
+        }
+    }
 
 }

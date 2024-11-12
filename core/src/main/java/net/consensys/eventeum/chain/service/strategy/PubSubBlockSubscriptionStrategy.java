@@ -38,10 +38,8 @@ import java.math.BigInteger;
 public class PubSubBlockSubscriptionStrategy extends AbstractBlockSubscriptionStrategy<NewHead> {
 
     private static final String PUB_SUB_EXECUTOR_NAME = "PUBSUB";
-
+    private final AsyncTaskService asyncService;
     private RetryTemplate retryTemplate;
-
-    private AsyncTaskService asyncService;
 
     public PubSubBlockSubscriptionStrategy(Web3j web3j,
                                            String nodeName,

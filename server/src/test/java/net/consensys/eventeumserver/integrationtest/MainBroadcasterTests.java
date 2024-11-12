@@ -28,7 +28,7 @@ import org.web3j.crypto.Hash;
 import org.web3j.crypto.Keys;
 
 import java.math.BigInteger;
-import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,7 +48,7 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         assertEquals(1, getBroadcastContractEvents().size());
 
-        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
+        final ContractEventDetails eventDetails = getBroadcastContractEvents().getFirst();
         verifyDummyEventDetails(registeredFilter, eventDetails, ContractEventStatus.UNCONFIRMED);
     }
 
@@ -63,7 +63,7 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         assertEquals(1, getBroadcastContractEvents().size());
 
-        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
+        final ContractEventDetails eventDetails = getBroadcastContractEvents().getFirst();
         verifyDummyEventDetails(registeredFilter, eventDetails, ContractEventStatus.UNCONFIRMED);
     }
 
@@ -81,7 +81,7 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         Assertions.assertTrue(getBroadcastContractEvents().size() > 0);
 
-        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(getBroadcastContractEvents().size()-1);
+        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(getBroadcastContractEvents().size() - 1);
         verifyDummyEventDetails(registeredFilter, eventDetails, ContractEventStatus.CONFIRMED);
     }
 
@@ -107,7 +107,7 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         assertTrue("No blocks received", getBroadcastBlockMessages().size() >= 1);
 
-        BlockDetails blockDetails = getBroadcastBlockMessages().get(0);
+        BlockDetails blockDetails = getBroadcastBlockMessages().getFirst();
         assertEquals(1, blockDetails.getNumber().compareTo(BigInteger.ZERO));
         assertNotNull(blockDetails.getHash());
     }
@@ -156,7 +156,7 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         Assertions.assertTrue(getBroadcastTransactionMessages().size() > 0);
 
-        final TransactionDetails txDetails = getBroadcastTransactionMessages().get(getBroadcastTransactionMessages().size()-1);
+        final TransactionDetails txDetails = getBroadcastTransactionMessages().get(getBroadcastTransactionMessages().size() - 1);
         assertEquals(txHash, txDetails.getHash());
         assertEquals(expectedStatus, txDetails.getStatus());
         assertNotNull(txDetails.getTimestamp());
@@ -187,7 +187,7 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         assertEquals(1, getBroadcastTransactionMessages().size());
 
-        final TransactionDetails txDetails = getBroadcastTransactionMessages().get(0);
+        final TransactionDetails txDetails = getBroadcastTransactionMessages().getFirst();
         assertEquals(Keys.toChecksumAddress(toAddress), txDetails.getTo());
         assertEquals(expectedStatus, txDetails.getStatus());
 
@@ -210,7 +210,7 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
                 TransactionIdentifierType.FROM_ADDRESS,
                 CREDS.getAddress(),
                 Constants.DEFAULT_NODE_NAME,
-                Arrays.asList(TransactionStatus.FAILED),
+                List.of(TransactionStatus.FAILED),
                 null
         );
 
@@ -222,7 +222,7 @@ public abstract class MainBroadcasterTests extends BaseKafkaIntegrationTest {
 
         assertEquals(1, getBroadcastTransactionMessages().size());
 
-        final TransactionDetails txDetails = getBroadcastTransactionMessages().get(0);
+        final TransactionDetails txDetails = getBroadcastTransactionMessages().getFirst();
         assertEquals(Keys.toChecksumAddress(CREDS.getAddress()), txDetails.getFrom());
         assertEquals(expectedStatus, txDetails.getStatus());
 

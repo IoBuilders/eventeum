@@ -24,9 +24,8 @@ import net.consensys.eventeum.model.LatestBlock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
 
+import java.math.BigInteger;
 import java.util.Optional;
 
 /**
@@ -36,30 +35,26 @@ import java.util.Optional;
  */
 public class SqlEventStore implements SaveableEventStore {
 
-    private ContractEventDetailsRepository eventDetailsRepository;
+    private final ContractEventDetailsRepository eventDetailsRepository;
 
-    private MessageDetailsRepository messageDetailsRepository;
+    private final MessageDetailsRepository messageDetailsRepository;
 
-    private LatestBlockRepository latestBlockRepository;
-
-    private JdbcTemplate jdbcTemplate;
+    private final LatestBlockRepository latestBlockRepository;
 
     public SqlEventStore(
             ContractEventDetailsRepository eventDetailsRepository,
             MessageDetailsRepository messageDetailsRepository,
-            LatestBlockRepository latestBlockRepository,
-            JdbcTemplate jdbcTemplate) {
+            LatestBlockRepository latestBlockRepository) {
         this.messageDetailsRepository = messageDetailsRepository;
         this.eventDetailsRepository = eventDetailsRepository;
         this.latestBlockRepository = latestBlockRepository;
-        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public Page<ContractEventDetails> getContractEventsForSignature(
             String eventSignature, String contractAddress, PageRequest pagination) {
         return eventDetailsRepository.findByEventSpecificationSignatureAndAddress(
-        		eventSignature, contractAddress, pagination);
+                eventSignature, contractAddress, pagination);
     }
 
     @Override
@@ -79,6 +74,20 @@ public class SqlEventStore implements SaveableEventStore {
         Sort.TypedSort<MessageDetails> message = Sort.sort(MessageDetails.class);
         return messageDetailsRepository.findFirstByNodeNameAndTopicId(
                 nodeName, topicId, message.by(MessageDetails::getTimestamp).descending());
+    }
+
+    @Override
+    public Optional<ContractEventDetails> getContractEvent(
+            String eventSignature,
+            String contractAddress,
+            String blockHash,
+            String transactionHash,
+            BigInteger logIndex
+    ) {
+        return eventDetailsRepository
+                .findByEventSpecificationSignatureAndAddressAndBlockHashAndTransactionHashAndLogIndex(
+                        eventSignature, contractAddress, blockHash, transactionHash, logIndex
+                );
     }
 
     @Override

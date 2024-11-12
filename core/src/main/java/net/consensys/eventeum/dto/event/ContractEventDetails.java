@@ -16,18 +16,22 @@ package net.consensys.eventeum.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import net.consensys.eventeum.dto.TransactionBasedDetails;
+import net.consensys.eventeum.dto.converter.EventParameterConverter;
 import net.consensys.eventeum.dto.converter.HashMapConverter;
 import net.consensys.eventeum.dto.event.parameter.EventParameter;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 
-import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Represents the details of an emitted Ethereum smart contract event.
@@ -43,19 +47,24 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ContractEventDetails implements TransactionBasedDetails {
 
-    private String name;
-
     @Id
+    @GeneratedValue
+    private UUID id;
+
+    @MongoId
+    @Field("_id")
     private String filterId;
+
+    private String name;
 
     private String nodeName;
 
-    @Lob // required because of https://stackoverflow.com/questions/43412517/sql-string-or-binary-data-would-be-truncated-error/43426863
     @ElementCollection
+    @Convert(converter = EventParameterConverter.class)
     private List<EventParameter> indexedParameters;
 
-    @Lob
     @ElementCollection
+    @Convert(converter = EventParameterConverter.class)
     private List<EventParameter> nonIndexedParameters;
 
     private String transactionHash;
@@ -68,7 +77,7 @@ public class ContractEventDetails implements TransactionBasedDetails {
 
     private String address;
 
-    @Column(name="\"from\"")
+    @Column(name = "\"from\"")
     private String from;
 
     private ContractEventStatus status = ContractEventStatus.UNCONFIRMED;
@@ -80,11 +89,10 @@ public class ContractEventDetails implements TransactionBasedDetails {
     private BigInteger timestamp;
 
     private BigInteger blockTimestamp;
-
-    public String getId() {
-        return transactionHash + "-" + blockHash + "-" + logIndex;
-    }
-
     @Convert(converter = HashMapConverter.class)
     private Map<String, Object> extensionData;
+
+    public String getEventIdentifier() {
+        return transactionHash + "-" + blockHash + "-" + logIndex;
+    }
 }

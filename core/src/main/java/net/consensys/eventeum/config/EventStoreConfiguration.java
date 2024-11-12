@@ -38,82 +38,78 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration
 @Order(0)
 public class EventStoreConfiguration {
 
-	@Configuration
-	@ConditionalOnExpression("'${eventStore.type}:${database.type}'=='DB:MONGO'")
-	@ConditionalOnMissingBean(EventStoreFactory.class)
-	public static class MongoEventStoreConfiguration {
+    @Configuration
+    @ConditionalOnExpression("'${eventStore.type}:${database.type}'=='DB:MONGO'")
+    @ConditionalOnMissingBean(EventStoreFactory.class)
+    public static class MongoEventStoreConfiguration {
 
-		@Bean
-		public SaveableEventStore dbEventStore(
-				ContractEventDetailsRepository contractEventRepository,
-				MessageDetailsRepository messageDetailsRepository,
-				LatestBlockRepository latestBlockRepository,
-				MongoTemplate mongoTemplate) {
-			return new MongoEventStore(
-					contractEventRepository, messageDetailsRepository, latestBlockRepository, mongoTemplate);
-		}
+        @Bean
+        public SaveableEventStore dbEventStore(
+                ContractEventDetailsRepository contractEventRepository,
+                MessageDetailsRepository messageDetailsRepository,
+                LatestBlockRepository latestBlockRepository,
+                MongoTemplate mongoTemplate) {
+            return new MongoEventStore(
+                    contractEventRepository, messageDetailsRepository, latestBlockRepository, mongoTemplate);
+        }
 
-		@Bean
-		public ContractEventListener eventStoreContractEventUpdater(SaveableEventStore eventStore) {
-			return new EventStoreContractEventUpdater(eventStore);
-		}
+        @Bean
+        public ContractEventListener eventStoreContractEventUpdater(SaveableEventStore eventStore) {
+            return new EventStoreContractEventUpdater(eventStore);
+        }
 
-		@Bean
-		public BlockListener eventStoreLatestBlockUpdater(SaveableEventStore eventStore,
-														  BlockDetailsFactory blockDetailsFactory,
-														  EventeumValueMonitor valueMonitor,
-														  ChainServicesContainer chainServicesContainer) {
-			return new EventStoreLatestBlockUpdater(eventStore, blockDetailsFactory, valueMonitor, chainServicesContainer);
-		}
-	}
+        @Bean
+        public BlockListener eventStoreLatestBlockUpdater(SaveableEventStore eventStore,
+                                                          BlockDetailsFactory blockDetailsFactory,
+                                                          EventeumValueMonitor valueMonitor,
+                                                          ChainServicesContainer chainServicesContainer) {
+            return new EventStoreLatestBlockUpdater(eventStore, blockDetailsFactory, valueMonitor, chainServicesContainer);
+        }
+    }
 
-	@Configuration
-	@ConditionalOnExpression("'${eventStore.type}:${database.type}'=='DB:SQL'")
-	@ConditionalOnMissingBean(EventStoreFactory.class)
-	public static class SqlEventStoreConfiguration {
+    @Configuration
+    @ConditionalOnExpression("'${eventStore.type}:${database.type}'=='DB:SQL'")
+    @ConditionalOnMissingBean(EventStoreFactory.class)
+    public static class SqlEventStoreConfiguration {
 
-		@Bean
-		public SaveableEventStore dbEventStore(
-				ContractEventDetailsRepository contractEventRepository,
-				MessageDetailsRepository messageDetailsRepository,
-				LatestBlockRepository latestBlockRepository,
-				JdbcTemplate jdbcTemplate) {
-			return new SqlEventStore(
-					contractEventRepository, messageDetailsRepository, latestBlockRepository, jdbcTemplate);
-		}
+        @Bean
+        public SaveableEventStore dbEventStore(
+                ContractEventDetailsRepository contractEventRepository,
+                MessageDetailsRepository messageDetailsRepository,
+                LatestBlockRepository latestBlockRepository) {
+            return new SqlEventStore(
+                    contractEventRepository, messageDetailsRepository, latestBlockRepository);
+        }
 
-		@Bean
-		public ContractEventListener eventStoreContractEventUpdater(SaveableEventStore eventStore) {
-			return new EventStoreContractEventUpdater(eventStore);
-		}
+        @Bean
+        public ContractEventListener eventStoreContractEventUpdater(SaveableEventStore eventStore) {
+            return new EventStoreContractEventUpdater(eventStore);
+        }
 
-		@Bean
-		public BlockListener eventStoreLatestBlockUpdater(SaveableEventStore eventStore,
-														  BlockDetailsFactory blockDetailsFactory,
-														  EventeumValueMonitor valueMonitor,
-														  ChainServicesContainer chainServiceContainer ) {
-			return new EventStoreLatestBlockUpdater(eventStore, blockDetailsFactory, valueMonitor,chainServiceContainer);
-		}
-	}
+        @Bean
+        public BlockListener eventStoreLatestBlockUpdater(SaveableEventStore eventStore,
+                                                          BlockDetailsFactory blockDetailsFactory,
+                                                          EventeumValueMonitor valueMonitor,
+                                                          ChainServicesContainer chainServiceContainer) {
+            return new EventStoreLatestBlockUpdater(eventStore, blockDetailsFactory, valueMonitor, chainServiceContainer);
+        }
+    }
 
-	@Configuration
-	@ConditionalOnProperty(name = "eventStore.type", havingValue = "REST")
-	@ConditionalOnMissingBean(EventStoreFactory.class)
-	public static class RESTEventStoreConfiguration {
+    @Configuration
+    @ConditionalOnProperty(name = "eventStore.type", havingValue = "REST")
+    @ConditionalOnMissingBean(EventStoreFactory.class)
+    public static class RESTEventStoreConfiguration {
 
-		@Bean
-		public EventStore RESTEventStore(EventStoreClient client) {
-			return new RESTEventStore(client);
-		}
-	}
-
-
+        @Bean
+        public EventStore RESTEventStore(EventStoreClient client) {
+            return new RESTEventStore(client);
+        }
+    }
 
 
 }

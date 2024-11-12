@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -102,6 +103,13 @@ public class EventStoreFactoryConfig {
 
                     @Override
                     public Optional<MessageDetails> getLatestMessageFromTopic(String nodeName, String topicId) {
+                        return Optional.empty();
+                    }
+
+                    @Override
+                    public Optional<ContractEventDetails> getContractEvent(
+                            String eventSignature, String contractAddress, String blockHash, String transactionHash, BigInteger logIndex
+                    ) {
                         return Optional.empty();
                     }
                 };

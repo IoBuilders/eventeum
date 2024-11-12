@@ -17,9 +17,8 @@ package net.consensys.eventeum.chain.config;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
-import net.consensys.eventeum.dto.event.filter.correlationId.CorrelationIdStrategy;
-import net.consensys.eventeum.dto.event.filter.correlationId.IndexedParameterCorrelationIdStrategy;
-import net.consensys.eventeum.dto.event.filter.correlationId.NonIndexedParameterCorrelationIdStrategy;
+import net.consensys.eventeum.dto.event.filter.correlationId.CorrelationIdType;
+import net.consensys.eventeum.dto.event.filter.correlationId.ParameterCorrelationIdStrategy;
 import net.consensys.eventeum.utils.ModelMapperFactory;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -84,23 +83,23 @@ public class EventFilterConfiguration {
 
         private int index;
 
-        private Map<String, Callable<CorrelationIdStrategy>> strategyCreatorMap = new HashMap<>();
+        private Map<String, Callable<ParameterCorrelationIdStrategy>> strategyCreatorMap = new HashMap<>();
 
         public CorrelationId() {
-            strategyCreatorMap.put(IndexedParameterCorrelationIdStrategy.TYPE, () -> {
-                final IndexedParameterCorrelationIdStrategy indexed = new IndexedParameterCorrelationIdStrategy(index);
+            strategyCreatorMap.put(CorrelationIdType.INDEXED_PARAMETER.name(), () ->
+                    new ParameterCorrelationIdStrategy(
+                            CorrelationIdType.INDEXED_PARAMETER, index
+                    )
+            );
 
-                return indexed;
-            });
-
-            strategyCreatorMap.put(NonIndexedParameterCorrelationIdStrategy.TYPE, () -> {
-                final NonIndexedParameterCorrelationIdStrategy nonIndexed = new NonIndexedParameterCorrelationIdStrategy(index);
-
-                return nonIndexed;
-            });
+            strategyCreatorMap.put(CorrelationIdType.NON_INDEXED_PARAMETER.name(), () ->
+                    new ParameterCorrelationIdStrategy(
+                            CorrelationIdType.NON_INDEXED_PARAMETER, index
+                    )
+            );
         }
 
-        public CorrelationIdStrategy toStrategy() {
+        public ParameterCorrelationIdStrategy toStrategy() {
             try {
                 return strategyCreatorMap.get(type).call();
             } catch (Exception e) {

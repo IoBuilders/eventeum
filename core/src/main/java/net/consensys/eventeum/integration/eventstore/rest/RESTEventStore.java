@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
+import java.math.BigInteger;
 import java.util.Optional;
 
 /**
@@ -65,6 +66,17 @@ public class RESTEventStore implements EventStore {
 
     @Override
     public Optional<MessageDetails> getLatestMessageFromTopic(String nodeName, String topicId) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<ContractEventDetails> getContractEvent(
+            String eventSignature,
+            String contractAddress,
+            String blockHash,
+            String transactionHash,
+            BigInteger logIndex
+    ) {
         return Optional.empty();
     }
 }

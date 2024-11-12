@@ -20,6 +20,7 @@ import net.consensys.eventeum.model.LatestBlock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import java.math.BigInteger;
 import java.util.Optional;
 
 /**
@@ -36,4 +37,6 @@ public interface EventStore {
     boolean isPagingZeroIndexed();
 
     Optional<MessageDetails> getLatestMessageFromTopic(String nodeName, String topicId);
+
+    Optional<ContractEventDetails> getContractEvent(String eventSignature, String contractAddress, String blockHash, String transactionHash, BigInteger logIndex);
 }
