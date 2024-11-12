@@ -17,7 +17,7 @@ package net.consensys.eventeum.integration.broadcast;
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
-import net.consensys.eventeum.dto.event.filter.correlationId.CorrelationIdStrategy;
+import net.consensys.eventeum.dto.event.filter.correlationId.ParameterCorrelationIdStrategy;
 import net.consensys.eventeum.dto.message.BlockEvent;
 import net.consensys.eventeum.dto.message.ContractEvent;
 import net.consensys.eventeum.dto.message.EventeumMessage;
@@ -110,7 +110,7 @@ public class KafkaBlockchainEventBroadcasterTest {
         final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockKafkaTemplate).send(eq(CONTRACT_EVENTS_TOPIC), idCaptor.capture(), any(EventeumMessage.class));
 
-        assertEquals(eventDetails.getId(), idCaptor.getValue());
+        assertEquals(eventDetails.getEventIdentifier(), idCaptor.getValue());
     }
 
     @Test
@@ -118,7 +118,7 @@ public class KafkaBlockchainEventBroadcasterTest {
 
         final ContractEventDetails eventDetails = createContractEventDetails();
 
-        final CorrelationIdStrategy mockIdStrategy = mock(CorrelationIdStrategy.class);
+        final ParameterCorrelationIdStrategy mockIdStrategy = mock(ParameterCorrelationIdStrategy.class);
         when(mockIdStrategy.getCorrelationId(eventDetails)).thenReturn("12-34");
 
         final ContractEventFilter mockFilter = mock(ContractEventFilter.class);

@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
@@ -102,6 +103,26 @@ public class MongoEventStore implements SaveableEventStore {
                 .with(Sort.by(Direction.DESC, "timestamp"))
                 .collation(Collation.of("en").numericOrderingEnabled());
         final MessageDetails result = mongoTemplate.findOne(query, MessageDetails.class);
+        return result != null ? Optional.of(result) : Optional.empty();
+    }
+
+    @Override
+    public Optional<ContractEventDetails> getContractEvent(
+            String eventSignature,
+            String contractAddress,
+            String blockHash,
+            String transactionHash,
+            BigInteger logIndex
+    ) {
+        final Query query = new Query(Criteria
+                .where("eventSignature").is(eventSignature)
+                .and("address").is(contractAddress)
+                .and("blockHash").is(blockHash)
+                .and("transactionHash").is(transactionHash)
+                .and("logIndex").is(logIndex))
+                .with(Sort.by(Direction.DESC, "timestamp"))
+                .collation(Collation.of("en").numericOrderingEnabled());
+        final ContractEventDetails result = mongoTemplate.findOne(query, ContractEventDetails.class);
         return result != null ? Optional.of(result) : Optional.empty();
     }
 

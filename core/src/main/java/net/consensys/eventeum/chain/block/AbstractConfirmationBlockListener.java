@@ -30,15 +30,15 @@ public abstract class AbstractConfirmationBlockListener<T extends TransactionBas
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractConfirmationBlockListener.class);
 
-    private T blockchainEvent;
-    private BlockchainService blockchainService;
-    private BigInteger targetBlock;
-    private BigInteger blocksToWaitForMissingTx;
-    private BigInteger blocksToWait;
+    private final T blockchainEvent;
+    private final BlockchainService blockchainService;
+    private final BigInteger targetBlock;
+    private final BigInteger blocksToWaitForMissingTx;
+    private final BigInteger blocksToWait;
 
-    private AtomicBoolean isInvalidated = new AtomicBoolean(false);
+    private final AtomicBoolean isInvalidated = new AtomicBoolean(false);
+    private final BigInteger numBlocksToWaitBeforeInvalidating;
     private BigInteger missingTxBlockLimit;
-    private BigInteger numBlocksToWaitBeforeInvalidating;
     private BigInteger currentNumBlocksToWaitBeforeInvalidating;
 
     public AbstractConfirmationBlockListener(T blockchainEvent,

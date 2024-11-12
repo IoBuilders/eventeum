@@ -122,7 +122,7 @@ public class DefaultContractEventProcessor implements ContractEventProcessor {
             listener.onEvent(contractEventDetails);
         } catch (Throwable t) {
             log.error(String.format(
-                    "An error occurred when processing contractEvent with id %s", contractEventDetails.getId()), t);
+                    "An error occurred when processing contractEvent with id %s", contractEventDetails.getEventIdentifier()), t);
             throw t;
         }
     }

@@ -34,13 +34,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -131,7 +131,7 @@ public class DefaultSubscriptionService implements SubscriptionService {
     @Override
     @Async
     public Future<ContractEventFilter> registerContractEventFilterWithRetries(ContractEventFilter filter, boolean broadcast) {
-        return AsyncResult.forValue(
+        return CompletableFuture.completedFuture(
                 retryTemplate.execute((context) -> doRegisterContractEventFilter(filter, broadcast))
         );
     }
@@ -225,7 +225,7 @@ public class DefaultSubscriptionService implements SubscriptionService {
 
     private void subscribeToNewBlockEvents(
             BlockSubscriptionStrategy subscriptionStrategy, List<BlockListener> blockListeners) {
-        blockListeners.forEach(listener -> subscriptionStrategy.addBlockListener(listener));
+        blockListeners.forEach(subscriptionStrategy::addBlockListener);
 
         subscriptionStrategy.subscribe();
     }
@@ -260,12 +260,10 @@ public class DefaultSubscriptionService implements SubscriptionService {
 
         final BlockchainService blockchainService = nodeServices.getBlockchainService();
 
-        final FilterSubscription sub = blockchainService.registerEventListener(filter, contractEvent -> {
+        return blockchainService.registerEventListener(filter, contractEvent -> {
             contractEventListeners.forEach(
                     listener -> triggerListener(listener, contractEvent));
         });
-
-        return sub;
     }
 
     private void triggerListener(ContractEventListener listener, ContractEventDetails contractEventDetails) {
@@ -273,7 +271,7 @@ public class DefaultSubscriptionService implements SubscriptionService {
             listener.onEvent(contractEventDetails);
         } catch (Throwable t) {
             log.error(String.format(
-                    "An error occurred when processing contractEvent with id %s", contractEventDetails.getId()), t);
+                    "An error occurred when processing contractEvent with id %s", contractEventDetails.getEventIdentifier()), t);
         }
     }
 

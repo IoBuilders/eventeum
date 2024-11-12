@@ -15,8 +15,11 @@
 package net.consensys.eventeum.chain.contract;
 
 import net.consensys.eventeum.dto.event.ContractEventDetails;
+import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.integration.eventstore.SaveableEventStore;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Optional;
 
 /**
  * A contract event listener that saves the ContractEventDetails to a SaveableEventStore.
@@ -35,6 +38,21 @@ public class EventStoreContractEventUpdater implements ContractEventListener {
     }
     @Override
     public void onEvent(ContractEventDetails eventDetails) {
-        saveableEventStore.save(eventDetails);
+        Optional<ContractEventDetails> eventFoundOpt = saveableEventStore.getContractEvent(
+                eventDetails.getEventSpecificationSignature(),
+                eventDetails.getAddress(),
+                eventDetails.getBlockHash(),
+                eventDetails.getTransactionHash(),
+                eventDetails.getLogIndex()
+        );
+        if (eventFoundOpt.isEmpty()) {
+            saveableEventStore.save(eventDetails);
+            return;
+        }
+        ContractEventDetails eventFound = eventFoundOpt.get();
+        if (eventFound.getStatus() == ContractEventStatus.UNCONFIRMED && eventDetails.getStatus() == ContractEventStatus.CONFIRMED) {
+            eventFound.setStatus(ContractEventStatus.CONFIRMED);
+            saveableEventStore.save(eventFound);
+        }
     }
 }

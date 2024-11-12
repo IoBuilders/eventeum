@@ -26,10 +26,8 @@ import net.consensys.eventeum.dto.event.ContractEventDetails;
 @NoArgsConstructor
 public class NonIndexedParameterCorrelationIdStrategy extends ParameterCorrelationIdStrategy{
 
-    public static final String TYPE = "NON_INDEXED_PARAMETER";
-
     public NonIndexedParameterCorrelationIdStrategy(int parameterIndex) {
-        super(TYPE, parameterIndex);
+        super(CorrelationIdType.NON_INDEXED_PARAMETER, parameterIndex);
     }
 
     @Override

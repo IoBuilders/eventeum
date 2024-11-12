@@ -72,7 +72,7 @@ public class EventConfirmationBlockListener extends AbstractConfirmationBlockLis
 
     @Override
     protected String getEventIdentifier(ContractEventDetails contractEventDetails) {
-        return contractEventDetails.getId();
+        return contractEventDetails.getEventIdentifier();
     }
 
     @Override

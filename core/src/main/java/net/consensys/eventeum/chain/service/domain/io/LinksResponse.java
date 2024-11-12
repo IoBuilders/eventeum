@@ -1,27 +1,22 @@
-
 package net.consensys.eventeum.chain.service.domain.io;
+
+import com.fasterxml.jackson.annotation.*;
+import jakarta.annotation.Generated;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import jakarta.annotation.Generated;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "next"
+        "next"
 })
 @Generated("jsonschema2pojo")
 public class LinksResponse {
 
+    @JsonIgnore
+    private final Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
     @JsonProperty("next")
     private String next;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
 
     @JsonProperty("next")
     public String getNext() {

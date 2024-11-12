@@ -19,7 +19,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.consensys.eventeum.constant.Constants;
 import net.consensys.eventeum.dto.converter.HashMapConverter;
-import net.consensys.eventeum.dto.event.filter.correlationId.CorrelationIdStrategy;
+import net.consensys.eventeum.dto.event.filter.correlationId.ParameterCorrelationIdStrategy;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import jakarta.persistence.Convert;
@@ -52,7 +52,7 @@ public class ContractEventFilter {
     private ContractEventSpecification eventSpecification;
     
     @Embedded
-    private CorrelationIdStrategy correlationIdStrategy;
+    private ParameterCorrelationIdStrategy correlationIdStrategy;
 
     private BigInteger startBlock;
 

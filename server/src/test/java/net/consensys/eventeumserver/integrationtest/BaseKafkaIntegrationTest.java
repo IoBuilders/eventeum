@@ -54,25 +54,17 @@ import java.util.UUID;
 public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
 
     private static final String KAFKA_LISTENER_CONTAINER_ID = "org.springframework.kafka.KafkaListenerEndpointContainer#0";
-
-    private ObjectMapper objectMapper = new ObjectMapper();
-
-    private List<EventeumMessage<ContractEventFilter>> broadcastFiltersEventMessages = new ArrayList<>();
-
-    private List<EventeumMessage<TransactionMonitoringSpec>> broadcastTransactionEventMessages = new ArrayList<>();
-
-    @Autowired
-    private KafkaSettings kafkaSettings;
-
-    @Autowired
-    EmbeddedKafkaBroker embeddedKafka;
-
-    private KafkaMessageListenerContainer springMessageListener;
-
-    private KafkaMessageListenerContainer<String, String> testContainer;
-
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final List<EventeumMessage<ContractEventFilter>> broadcastFiltersEventMessages = new ArrayList<>();
+    private final List<EventeumMessage<TransactionMonitoringSpec>> broadcastTransactionEventMessages = new ArrayList<>();
     @Autowired
     public KafkaListenerEndpointRegistry registry;
+    @Autowired
+    EmbeddedKafkaBroker embeddedKafka;
+    @Autowired
+    private KafkaSettings kafkaSettings;
+    private KafkaMessageListenerContainer springMessageListener;
+    private KafkaMessageListenerContainer<String, String> testContainer;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -117,7 +109,7 @@ public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
                                 objectMapper.readValue(record.value(), EventeumMessage.class);
 
                         if (message.getType().equals(ContractEventFilterAdded.TYPE)
-                            || message.getType().equals(ContractEventFilterRemoved.TYPE)) {
+                                || message.getType().equals(ContractEventFilterRemoved.TYPE)) {
                             final EventeumMessage<ContractEventFilter> filterMessge = message;
                             getBroadcastFilterEventMessages().add(filterMessge);
                         } else {
@@ -200,7 +192,7 @@ public class BaseKafkaIntegrationTest extends BaseIntegrationTest {
     }
 
     private String generateTestGroupId() {
-        return "testGroup-" + UUID.randomUUID().toString();
+        return "testGroup-" + UUID.randomUUID();
     }
 
     protected Map<String, Object> modifyKafkaConsumerProps(Map<String, Object> consumerProps) {
