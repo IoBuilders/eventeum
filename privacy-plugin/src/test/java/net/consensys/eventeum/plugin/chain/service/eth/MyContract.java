@@ -6,6 +6,7 @@ import org.web3j.abi.EventEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Event;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -35,7 +36,6 @@ import java.util.List;
  *
  * <p>Generated with web3j version 1.4.1.
  */
-@SuppressWarnings("rawtypes")
 public class MyContract extends Contract {
     public static final String BINARY = "608060405234801561001057600080fd5b506101ac806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c806354fd4d501461003b5780637b0cb83914610059575b600080fd5b610043610063565b60405161005091906100fb565b60405180910390f35b610061610068565b005b600181565b7f02f83fe6099cbcd06b097fe089934fc7c63df36c0daea35d2fb79e00019c7b133360014260405161009c939291906100c4565b60405180910390a1565b6100af81610140565b82525050565b6100be81610136565b82525050565b60006060820190506100d960008301866100a6565b6100e660208301856100b5565b6100f360408301846100b5565b949350505050565b600060208201905061011060008301846100b5565b92915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000819050919050565b600061014b82610152565b9050919050565b600061015d82610164565b9050919050565b600061016f82610116565b905091905056fea2646970667358221220e38bd7fc3014861ee9ea82054ba2db8c5b54e9b0faa3678141e06babbeea345f64736f6c63430007060033";
 
@@ -44,8 +44,7 @@ public class MyContract extends Contract {
     public static final String FUNC_VERSION = "version";
 
     public static final Event EVENT_EVENT = new Event("Event",
-            Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
-    ;
+            Arrays.asList(new TypeReference<Address>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
 
     @Deprecated
     protected MyContract(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
@@ -103,15 +102,16 @@ public class MyContract extends Contract {
     public RemoteFunctionCall<TransactionReceipt> emitEvent() {
         final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(
                 FUNC_EMITEVENT,
-                Arrays.<Type>asList(),
-                Collections.<TypeReference<?>>emptyList());
+                List.of(),
+                Collections.emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public RemoteFunctionCall<BigInteger> version() {
         final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(FUNC_VERSION,
-                Arrays.<Type>asList(),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
+                List.of(),
+                List.of(new TypeReference<Uint256>() {
+                }));
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
     }
 

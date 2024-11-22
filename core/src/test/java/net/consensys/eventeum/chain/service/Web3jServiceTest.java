@@ -31,7 +31,6 @@ import org.mockito.ArgumentCaptor;
 import org.reactivestreams.Subscriber;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
-import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.request.EthFilter;
@@ -43,8 +42,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class Web3jServiceTest {
@@ -65,14 +63,12 @@ public class Web3jServiceTest {
 
     private ContractEventDetails mockContractEventDetails;
 
-    private EventBlockManagementService mockBlockManagement;
-
     @BeforeEach
     public void init() throws IOException {
         mockWeb3j = mock(Web3j.class);
         mockContractEventDetailsFactory = mock(ContractEventDetailsFactory.class);
         mockContractEventDetails = mock(ContractEventDetails.class);
-        mockBlockManagement = mock(EventBlockManagementService.class);
+        EventBlockManagementService mockBlockManagement = mock(EventBlockManagementService.class);
 
         //Wire up getBlockNumber
         final Request<?, EthBlockNumber> mockRequest = mock(Request.class);
@@ -133,7 +129,7 @@ public class Web3jServiceTest {
         final org.web3j.protocol.core.methods.response.TransactionReceipt mockTxReceipt = createMockTxReceipt();
 
         final Optional<org.web3j.protocol.core.methods.response.TransactionReceipt> txReceiptOptional
-                = Optional.ofNullable(mockTxReceipt);
+                = Optional.of(mockTxReceipt);
         when(mockGetTxReceipt.getTransactionReceipt()).thenReturn(txReceiptOptional);
         when(mockRequest.send()).thenReturn(mockGetTxReceipt);
         doReturn(mockRequest).when(mockWeb3j).ethGetTransactionReceipt(TX_HASH);
@@ -249,7 +245,7 @@ public class Web3jServiceTest {
         when(txReceipt.getTo()).thenReturn(TO_ADDRESS);
         when(txReceipt.getLogsBloom()).thenReturn(LOGS_BLOOM);
         final List<org.web3j.protocol.core.methods.response.Log> mockLogs
-                = Arrays.asList(createMockTransactionLog(false));
+                = List.of(createMockTransactionLog(false));
         when(txReceipt.getLogs()).thenReturn(mockLogs);
 
         return txReceipt;
@@ -267,7 +263,7 @@ public class Web3jServiceTest {
         assertEquals(TO_ADDRESS, txReceipt.getTo());
         assertEquals(LOGS_BLOOM, txReceipt.getLogsBloom());
 
-        checkTransactionLog(txReceipt.getLogs().get(0));
+        checkTransactionLog(txReceipt.getLogs().getFirst());
     }
 
     private static final BigInteger LOG_INDEX = BigInteger.ZERO;
@@ -288,13 +284,13 @@ public class Web3jServiceTest {
         when(log.getAddress()).thenReturn(CONTRACT_ADDRESS);
         when(log.getData()).thenReturn(DATA);
         when(log.getType()).thenReturn(TYPE);
-        when(log.getTopics()).thenReturn(Arrays.asList(TOPIC));
+        when(log.getTopics()).thenReturn(List.of(TOPIC));
 
         return log;
     }
 
     private void checkTransactionLog(Log log) {
-        assertEquals(false, log.isRemoved());
+        assertFalse(log.isRemoved());
         assertEquals(LOG_INDEX, log.getLogIndex());
         assertEquals(TX_INDEX, log.getTransactionIndex());
         assertEquals(TX_HASH, log.getTransactionHash());
@@ -303,12 +299,12 @@ public class Web3jServiceTest {
         assertEquals(CONTRACT_ADDRESS, log.getAddress());
         assertEquals(DATA, log.getData());
         assertEquals(TYPE, log.getType());
-        assertEquals(TOPIC, log.getTopics().get(0));
+        assertEquals(TOPIC, log.getTopics().getFirst());
     }
 
-    private class DummyFlowable<T> extends Flowable<T> {
+    private static class DummyFlowable<T> extends Flowable<T> {
 
-        private T value;
+        private final T value;
 
         public DummyFlowable(T value) {
             this.value = value;

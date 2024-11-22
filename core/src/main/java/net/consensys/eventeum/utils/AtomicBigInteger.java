@@ -15,12 +15,12 @@ public final class AtomicBigInteger {
         return valueHolder.get();
     }
 
-    public BigInteger incrementAndGet() {
+    public void increment() {
         for (; ; ) {
             BigInteger current = valueHolder.get();
             BigInteger next = current.add(BigInteger.ONE);
             if (valueHolder.compareAndSet(current, next)) {
-                return next;
+                return;
             }
         }
     }
