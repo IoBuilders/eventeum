@@ -16,11 +16,11 @@ package net.consensys.eventeumserver.integrationtest.utils;
 
 import org.springframework.boot.SpringApplication;
 
-//@SpringBootApplication(exclude = {EmbeddedMongoAutoConfiguration.class})
-//@EnableEventeum
+// @SpringBootApplication(exclude = {EmbeddedMongoAutoConfiguration.class})
+// @EnableEventeum
 public class ExcludeEmbeddedMongoApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(ExcludeEmbeddedMongoApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(ExcludeEmbeddedMongoApplication.class, args);
+  }
 }

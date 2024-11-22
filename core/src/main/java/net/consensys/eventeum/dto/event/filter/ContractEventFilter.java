@@ -15,19 +15,18 @@
 package net.consensys.eventeum.dto.event.filter;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import net.consensys.eventeum.constant.Constants;
-import net.consensys.eventeum.dto.converter.HashMapConverter;
-import net.consensys.eventeum.dto.event.filter.correlationId.ParameterCorrelationIdStrategy;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import java.math.BigInteger;
 import java.util.Map;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import net.consensys.eventeum.constant.Constants;
+import net.consensys.eventeum.dto.converter.HashMapConverter;
+import net.consensys.eventeum.dto.event.filter.correlationId.ParameterCorrelationIdStrategy;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Represents the details of a contract event filter.
@@ -41,21 +40,18 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ContractEventFilter {
 
-    @Id
-    private String id;
+  @Id private String id;
 
-    private String contractAddress;
+  private String contractAddress;
 
-    private String node = Constants.DEFAULT_NODE_NAME;
+  private String node = Constants.DEFAULT_NODE_NAME;
 
-    @Embedded
-    private ContractEventSpecification eventSpecification;
-    
-    @Embedded
-    private ParameterCorrelationIdStrategy correlationIdStrategy;
+  @Embedded private ContractEventSpecification eventSpecification;
 
-    private BigInteger startBlock;
+  @Embedded private ParameterCorrelationIdStrategy correlationIdStrategy;
 
-    @Convert(converter = HashMapConverter.class)
-    private Map<String, Object> extension;
+  private BigInteger startBlock;
+
+  @Convert(converter = HashMapConverter.class)
+  private Map<String, Object> extension;
 }

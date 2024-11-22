@@ -18,7 +18,6 @@ import lombok.AllArgsConstructor;
 import net.consensys.eventeum.chain.factory.BlockDetailsFactory;
 import net.consensys.eventeum.chain.service.domain.Block;
 import net.consensys.eventeum.integration.broadcast.blockchain.BlockchainEventBroadcaster;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -33,14 +32,12 @@ import org.springframework.stereotype.Component;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class BroadcastingBlockListener implements BlockListener {
 
-    private BlockchainEventBroadcaster eventBroadcaster;
+  private BlockchainEventBroadcaster eventBroadcaster;
 
-    private BlockDetailsFactory blockDetailsFactory;
+  private BlockDetailsFactory blockDetailsFactory;
 
-    @Override
-    public void onBlock(Block block) {
-        eventBroadcaster.broadcastNewBlock(blockDetailsFactory.createBlockDetails(block));
-    }
-
-
+  @Override
+  public void onBlock(Block block) {
+    eventBroadcaster.broadcastNewBlock(blockDetailsFactory.createBlockDetails(block));
+  }
 }

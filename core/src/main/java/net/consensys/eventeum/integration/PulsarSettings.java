@@ -14,35 +14,34 @@
 
 package net.consensys.eventeum.integration;
 
+import java.util.Map;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Map;
 
 @Configuration
 @ConfigurationProperties(prefix = "pulsar")
 @Data
 public class PulsarSettings {
-	@Data
-	public static class Authentication {
-		private String pluginClassName;
-		private Map<String, String> params;
-	}
+  @Data
+  public static class Authentication {
+    private String pluginClassName;
+    private Map<String, String> params;
+  }
 
-	@Data
-	public static class Topics {
-		private String blockEvents;
+  @Data
+  public static class Topics {
+    private String blockEvents;
 
-		private String contractEvents;
+    private String contractEvents;
 
-		private String transactionEvents;
+    private String transactionEvents;
 
-		private String messageEvents;
-	}
+    private String messageEvents;
+  }
 
-	private Map<String, Object> config;
-	private Authentication authentication;
+  private Map<String, Object> config;
+  private Authentication authentication;
 
-	private Topics topic;
+  private Topics topic;
 }

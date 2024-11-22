@@ -21,39 +21,38 @@ import net.consensys.eventeum.dto.message.MessageDetails;
 import net.consensys.eventeum.dto.transaction.TransactionDetails;
 
 @AllArgsConstructor
-    public class ListenerInvokingBlockchainEventBroadcaster implements BlockchainEventBroadcaster {
+public class ListenerInvokingBlockchainEventBroadcaster implements BlockchainEventBroadcaster {
 
-    private OnBlockchainEventListener listener;
+  private OnBlockchainEventListener listener;
 
-    @Override
-    public void broadcastNewBlock(BlockDetails block) {
-        listener.onNewBlock(block);
-    }
+  @Override
+  public void broadcastNewBlock(BlockDetails block) {
+    listener.onNewBlock(block);
+  }
 
-    @Override
-    public void broadcastContractEvent(ContractEventDetails eventDetails) {
-        listener.onContractEvent(eventDetails);
-    }
+  @Override
+  public void broadcastContractEvent(ContractEventDetails eventDetails) {
+    listener.onContractEvent(eventDetails);
+  }
 
-    @Override
-    public void broadcastTransaction(TransactionDetails transactionDetails) {
-        listener.onTransactionEvent(transactionDetails);
-    }
+  @Override
+  public void broadcastTransaction(TransactionDetails transactionDetails) {
+    listener.onTransactionEvent(transactionDetails);
+  }
 
-    @Override
-    public void broadcastMessage(MessageDetails messageDetails) {
-        listener.onMessageEvent(messageDetails);
-    }
+  @Override
+  public void broadcastMessage(MessageDetails messageDetails) {
+    listener.onMessageEvent(messageDetails);
+  }
 
-    public interface OnBlockchainEventListener {
+  public interface OnBlockchainEventListener {
 
-        void onNewBlock(BlockDetails block);
+    void onNewBlock(BlockDetails block);
 
-        void onContractEvent(ContractEventDetails eventDetails);
+    void onContractEvent(ContractEventDetails eventDetails);
 
-        void onTransactionEvent(TransactionDetails transactionDetails);
+    void onTransactionEvent(TransactionDetails transactionDetails);
 
-        void onMessageEvent(MessageDetails messageDetails);
-    }
-
+    void onMessageEvent(MessageDetails messageDetails);
+  }
 }

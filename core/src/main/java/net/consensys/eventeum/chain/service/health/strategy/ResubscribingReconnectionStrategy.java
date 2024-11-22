@@ -23,12 +23,12 @@ import net.consensys.eventeum.service.SubscriptionService;
 @Data
 public abstract class ResubscribingReconnectionStrategy implements ReconnectionStrategy {
 
-    private SubscriptionService subscriptionService;
-    private BlockSubscriptionStrategy blockSubscriptionStrategy;
+  private SubscriptionService subscriptionService;
+  private BlockSubscriptionStrategy blockSubscriptionStrategy;
 
-    @Override
-    public void resubscribe() {
+  @Override
+  public void resubscribe() {
 
-        blockSubscriptionStrategy.subscribe();
-    }
+    blockSubscriptionStrategy.subscribe();
+  }
 }

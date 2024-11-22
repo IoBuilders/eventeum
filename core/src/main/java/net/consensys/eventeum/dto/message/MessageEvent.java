@@ -5,9 +5,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MessageEvent extends AbstractMessage<MessageDetails> {
 
-    public static final String TYPE = "MESSAGE";
+  public static final String TYPE = "MESSAGE";
 
-    public MessageEvent(MessageDetails details) {
-        super(details.getTopicId(), TYPE, details);
-    }
+  public MessageEvent(MessageDetails details) {
+    super(details.getTopicId(), TYPE, details);
+  }
 }

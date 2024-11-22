@@ -14,6 +14,12 @@
 
 package net.consensys.eventeum.integration.broadcast;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
+
+import java.math.BigInteger;
+import java.util.Optional;
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
@@ -31,164 +37,171 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.kafka.core.KafkaTemplate;
 
-import java.math.BigInteger;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
-
 public class KafkaBlockchainEventBroadcasterTest {
 
-    private static final String BLOCK_EVENTS_TOPIC = "ThisIsABlockTopic";
+  private static final String BLOCK_EVENTS_TOPIC = "ThisIsABlockTopic";
 
-    private static final String CONTRACT_EVENTS_TOPIC = "ThisIsAnEventTopic";
+  private static final String CONTRACT_EVENTS_TOPIC = "ThisIsAnEventTopic";
 
-    private static final String TRANSACTION_EVENTS_TOPIC = "ThisIsAnTransactionTopic";
+  private static final String TRANSACTION_EVENTS_TOPIC = "ThisIsAnTransactionTopic";
 
-    private static final String MESSAGE_EVENTS_TOPIC = "ThisIsAnMessageTopic";
+  private static final String MESSAGE_EVENTS_TOPIC = "ThisIsAnMessageTopic";
 
-    private static final String FILTER_ID = "filter-id";
+  private static final String FILTER_ID = "filter-id";
 
-    private KafkaBlockchainEventBroadcaster underTest;
+  private KafkaBlockchainEventBroadcaster underTest;
 
-    private KafkaTemplate<String, EventeumMessage> mockKafkaTemplate;
+  private KafkaTemplate<String, EventeumMessage> mockKafkaTemplate;
 
-    private KafkaSettings mockKafkaSettings;
+  private KafkaSettings mockKafkaSettings;
 
-    private ContractEventFilterRepository mockFilterRepository;
+  private ContractEventFilterRepository mockFilterRepository;
 
-    @BeforeEach
-    public void init() {
-        mockKafkaTemplate = mock(KafkaTemplate.class);
-        mockKafkaSettings = mock(KafkaSettings.class);
-        mockFilterRepository = mock(ContractEventFilterRepository.class);
+  @BeforeEach
+  public void init() {
+    mockKafkaTemplate = mock(KafkaTemplate.class);
+    mockKafkaSettings = mock(KafkaSettings.class);
+    mockFilterRepository = mock(ContractEventFilterRepository.class);
 
-        when(mockKafkaSettings.getBlockEventsTopic()).thenReturn(BLOCK_EVENTS_TOPIC);
-        when(mockKafkaSettings.getContractEventsTopic()).thenReturn(CONTRACT_EVENTS_TOPIC);
-        when(mockKafkaSettings.getTransactionEventsTopic()).thenReturn(TRANSACTION_EVENTS_TOPIC);
-        when(mockKafkaSettings.getMessageEventsTopic()).thenReturn(MESSAGE_EVENTS_TOPIC);
+    when(mockKafkaSettings.getBlockEventsTopic()).thenReturn(BLOCK_EVENTS_TOPIC);
+    when(mockKafkaSettings.getContractEventsTopic()).thenReturn(CONTRACT_EVENTS_TOPIC);
+    when(mockKafkaSettings.getTransactionEventsTopic()).thenReturn(TRANSACTION_EVENTS_TOPIC);
+    when(mockKafkaSettings.getMessageEventsTopic()).thenReturn(MESSAGE_EVENTS_TOPIC);
 
-        underTest = new KafkaBlockchainEventBroadcaster(mockKafkaTemplate, mockKafkaSettings, mockFilterRepository);
-    }
+    underTest =
+        new KafkaBlockchainEventBroadcaster(
+            mockKafkaTemplate, mockKafkaSettings, mockFilterRepository);
+  }
 
-    @Test
-    public void testBroadcastNewBlock() {
-        final BlockDetails blockDetails = createBlockDetails();
+  @Test
+  public void testBroadcastNewBlock() {
+    final BlockDetails blockDetails = createBlockDetails();
 
-        underTest.broadcastNewBlock(blockDetails);
+    underTest.broadcastNewBlock(blockDetails);
 
-        final ArgumentCaptor<EventeumMessage> eventCaptor = ArgumentCaptor.forClass(EventeumMessage.class);
-        final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockKafkaTemplate).send(eq(BLOCK_EVENTS_TOPIC), idCaptor.capture(), eventCaptor.capture());
+    final ArgumentCaptor<EventeumMessage> eventCaptor =
+        ArgumentCaptor.forClass(EventeumMessage.class);
+    final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKafkaTemplate)
+        .send(eq(BLOCK_EVENTS_TOPIC), idCaptor.capture(), eventCaptor.capture());
 
-        assertEquals(BlockEvent.TYPE, eventCaptor.getValue().getType());
-        assertEquals(blockDetails, eventCaptor.getValue().getDetails());
-        assertNotNull(idCaptor.getValue());
-        assertEquals(eventCaptor.getValue().getId(), idCaptor.getValue());
-    }
+    assertEquals(BlockEvent.TYPE, eventCaptor.getValue().getType());
+    assertEquals(blockDetails, eventCaptor.getValue().getDetails());
+    assertNotNull(idCaptor.getValue());
+    assertEquals(eventCaptor.getValue().getId(), idCaptor.getValue());
+  }
 
-    @Test
-    public void testBroadcastContractEvent() {
-        final ContractEventDetails eventDetails = createContractEventDetails();
+  @Test
+  public void testBroadcastContractEvent() {
+    final ContractEventDetails eventDetails = createContractEventDetails();
 
-        underTest.broadcastContractEvent(eventDetails);
+    underTest.broadcastContractEvent(eventDetails);
 
-        final ArgumentCaptor<EventeumMessage> eventCaptor = ArgumentCaptor.forClass(EventeumMessage.class);
-        verify(mockKafkaTemplate).send(eq(CONTRACT_EVENTS_TOPIC), anyString(), eventCaptor.capture());
+    final ArgumentCaptor<EventeumMessage> eventCaptor =
+        ArgumentCaptor.forClass(EventeumMessage.class);
+    verify(mockKafkaTemplate).send(eq(CONTRACT_EVENTS_TOPIC), anyString(), eventCaptor.capture());
 
-        assertEquals(ContractEvent.TYPE, eventCaptor.getValue().getType());
-        assertEquals(eventDetails, eventCaptor.getValue().getDetails());
-    }
+    assertEquals(ContractEvent.TYPE, eventCaptor.getValue().getType());
+    assertEquals(eventDetails, eventCaptor.getValue().getDetails());
+  }
 
-    @Test
-    public void testBroadcastContractEventDefaultCorrelationId() {
-        final ContractEventDetails eventDetails = createContractEventDetails();
+  @Test
+  public void testBroadcastContractEventDefaultCorrelationId() {
+    final ContractEventDetails eventDetails = createContractEventDetails();
 
-        underTest.broadcastContractEvent(eventDetails);
+    underTest.broadcastContractEvent(eventDetails);
 
-        final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockKafkaTemplate).send(eq(CONTRACT_EVENTS_TOPIC), idCaptor.capture(), any(EventeumMessage.class));
+    final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKafkaTemplate)
+        .send(eq(CONTRACT_EVENTS_TOPIC), idCaptor.capture(), any(EventeumMessage.class));
 
-        assertEquals(eventDetails.getEventIdentifier(), idCaptor.getValue());
-    }
+    assertEquals(eventDetails.getEventIdentifier(), idCaptor.getValue());
+  }
 
-    @Test
-    public void testCorrelationIdWhenStrategySetOnFilter() {
+  @Test
+  public void testCorrelationIdWhenStrategySetOnFilter() {
 
-        final ContractEventDetails eventDetails = createContractEventDetails();
+    final ContractEventDetails eventDetails = createContractEventDetails();
 
-        final ParameterCorrelationIdStrategy mockIdStrategy = mock(ParameterCorrelationIdStrategy.class);
-        when(mockIdStrategy.getCorrelationId(eventDetails)).thenReturn("12-34");
+    final ParameterCorrelationIdStrategy mockIdStrategy =
+        mock(ParameterCorrelationIdStrategy.class);
+    when(mockIdStrategy.getCorrelationId(eventDetails)).thenReturn("12-34");
 
-        final ContractEventFilter mockFilter = mock(ContractEventFilter.class);
-        when(mockFilter.getCorrelationIdStrategy()).thenReturn(mockIdStrategy);
+    final ContractEventFilter mockFilter = mock(ContractEventFilter.class);
+    when(mockFilter.getCorrelationIdStrategy()).thenReturn(mockIdStrategy);
 
-        when(mockFilterRepository.findById(FILTER_ID)).thenReturn(Optional.of(mockFilter));
+    when(mockFilterRepository.findById(FILTER_ID)).thenReturn(Optional.of(mockFilter));
 
-        underTest.broadcastContractEvent(eventDetails);
+    underTest.broadcastContractEvent(eventDetails);
 
-        final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockKafkaTemplate).send(eq(CONTRACT_EVENTS_TOPIC), idCaptor.capture(), any(EventeumMessage.class));
+    final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKafkaTemplate)
+        .send(eq(CONTRACT_EVENTS_TOPIC), idCaptor.capture(), any(EventeumMessage.class));
 
-        assertNotNull(idCaptor.getValue());
-        assertEquals("12-34", idCaptor.getValue());
-    }
+    assertNotNull(idCaptor.getValue());
+    assertEquals("12-34", idCaptor.getValue());
+  }
 
-    @Test
-    public void testBroadcastTransactionEvent() {
-        final TransactionDetails transactionDetails = createTransactionDetails();
+  @Test
+  public void testBroadcastTransactionEvent() {
+    final TransactionDetails transactionDetails = createTransactionDetails();
 
-        underTest.broadcastTransaction(transactionDetails);
+    underTest.broadcastTransaction(transactionDetails);
 
-        final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockKafkaTemplate).send(eq(TRANSACTION_EVENTS_TOPIC), idCaptor.capture(), any(EventeumMessage.class));
+    final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKafkaTemplate)
+        .send(eq(TRANSACTION_EVENTS_TOPIC), idCaptor.capture(), any(EventeumMessage.class));
 
-        assertEquals(transactionDetails.getBlockHash(), idCaptor.getValue());
-    }
+    assertEquals(transactionDetails.getBlockHash(), idCaptor.getValue());
+  }
 
-    @Test
-    public void testBroadcastMessageEvent() {
-        final MessageDetails messageDetails = createMessageDetails();
+  @Test
+  public void testBroadcastMessageEvent() {
+    final MessageDetails messageDetails = createMessageDetails();
 
-        underTest.broadcastMessage(messageDetails);
+    underTest.broadcastMessage(messageDetails);
 
-        final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockKafkaTemplate).send(eq(MESSAGE_EVENTS_TOPIC), idCaptor.capture(), any(EventeumMessage.class));
+    final ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKafkaTemplate)
+        .send(eq(MESSAGE_EVENTS_TOPIC), idCaptor.capture(), any(EventeumMessage.class));
 
-        assertEquals(messageDetails.getTopicId(), idCaptor.getValue());
-    }
+    assertEquals(messageDetails.getTopicId(), idCaptor.getValue());
+  }
 
-    private BlockDetails createBlockDetails() {
-        final BlockDetails blockDetails = new BlockDetails();
-        blockDetails.setHash("0x86e01e667d3e9a0c624ca2e30b1b452973b7ba2802bb2f2c30ce399dd6131741");
+  private BlockDetails createBlockDetails() {
+    final BlockDetails blockDetails = new BlockDetails();
+    blockDetails.setHash("0x86e01e667d3e9a0c624ca2e30b1b452973b7ba2802bb2f2c30ce399dd6131741");
 
-        return blockDetails;
-    }
+    return blockDetails;
+  }
 
-    private ContractEventDetails createContractEventDetails() {
-        final ContractEventDetails contractEventDetails = new ContractEventDetails();
-        contractEventDetails.setBlockHash("0x86e01e667d3e9a0c624ca2e30b1b452973b7ba2802bb2f2c30ce399dd6131741");
-        contractEventDetails.setTransactionHash("0x7ba0d5bf4dd88d9bca44957460a7e69fffbf9604288a7d4e4a9d6c7e75c627b4");
-        contractEventDetails.setLogIndex(BigInteger.ONE);
-        contractEventDetails.setFilterId(FILTER_ID);
+  private ContractEventDetails createContractEventDetails() {
+    final ContractEventDetails contractEventDetails = new ContractEventDetails();
+    contractEventDetails.setBlockHash(
+        "0x86e01e667d3e9a0c624ca2e30b1b452973b7ba2802bb2f2c30ce399dd6131741");
+    contractEventDetails.setTransactionHash(
+        "0x7ba0d5bf4dd88d9bca44957460a7e69fffbf9604288a7d4e4a9d6c7e75c627b4");
+    contractEventDetails.setLogIndex(BigInteger.ONE);
+    contractEventDetails.setFilterId(FILTER_ID);
 
-        return contractEventDetails;
-    }
+    return contractEventDetails;
+  }
 
-    private TransactionDetails createTransactionDetails() {
-        final TransactionDetails transactionDetails = new TransactionDetails();
-        transactionDetails.setBlockHash("0x86e01e667d3e9a0c624ca2e30b1b452973b7ba2802bb2f2c30ce399dd6131741");
-        transactionDetails.setHash("0x7ba0d5bf4dd88d9bca44957460a7e69fffbf9604288a7d4e4a9d6c7e75c627b4");
+  private TransactionDetails createTransactionDetails() {
+    final TransactionDetails transactionDetails = new TransactionDetails();
+    transactionDetails.setBlockHash(
+        "0x86e01e667d3e9a0c624ca2e30b1b452973b7ba2802bb2f2c30ce399dd6131741");
+    transactionDetails.setHash(
+        "0x7ba0d5bf4dd88d9bca44957460a7e69fffbf9604288a7d4e4a9d6c7e75c627b4");
 
-        return transactionDetails;
-    }
+    return transactionDetails;
+  }
 
-    private MessageDetails createMessageDetails() {
-        final MessageDetails messageDetails = new MessageDetails();
-        messageDetails.setMessage("Hello world!");
-        messageDetails.setTopicId("0.0.1");
+  private MessageDetails createMessageDetails() {
+    final MessageDetails messageDetails = new MessageDetails();
+    messageDetails.setMessage("Hello world!");
+    messageDetails.setTopicId("0.0.1");
 
-        return messageDetails;
-    }
+    return messageDetails;
+  }
 }

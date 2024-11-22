@@ -29,23 +29,23 @@ import net.consensys.eventeum.dto.event.ContractEventDetails;
 @NoArgsConstructor
 public class ParameterCorrelationIdStrategy implements CorrelationIdStrategy {
 
-    @Column(name = "correlation_id_strategy_parameter_id")
-    private int parameterIndex;
+  @Column(name = "correlation_id_strategy_parameter_id")
+  private int parameterIndex;
 
-    @Column(name = "correlation_id_strategy_type")
-    private CorrelationIdType type;
+  @Column(name = "correlation_id_strategy_type")
+  private CorrelationIdType type;
 
-    public ParameterCorrelationIdStrategy(CorrelationIdType type, int parameterIndex) {
-        this.type = type;
-        this.parameterIndex = parameterIndex;
-    }
+  public ParameterCorrelationIdStrategy(CorrelationIdType type, int parameterIndex) {
+    this.type = type;
+    this.parameterIndex = parameterIndex;
+  }
 
-    @Override
-    public String getCorrelationId(ContractEventDetails contractEvent) {
-        return (type == CorrelationIdType.INDEXED_PARAMETER
-                ? contractEvent.getIndexedParameters()
-                : contractEvent.getNonIndexedParameters()
-        ).get(getParameterIndex()).getValueString();
-    }
-
+  @Override
+  public String getCorrelationId(ContractEventDetails contractEvent) {
+    return (type == CorrelationIdType.INDEXED_PARAMETER
+            ? contractEvent.getIndexedParameters()
+            : contractEvent.getNonIndexedParameters())
+        .get(getParameterIndex())
+        .getValueString();
+  }
 }

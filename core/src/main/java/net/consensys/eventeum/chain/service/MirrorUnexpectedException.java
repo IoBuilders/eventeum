@@ -16,17 +16,16 @@ package net.consensys.eventeum.chain.service;
 
 public class MirrorUnexpectedException extends RuntimeException {
 
-    public MirrorUnexpectedException(String message) {
-        super(message);
-    }
+  public MirrorUnexpectedException(String message) {
+    super(message);
+  }
 
-    public MirrorUnexpectedException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public MirrorUnexpectedException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    @Override
-    public Throwable fillInStackTrace() {
-        return this;
-    }
-
+  @Override
+  public Throwable fillInStackTrace() {
+    return this;
+  }
 }

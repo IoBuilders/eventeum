@@ -14,13 +14,12 @@
 
 package net.consensys.eventeum.dto.event.parameter;
 
+import jakarta.persistence.Embeddable;
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import jakarta.persistence.Embeddable;
-import java.io.Serializable;
 
 @Embeddable
 @Data
@@ -29,7 +28,7 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public abstract class AbstractEventParameter<T extends Serializable> implements EventParameter<T> {
 
-    private String type;
+  private String type;
 
-    private T value;
+  private T value;
 }

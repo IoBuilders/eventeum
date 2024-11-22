@@ -10,14 +10,13 @@ import lombok.NoArgsConstructor;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class StateChangeResponse {
 
-    private String address;
+  private String address;
 
-    private String contractId;
+  private String contractId;
 
-    private String slot;
+  private String slot;
 
-    private String valueRead;
+  private String valueRead;
 
-    private String valueWritten;
-
+  private String valueWritten;
 }

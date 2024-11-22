@@ -16,6 +16,11 @@ package net.consensys.eventeum.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -26,12 +31,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Keys;
 
-import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 @Document
 @Entity
 @Data
@@ -40,66 +39,73 @@ import java.util.Map;
 @NoArgsConstructor
 public class TransactionMonitoringSpec {
 
-    @Id
-    private String id;
+  @Id private String id;
 
-    private TransactionIdentifierType type;
+  private TransactionIdentifierType type;
 
-    private String nodeName = Constants.DEFAULT_NODE_NAME;
+  private String nodeName = Constants.DEFAULT_NODE_NAME;
 
-    //Need to wrap in an ArrayList so its modifiable
-    @ElementCollection(fetch = FetchType.EAGER)
-    @Enumerated(EnumType.ORDINAL)
-    private List<TransactionStatus> statuses = new ArrayList(
-            Arrays.asList(TransactionStatus.UNCONFIRMED, TransactionStatus.CONFIRMED, TransactionStatus.FAILED));
+  // Need to wrap in an ArrayList so its modifiable
+  @ElementCollection(fetch = FetchType.EAGER)
+  @Enumerated(EnumType.ORDINAL)
+  private List<TransactionStatus> statuses =
+      new ArrayList(
+          Arrays.asList(
+              TransactionStatus.UNCONFIRMED,
+              TransactionStatus.CONFIRMED,
+              TransactionStatus.FAILED));
 
-    private String transactionIdentifierValue;
+  private String transactionIdentifierValue;
 
-    @Convert(converter = HashMapConverter.class)
-    private Map<String, Object> extension;
+  @Convert(converter = HashMapConverter.class)
+  private Map<String, Object> extension;
 
-    public TransactionMonitoringSpec(TransactionIdentifierType type,
-                                     String transactionIdentifierValue,
-                                     String nodeName,
-                                     List<TransactionStatus> statuses,
-                                     Map<String, Object> extension) {
-        this.type = type;
-        this.transactionIdentifierValue = transactionIdentifierValue;
-        this.nodeName = nodeName;
-        this.extension = extension;
-        System.out.println("Extension: " + extension);
-        if (statuses != null && !statuses.isEmpty()) {
-            this.statuses = statuses;
-        }
-
-        convertToCheckSum();
-
-        this.id = Hash.sha3String(transactionIdentifierValue + type + nodeName + this.statuses.toString()).substring(2);
+  public TransactionMonitoringSpec(
+      TransactionIdentifierType type,
+      String transactionIdentifierValue,
+      String nodeName,
+      List<TransactionStatus> statuses,
+      Map<String, Object> extension) {
+    this.type = type;
+    this.transactionIdentifierValue = transactionIdentifierValue;
+    this.nodeName = nodeName;
+    this.extension = extension;
+    System.out.println("Extension: " + extension);
+    if (statuses != null && !statuses.isEmpty()) {
+      this.statuses = statuses;
     }
 
-    public TransactionMonitoringSpec(TransactionIdentifierType type,
-                                     String transactionIdentifierValue,
-                                     String nodeName) {
-        this(type, transactionIdentifierValue, nodeName, null, null);
-    }
+    convertToCheckSum();
 
-    @JsonSetter("type")
-    public void setType(String type) {
-        this.type = TransactionIdentifierType.valueOf(type.toUpperCase());
-    }
+    this.id =
+        Hash.sha3String(transactionIdentifierValue + type + nodeName + this.statuses.toString())
+            .substring(2);
+  }
 
-    @JsonSetter("type")
-    public void setType(TransactionIdentifierType type) {
-        this.type = type;
-    }
+  public TransactionMonitoringSpec(
+      TransactionIdentifierType type, String transactionIdentifierValue, String nodeName) {
+    this(type, transactionIdentifierValue, nodeName, null, null);
+  }
 
-    public void generateId() {
-        this.id = Hash.sha3String(transactionIdentifierValue + type + nodeName + statuses.toString()).substring(2);
-    }
+  @JsonSetter("type")
+  public void setType(String type) {
+    this.type = TransactionIdentifierType.valueOf(type.toUpperCase());
+  }
 
-    public void convertToCheckSum() {
-        if (this.type != TransactionIdentifierType.HASH) {
-            this.transactionIdentifierValue = Keys.toChecksumAddress(this.transactionIdentifierValue);
-        }
+  @JsonSetter("type")
+  public void setType(TransactionIdentifierType type) {
+    this.type = type;
+  }
+
+  public void generateId() {
+    this.id =
+        Hash.sha3String(transactionIdentifierValue + type + nodeName + statuses.toString())
+            .substring(2);
+  }
+
+  public void convertToCheckSum() {
+    if (this.type != TransactionIdentifierType.HASH) {
+      this.transactionIdentifierValue = Keys.toChecksumAddress(this.transactionIdentifierValue);
     }
+  }
 }

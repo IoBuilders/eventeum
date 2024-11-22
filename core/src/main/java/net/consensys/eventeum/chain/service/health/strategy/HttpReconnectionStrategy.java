@@ -19,22 +19,23 @@ import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
 import net.consensys.eventeum.service.SubscriptionService;
 
 /**
- * An NodeFailureListener that reconnects the blockchain service and resubscribes to all
- * active event subscriptions on recovery.
+ * An NodeFailureListener that reconnects the blockchain service and resubscribes to all active
+ * event subscriptions on recovery.
  *
- * Note:  All subscriptions are unregistered before being reregistered.
+ * <p>Note: All subscriptions are unregistered before being reregistered.
  *
  * @author Craig Williams <craig.williams@consensys.net>
  */
 @Slf4j
 public class HttpReconnectionStrategy extends ResubscribingReconnectionStrategy {
 
-    public HttpReconnectionStrategy(SubscriptionService subscriptionService, BlockSubscriptionStrategy blockSubscription) {
-        super(subscriptionService, blockSubscription);
-    }
+  public HttpReconnectionStrategy(
+      SubscriptionService subscriptionService, BlockSubscriptionStrategy blockSubscription) {
+    super(subscriptionService, blockSubscription);
+  }
 
-    @Override
-    public void reconnect() {
-        //Do Nothing
-    }
+  @Override
+  public void reconnect() {
+    // Do Nothing
+  }
 }

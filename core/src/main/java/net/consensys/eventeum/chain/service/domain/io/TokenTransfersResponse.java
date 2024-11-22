@@ -10,12 +10,11 @@ import lombok.NoArgsConstructor;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TokenTransfersResponse {
 
-    String tokenId;
+  String tokenId;
 
-    String account;
+  String account;
 
-    String amount;
+  String amount;
 
-    Boolean isApproval;
-
+  Boolean isApproval;
 }

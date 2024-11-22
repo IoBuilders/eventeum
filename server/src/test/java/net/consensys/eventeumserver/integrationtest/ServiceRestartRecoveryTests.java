@@ -14,8 +14,13 @@
 
 package net.consensys.eventeumserver.integrationtest;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import net.consensys.eventeum.constant.Constants;
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
@@ -43,230 +48,248 @@ import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.web3j.crypto.Hash;
 
-import java.math.BigInteger;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@TestPropertySource(properties=
-        {"spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration"})
+@TestPropertySource(
+    properties = {
+      "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration"
+    })
 public abstract class ServiceRestartRecoveryTests extends BaseKafkaIntegrationTest {
-    private static final int MONGO_PORT = 27017;
+  private static final int MONGO_PORT = 27017;
 
-    private static FixedHostPortGenericContainer mongoContainer;
+  private static FixedHostPortGenericContainer mongoContainer;
 
-    @Autowired
-    private TransactionMonitoringSpecRepository txRepo;
+  @Autowired private TransactionMonitoringSpecRepository txRepo;
 
-    @BeforeAll
-    public static void startMongo() {
-        if (isLocalPortFree(MONGO_PORT)) {
-            mongoContainer = new FixedHostPortGenericContainer("mongo:4.0.10");
-            mongoContainer.waitingFor(Wait.forListeningPort());
-            mongoContainer.withFixedExposedPort(MONGO_PORT, MONGO_PORT);
-            mongoContainer.start();
+  @BeforeAll
+  public static void startMongo() {
+    if (isLocalPortFree(MONGO_PORT)) {
+      mongoContainer = new FixedHostPortGenericContainer("mongo:4.0.10");
+      mongoContainer.waitingFor(Wait.forListeningPort());
+      mongoContainer.withFixedExposedPort(MONGO_PORT, MONGO_PORT);
+      mongoContainer.start();
 
-            waitForMongoDBToStart(30000);
-        }
+      waitForMongoDBToStart(30000);
     }
+  }
 
-    @AfterAll
-    public static void stopMongo() {
-        if (mongoContainer != null) {
-            mongoContainer.stop();
-        }
+  @AfterAll
+  public static void stopMongo() {
+    if (mongoContainer != null) {
+      mongoContainer.stop();
     }
+  }
 
-    protected void doBroadcastMissedBlocksOnStartupAfterFailureTest() throws Exception {
+  protected void doBroadcastMissedBlocksOnStartupAfterFailureTest() throws Exception {
 
-        triggerBlocks(5);
+    triggerBlocks(5);
 
-        waitForBlockMessages(5);
+    waitForBlockMessages(5);
 
-        //Depending on timing, the genesis block is sometimes broadcast,
-        //So wait another few seconds for the last block if this is the case
-        waitForBroadcast();
+    // Depending on timing, the genesis block is sometimes broadcast,
+    // So wait another few seconds for the last block if this is the case
+    waitForBroadcast();
 
-        List<BlockDetails> broadcastBlocks = getBroadcastBlockMessages();
+    List<BlockDetails> broadcastBlocks = getBroadcastBlockMessages();
 
-        System.out.println("BROADCAST BLOCKS BEFORE: " + JSON.stringify(getBroadcastBlockMessages()));
+    System.out.println("BROADCAST BLOCKS BEFORE: " + JSON.stringify(getBroadcastBlockMessages()));
 
-        //Ensure latest block has been updated in eventeum
-        waitForBroadcast();
+    // Ensure latest block has been updated in eventeum
+    waitForBroadcast();
 
-        TestContextManager tc = new TestContextManager(getClass());
-        tc.prepareTestInstance(this);
+    TestContextManager tc = new TestContextManager(getClass());
+    tc.prepareTestInstance(this);
 
-        AtomicReference<BigInteger> lastBlockNumber = new AtomicReference<>(BigInteger.ZERO);
+    AtomicReference<BigInteger> lastBlockNumber = new AtomicReference<>(BigInteger.ZERO);
 
-        restartEventeumKafka(() -> {
-            lastBlockNumber.set(broadcastBlocks.get(broadcastBlocks.size() - 1).getNumber());
-            getBroadcastBlockMessages().clear();
-        }, tc);
+    restartEventeumKafka(
+        () -> {
+          lastBlockNumber.set(broadcastBlocks.get(broadcastBlocks.size() - 1).getNumber());
+          getBroadcastBlockMessages().clear();
+        },
+        tc);
 
-        triggerBlocks(2);
+    triggerBlocks(2);
 
-        Thread.sleep(2000);
-        triggerBlocks(1);
+    Thread.sleep(2000);
+    triggerBlocks(1);
 
-        waitForBlockMessages(3);
+    waitForBlockMessages(3);
 
-        System.out.println("BROADCAST BLOCKS AFTER: " + JSON.stringify(getBroadcastBlockMessages()));
+    System.out.println("BROADCAST BLOCKS AFTER: " + JSON.stringify(getBroadcastBlockMessages()));
 
-        System.err.println("LAST BLOCK: " + lastBlockNumber.get() + " FIRST BLOCK AFTER RESTART: " + getBroadcastBlockMessages().get(0).getNumber());
-        //Eventeum will rebroadcast the last seen block after restart in case block
-        //wasn't fully processed (when numBlocksToReplay=0)
-        assertTrue(lastBlockNumber.get().intValue() == getBroadcastBlockMessages().get(0).getNumber().intValue() ||
-                lastBlockNumber.get().intValue()-1 == getBroadcastBlockMessages().get(0).getNumber().intValue() ||
-                lastBlockNumber.get().intValue()+1 == getBroadcastBlockMessages().get(0).getNumber().intValue());
+    System.err.println(
+        "LAST BLOCK: "
+            + lastBlockNumber.get()
+            + " FIRST BLOCK AFTER RESTART: "
+            + getBroadcastBlockMessages().get(0).getNumber());
+    // Eventeum will rebroadcast the last seen block after restart in case block
+    // wasn't fully processed (when numBlocksToReplay=0)
+    assertTrue(
+        lastBlockNumber.get().intValue()
+                == getBroadcastBlockMessages().get(0).getNumber().intValue()
+            || lastBlockNumber.get().intValue() - 1
+                == getBroadcastBlockMessages().get(0).getNumber().intValue()
+            || lastBlockNumber.get().intValue() + 1
+                == getBroadcastBlockMessages().get(0).getNumber().intValue());
 
-        //Assert incremental blocks
-        for(int i = 0; i < getBroadcastBlockMessages().size(); i++) {
-            final BigInteger expectedNumber = BigInteger.valueOf(i + lastBlockNumber.get().intValue());
+    // Assert incremental blocks
+    for (int i = 0; i < getBroadcastBlockMessages().size(); i++) {
+      final BigInteger expectedNumber = BigInteger.valueOf(i + lastBlockNumber.get().intValue());
 
-            assertTrue(expectedNumber.intValue() == getBroadcastBlockMessages().get(i).getNumber().intValue() ||
-                    expectedNumber.intValue()-1 == getBroadcastBlockMessages().get(i).getNumber().intValue() ||
-                    expectedNumber.intValue()+1 == getBroadcastBlockMessages().get(i).getNumber().intValue());
-        }
+      assertTrue(
+          expectedNumber.intValue() == getBroadcastBlockMessages().get(i).getNumber().intValue()
+              || expectedNumber.intValue() - 1
+                  == getBroadcastBlockMessages().get(i).getNumber().intValue()
+              || expectedNumber.intValue() + 1
+                  == getBroadcastBlockMessages().get(i).getNumber().intValue());
     }
+  }
 
-    public void doBroadcastUnconfirmedEventAfterFailureTest() throws Exception {
+  public void doBroadcastUnconfirmedEventAfterFailureTest() throws Exception {
 
-        final EventEmitter emitter = deployEventEmitterContract();
+    final EventEmitter emitter = deployEventEmitterContract();
 
-        final ContractEventFilter registeredFilter = registerDummyEventFilter(emitter.getContractAddress());
+    final ContractEventFilter registeredFilter =
+        registerDummyEventFilter(emitter.getContractAddress());
 
-        TestContextManager tc = new TestContextManager(getClass());
-        tc.prepareTestInstance(this);
+    TestContextManager tc = new TestContextManager(getClass());
+    tc.prepareTestInstance(this);
 
-        restartEventeumKafka(() -> {
+    restartEventeumKafka(
+        () -> {
+          try {
+            emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
+            waitForBroadcast();
+          } catch (Exception e) {
+            e.printStackTrace();
+            fail("Unable to emit event");
+          }
+        },
+        tc);
+
+    waitForContractEventMessages(1);
+
+    assertEquals(1, getBroadcastContractEvents().size());
+
+    final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
+    verifyDummyEventDetails(registeredFilter, eventDetails, ContractEventStatus.UNCONFIRMED);
+  }
+
+  public void doBroadcastConfirmedEventAfter12BlocksWhenDownTest() throws Exception {
+
+    final EventEmitter emitter = deployEventEmitterContract();
+
+    final ContractEventFilter registeredFilter =
+        registerDummyEventFilter(emitter.getContractAddress());
+
+    TestContextManager tc = new TestContextManager(getClass());
+    tc.prepareTestInstance(this);
+
+    restartEventeumKafka(
+        () -> {
+          try {
             try {
-                emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
-                waitForBroadcast();
+              emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
+              waitForBroadcast();
+
+              triggerBlocks(12);
             } catch (Exception e) {
-                e.printStackTrace();
-                fail("Unable to emit event");
+              e.printStackTrace();
             }
-        }, tc);
+          } catch (Exception e) {
+            e.printStackTrace();
+            fail("Unable to emit event");
+          }
+        },
+        tc);
 
-        waitForContractEventMessages(1);
+    waitForContractEventMessages(1);
 
-        assertEquals(1, getBroadcastContractEvents().size());
+    assertEquals(1, getBroadcastContractEvents().size());
 
-        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
-        verifyDummyEventDetails(registeredFilter, eventDetails, ContractEventStatus.UNCONFIRMED);
-    }
+    verifyDummyEventDetails(
+        registeredFilter, getBroadcastContractEvents().get(0), ContractEventStatus.CONFIRMED);
+  }
 
-    public void doBroadcastConfirmedEventAfter12BlocksWhenDownTest() throws Exception {
+  protected void doBroadcastTransactionUnconfirmedAfterFailureTest() throws Exception {
 
-        final EventEmitter emitter = deployEventEmitterContract();
+    triggerBlocks(1);
 
-        final ContractEventFilter registeredFilter = registerDummyEventFilter(emitter.getContractAddress());
+    waitForBlockMessages(1);
 
-        TestContextManager tc = new TestContextManager(getClass());
-        tc.prepareTestInstance(this);
+    // We're going to send 10 transactions in front to trigger blocks so nonce should be 10 higher
+    final BigInteger nonce = getNonce().add(BigInteger.TEN);
 
-        restartEventeumKafka(() -> {
-            try {
-                try {
-                    emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
-                    waitForBroadcast();
+    final String signedHex = createRawSignedTransactionHex(nonce);
 
-                    triggerBlocks(12);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                fail("Unable to emit event");
-            }
-        }, tc);
+    final String txHash = Hash.sha3(signedHex);
 
-        waitForContractEventMessages(1);
+    TransactionMonitoringSpec monitorSpec =
+        new TransactionMonitoringSpec(
+            TransactionIdentifierType.HASH, txHash, Constants.DEFAULT_NODE_NAME);
 
-        assertEquals(1, getBroadcastContractEvents().size());
+    monitorTransaction(monitorSpec);
 
+    txRepo.findAll();
 
-        verifyDummyEventDetails(registeredFilter,
-                getBroadcastContractEvents().get(0), ContractEventStatus.CONFIRMED);
-    }
+    TestContextManager tc = new TestContextManager(getClass());
+    tc.prepareTestInstance(this);
 
-    protected void doBroadcastTransactionUnconfirmedAfterFailureTest() throws Exception {
+    restartEventeumKafka(
+        () -> {
+          try {
+            triggerBlocks(10);
+            final String actualTxHash = sendRawTransaction(signedHex);
+            assertEquals(txHash, actualTxHash);
+            waitForBroadcast();
 
-        triggerBlocks(1);
+            triggerBlocks(10);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        },
+        tc);
 
-        waitForBlockMessages(1);
+    txRepo.findAll();
 
-        //We're going to send 10 transactions in front to trigger blocks so nonce should be 10 higher
-        final BigInteger nonce = getNonce().add(BigInteger.TEN);
+    waitForTransactionMessages(1);
 
-        final String signedHex = createRawSignedTransactionHex(nonce);
+    assertEquals(1, getBroadcastTransactionMessages().size());
 
-        final String txHash = Hash.sha3(signedHex);
+    final TransactionDetails txDetails = getBroadcastTransactionMessages().get(0);
+    assertEquals(txHash, txDetails.getHash());
+    assertEquals(TransactionStatus.UNCONFIRMED, txDetails.getStatus());
+  }
 
-        TransactionMonitoringSpec monitorSpec = new TransactionMonitoringSpec(TransactionIdentifierType.HASH, txHash, Constants.DEFAULT_NODE_NAME);
+  private static void waitForMongoDBToStart(long timeToWait) {
+    final long startTime = System.currentTimeMillis();
 
-        monitorTransaction(monitorSpec);
+    while (true) {
+      if (System.currentTimeMillis() > startTime + timeToWait) {
+        throw new IllegalStateException("MongoDB failed to start...");
+      }
 
-        txRepo.findAll();
+      try {
+        // Check mongo is up
+        final MongoClient mongo = MongoClients.create();
+        final List<String> databaseNames = IterableUtils.toList(mongo.listDatabaseNames());
 
-        TestContextManager tc = new TestContextManager(getClass());
-        tc.prepareTestInstance(this);
-
-        restartEventeumKafka(() -> {
-            try {
-                triggerBlocks(10);
-                final String actualTxHash = sendRawTransaction(signedHex);
-                assertEquals(txHash, actualTxHash);
-                waitForBroadcast();
-
-                triggerBlocks(10);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, tc);
-
-        txRepo.findAll();
-
-        waitForTransactionMessages(1);
-
-        assertEquals(1, getBroadcastTransactionMessages().size());
-
-        final TransactionDetails txDetails = getBroadcastTransactionMessages().get(0);
-        assertEquals(txHash, txDetails.getHash());
-        assertEquals(TransactionStatus.UNCONFIRMED, txDetails.getStatus());
-    }
-
-    private static void waitForMongoDBToStart(long timeToWait) {
-        final long startTime = System.currentTimeMillis();
-
-        while (true) {
-            if (System.currentTimeMillis() > startTime + timeToWait) {
-                throw new IllegalStateException("MongoDB failed to start...");
-            }
-
-            try {
-                //Check mongo is up
-                final MongoClient mongo = MongoClients.create();
-                final List<String> databaseNames = IterableUtils.toList(mongo.listDatabaseNames());
-
-                if (databaseNames.size() > 0) {
-                    break;
-                }
-            } catch (Throwable t) {
-                //If an error occurs, mongoDB is not yet up
-            }
-
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();;
-            }
+        if (databaseNames.size() > 0) {
+          break;
         }
+      } catch (Throwable t) {
+        // If an error occurs, mongoDB is not yet up
+      }
+
+      try {
+        Thread.sleep(500);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        ;
+      }
     }
+  }
 }

@@ -24,27 +24,27 @@ import org.modelmapper.ModelMapper;
 @NoArgsConstructor
 public class Web3jTransaction implements Transaction {
 
-    private String hash;
-    private String nonce;
-    private String blockHash;
-    private String blockNumber;
-    private String transactionIndex;
-    private String from;
-    private String to;
-    private String value;
-    private String gasPrice;
-    private String gas;
-    private String input;
-    private String creates;
-    private String publicKey;
-    private String raw;
-    private String r;
-    private String s;
-    private long v;
+  private String hash;
+  private String nonce;
+  private String blockHash;
+  private String blockNumber;
+  private String transactionIndex;
+  private String from;
+  private String to;
+  private String value;
+  private String gasPrice;
+  private String gas;
+  private String input;
+  private String creates;
+  private String publicKey;
+  private String raw;
+  private String r;
+  private String s;
+  private long v;
 
-    public Web3jTransaction(org.web3j.protocol.core.methods.response.Transaction web3jTransaction) {
+  public Web3jTransaction(org.web3j.protocol.core.methods.response.Transaction web3jTransaction) {
 
-        final ModelMapper modelMapper = ModelMapperFactory.getInstance().getModelMapper();
-        modelMapper.map(web3jTransaction, this);
-    }
+    final ModelMapper modelMapper = ModelMapperFactory.getInstance().getModelMapper();
+    modelMapper.map(web3jTransaction, this);
+  }
 }

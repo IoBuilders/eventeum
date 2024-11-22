@@ -14,6 +14,11 @@
 
 package net.consensys.eventeumserver.integrationtest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,70 +32,67 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.http.HttpService;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals; 
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public abstract class BaseStartBlockTest extends BaseKafkaIntegrationTest {
 
+  @BeforeAll
+  public static void doTriggerBlocks() throws IOException {
+    // Triggers 6 blocks total (genesis and additional 5)
+    triggerBlocks(5);
+  }
 
-    @BeforeAll
-    public static void doTriggerBlocks() throws IOException {
-        //Triggers 6 blocks total (genesis and additional 5)
-        triggerBlocks(5);
+  @BeforeEach
+  @Override
+  public void clearMessages() {
+    // Theres a race condition that sometimes causes the block messages to be cleared after being
+    // received
+    // Overriding to remove the clearing of block messages as its not required here (until there are
+    // multiple tests!)
+    getBroadcastContractEvents().clear();
+    getBroadcastTransactionMessages().clear();
+  }
+
+  @Test
+  public void testStartBlockForBlockBroadcast() throws IOException {
+    triggerBlocks(1);
+
+    waitForBlockMessages(5);
+
+    assertEquals(BigInteger.valueOf(3), getBroadcastBlockMessages().get(0).getNumber());
+    assertEquals(BigInteger.valueOf(4), getBroadcastBlockMessages().get(1).getNumber());
+    assertEquals(BigInteger.valueOf(5), getBroadcastBlockMessages().get(2).getNumber());
+    assertEquals(BigInteger.valueOf(6), getBroadcastBlockMessages().get(3).getNumber());
+    assertEquals(BigInteger.valueOf(7), getBroadcastBlockMessages().get(4).getNumber());
+  }
+
+  @Override
+  protected Map<String, Object> modifyKafkaConsumerProps(Map<String, Object> consumerProps) {
+    consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+    return consumerProps;
+  }
+
+  private static void triggerBlocks(int numBlocks) throws IOException {
+    final Web3j web3j = Web3j.build(new HttpService("http://localhost:8545"));
+
+    for (int i = 0; i < numBlocks; i++) {
+      web3j
+          .ethSendTransaction(
+              Transaction.createEtherTransaction(
+                  web3j.ethAccounts().send().getAccounts().get(0),
+                  web3j
+                      .ethGetTransactionCount(
+                          web3j.ethAccounts().send().getAccounts().get(0),
+                          DefaultBlockParameterName.fromString("latest"))
+                      .send()
+                      .getTransactionCount(),
+                  BigInteger.valueOf(2000),
+                  BigInteger.valueOf(6721975),
+                  CREDS.getAddress(),
+                  new BigInteger("9460000000000000000")))
+          .send();
     }
-
-    @BeforeEach
-    @Override
-    public void clearMessages() {
-        //Theres a race condition that sometimes causes the block messages to be cleared after being received
-        //Overriding to remove the clearing of block messages as its not required here (until there are multiple tests!)
-        getBroadcastContractEvents().clear();
-        getBroadcastTransactionMessages().clear();
-    }
-
-    @Test
-    public void testStartBlockForBlockBroadcast() throws IOException {
-        triggerBlocks(1);
-
-        waitForBlockMessages(5);
-
-        assertEquals(BigInteger.valueOf(3), getBroadcastBlockMessages().get(0).getNumber());
-        assertEquals(BigInteger.valueOf(4), getBroadcastBlockMessages().get(1).getNumber());
-        assertEquals(BigInteger.valueOf(5), getBroadcastBlockMessages().get(2).getNumber());
-        assertEquals(BigInteger.valueOf(6), getBroadcastBlockMessages().get(3).getNumber());
-        assertEquals(BigInteger.valueOf(7), getBroadcastBlockMessages().get(4).getNumber());
-    }
-
-    @Override
-    protected Map<String, Object> modifyKafkaConsumerProps(Map<String, Object> consumerProps) {
-        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-
-        return consumerProps;
-    }
-
-    private static void triggerBlocks(int numBlocks) throws IOException {
-        final Web3j web3j = Web3j.build(new HttpService("http://localhost:8545"));
-
-        for (int i = 0; i < numBlocks; i++){
-            web3j.ethSendTransaction(Transaction.createEtherTransaction(
-                    web3j.ethAccounts().send().getAccounts().get(0),
-
-                    web3j.ethGetTransactionCount(
-                            web3j.ethAccounts().send().getAccounts().get(0),
-                            DefaultBlockParameterName.fromString("latest")
-                    ).send().getTransactionCount(),
-
-                    BigInteger.valueOf(2000),
-                    BigInteger.valueOf(6721975),
-                    CREDS.getAddress(),
-                    new BigInteger("9460000000000000000"))
-            ).send();
-        }
-    }
+  }
 }

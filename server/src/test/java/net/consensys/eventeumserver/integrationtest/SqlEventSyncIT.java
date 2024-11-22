@@ -23,23 +23,20 @@ import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@TestPropertySource(locations="classpath:application-test-sql-event-sync.properties")
+@TestPropertySource(locations = "classpath:application-test-sql-event-sync.properties")
 @ContextConfiguration(initializers = {SqlEventSyncIT.Initializer.class})
 @Testcontainers
 public class SqlEventSyncIT extends BaseEventCatchupTest {
 
-    @Container
-    public static MSSQLServerContainer mssqlserver = new MSSQLServerContainer()
-            .withPassword("reallyStrongPwd123")
-            .acceptLicense();
+  @Container
+  public static MSSQLServerContainer mssqlserver =
+      new MSSQLServerContainer().withPassword("reallyStrongPwd123").acceptLicense();
 
-    static class Initializer
-            implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-                    "spring.datasource.url=" + mssqlserver.getJdbcUrl()
-            ).applyTo(configurableApplicationContext.getEnvironment());
-        }
+  static class Initializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of("spring.datasource.url=" + mssqlserver.getJdbcUrl())
+          .applyTo(configurableApplicationContext.getEnvironment());
     }
-
+  }
 }

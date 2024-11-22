@@ -14,6 +14,9 @@
 
 package net.consensys.eventeum.integration.broadcast;
 
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.integration.broadcast.blockchain.BlockchainEventBroadcaster;
 import net.consensys.eventeum.integration.broadcast.blockchain.EventBroadcasterWrapper;
@@ -21,37 +24,36 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-
 public class EventBroadcasterWrapperTest {
 
-    private static final Long EXPIRATION_MILLISECONDS = 6000000L;
+  private static final Long EXPIRATION_MILLISECONDS = 6000000L;
 
-    private BlockchainEventBroadcaster blockchainEventBroadcaster;
+  private BlockchainEventBroadcaster blockchainEventBroadcaster;
 
-    @BeforeEach
-    public void init() {
-        blockchainEventBroadcaster = Mockito.mock(BlockchainEventBroadcaster.class);
-    }
+  @BeforeEach
+  public void init() {
+    blockchainEventBroadcaster = Mockito.mock(BlockchainEventBroadcaster.class);
+  }
 
-    @Test
-    public void testDisableBlockNotification() {
-        EventBroadcasterWrapper underTest = new EventBroadcasterWrapper(EXPIRATION_MILLISECONDS, blockchainEventBroadcaster, false);
-        final BlockDetails block = new BlockDetails();
+  @Test
+  public void testDisableBlockNotification() {
+    EventBroadcasterWrapper underTest =
+        new EventBroadcasterWrapper(EXPIRATION_MILLISECONDS, blockchainEventBroadcaster, false);
+    final BlockDetails block = new BlockDetails();
 
-        underTest.broadcastNewBlock(block);
+    underTest.broadcastNewBlock(block);
 
-        verify(blockchainEventBroadcaster, never()).broadcastNewBlock(block);
-    }
+    verify(blockchainEventBroadcaster, never()).broadcastNewBlock(block);
+  }
 
-    @Test
-    public void testEnableBlockNotifications() {
-        EventBroadcasterWrapper underTest = new EventBroadcasterWrapper(EXPIRATION_MILLISECONDS, blockchainEventBroadcaster, true);
-        final BlockDetails block = new BlockDetails();
+  @Test
+  public void testEnableBlockNotifications() {
+    EventBroadcasterWrapper underTest =
+        new EventBroadcasterWrapper(EXPIRATION_MILLISECONDS, blockchainEventBroadcaster, true);
+    final BlockDetails block = new BlockDetails();
 
-        underTest.broadcastNewBlock(block);
+    underTest.broadcastNewBlock(block);
 
-        verify(blockchainEventBroadcaster).broadcastNewBlock(block);
-    }
+    verify(blockchainEventBroadcaster).broadcastNewBlock(block);
+  }
 }

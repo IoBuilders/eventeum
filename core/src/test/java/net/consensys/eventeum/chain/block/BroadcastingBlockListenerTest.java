@@ -14,6 +14,10 @@
 
 package net.consensys.eventeum.chain.block;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+import java.math.BigInteger;
 import net.consensys.eventeum.chain.factory.DefaultBlockDetailsFactory;
 import net.consensys.eventeum.chain.service.domain.Block;
 import net.consensys.eventeum.dto.block.BlockDetails;
@@ -23,33 +27,28 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import java.math.BigInteger;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
-
 public class BroadcastingBlockListenerTest {
 
-    private BroadcastingBlockListener underTest;
+  private BroadcastingBlockListener underTest;
 
-    private BlockchainEventBroadcaster mockBroadcaster;
+  private BlockchainEventBroadcaster mockBroadcaster;
 
-    @BeforeEach
-    public void init() {
-        mockBroadcaster = mock(BlockchainEventBroadcaster.class);
+  @BeforeEach
+  public void init() {
+    mockBroadcaster = mock(BlockchainEventBroadcaster.class);
 
-        underTest = new BroadcastingBlockListener(mockBroadcaster, new DefaultBlockDetailsFactory());
-    }
+    underTest = new BroadcastingBlockListener(mockBroadcaster, new DefaultBlockDetailsFactory());
+  }
 
-    @Test
-    public void testOnBlock() {
-        final Block block = Mockito.mock(Block.class);
-        when(block.getNumber()).thenReturn(BigInteger.TEN);
-        underTest.onBlock(block);
+  @Test
+  public void testOnBlock() {
+    final Block block = Mockito.mock(Block.class);
+    when(block.getNumber()).thenReturn(BigInteger.TEN);
+    underTest.onBlock(block);
 
-        ArgumentCaptor<BlockDetails> captor = ArgumentCaptor.forClass(BlockDetails.class);
-        verify(mockBroadcaster).broadcastNewBlock(captor.capture());
+    ArgumentCaptor<BlockDetails> captor = ArgumentCaptor.forClass(BlockDetails.class);
+    verify(mockBroadcaster).broadcastNewBlock(captor.capture());
 
-        assertEquals(BigInteger.TEN, captor.getValue().getNumber());
-    }
+    assertEquals(BigInteger.TEN, captor.getValue().getNumber());
+  }
 }

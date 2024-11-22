@@ -24,21 +24,21 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestPropertySource(locations="classpath:application-test-ws-pubsub.properties")
+@TestPropertySource(locations = "classpath:application-test-ws-pubsub.properties")
 public class WebsocketsNodeRecoveryIT extends NodeRecoveryTests {
 
-    @Test
-    public void singleNodeFailureRecoveryTest() throws Exception {
-        doSingleNodeFailureRecoveryTest();
-    }
+  @Test
+  public void singleNodeFailureRecoveryTest() throws Exception {
+    doSingleNodeFailureRecoveryTest();
+  }
 
-    @Test
-    public void multipleNodeFailuresRecoveryTest() throws Exception {
-        doMultipleNodeFailuresRecoveryTest();
-    }
+  @Test
+  public void multipleNodeFailuresRecoveryTest() throws Exception {
+    doMultipleNodeFailuresRecoveryTest();
+  }
 
-    @Test
-    public void quickSuccessionNodeFailuresRecoveryTest() throws Exception {
-        doQuickSuccessionNodeFailuresRecoveryTest();
-    }
+  @Test
+  public void quickSuccessionNodeFailuresRecoveryTest() throws Exception {
+    doQuickSuccessionNodeFailuresRecoveryTest();
+  }
 }

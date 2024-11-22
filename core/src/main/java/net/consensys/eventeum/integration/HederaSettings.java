@@ -9,13 +9,12 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "hedera")
 public class HederaSettings {
 
-    private boolean testnet;
-    private Account account = new Account();
+  private boolean testnet;
+  private Account account = new Account();
 
-    @Data
-    public static class Account {
-        private String id;
-        private String privateKey;
-    }
-
+  @Data
+  public static class Account {
+    private String id;
+    private String privateKey;
+  }
 }

@@ -23,10 +23,10 @@ import net.consensys.eventeum.chain.service.domain.Block;
  */
 public interface BlockListener {
 
-    /**
-     * Called when a new block is detected fron the ethereum node.
-     *
-     * @param block The new block
-     */
-    void onBlock(Block block);
+  /**
+   * Called when a new block is detected fron the ethereum node.
+   *
+   * @param block The new block
+   */
+  void onBlock(Block block);
 }
