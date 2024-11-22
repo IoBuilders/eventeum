@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PrivacyConfNode {
-    private boolean enabled;
-    private String privacyPrecompiledAddress;
+  private boolean enabled;
+  private String privacyPrecompiledAddress;
 }

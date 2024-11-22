@@ -14,6 +14,8 @@
 
 package net.consensys.eventeum.integration.eventstore.db;
 
+import java.math.BigInteger;
+import java.util.Optional;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.message.MessageDetails;
 import net.consensys.eventeum.integration.eventstore.SaveableEventStore;
@@ -25,9 +27,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.math.BigInteger;
-import java.util.Optional;
-
 /**
  * A saveable event store that stores contract events in a db repository.
  *
@@ -35,73 +34,71 @@ import java.util.Optional;
  */
 public class SqlEventStore implements SaveableEventStore {
 
-    private final ContractEventDetailsRepository eventDetailsRepository;
+  private final ContractEventDetailsRepository eventDetailsRepository;
 
-    private final MessageDetailsRepository messageDetailsRepository;
+  private final MessageDetailsRepository messageDetailsRepository;
 
-    private final LatestBlockRepository latestBlockRepository;
+  private final LatestBlockRepository latestBlockRepository;
 
-    public SqlEventStore(
-            ContractEventDetailsRepository eventDetailsRepository,
-            MessageDetailsRepository messageDetailsRepository,
-            LatestBlockRepository latestBlockRepository) {
-        this.messageDetailsRepository = messageDetailsRepository;
-        this.eventDetailsRepository = eventDetailsRepository;
-        this.latestBlockRepository = latestBlockRepository;
-    }
+  public SqlEventStore(
+      ContractEventDetailsRepository eventDetailsRepository,
+      MessageDetailsRepository messageDetailsRepository,
+      LatestBlockRepository latestBlockRepository) {
+    this.messageDetailsRepository = messageDetailsRepository;
+    this.eventDetailsRepository = eventDetailsRepository;
+    this.latestBlockRepository = latestBlockRepository;
+  }
 
-    @Override
-    public Page<ContractEventDetails> getContractEventsForSignature(
-            String eventSignature, String contractAddress, PageRequest pagination) {
-        return eventDetailsRepository.findByEventSpecificationSignatureAndAddress(
-                eventSignature, contractAddress, pagination);
-    }
+  @Override
+  public Page<ContractEventDetails> getContractEventsForSignature(
+      String eventSignature, String contractAddress, PageRequest pagination) {
+    return eventDetailsRepository.findByEventSpecificationSignatureAndAddress(
+        eventSignature, contractAddress, pagination);
+  }
 
-    @Override
-    public Optional<LatestBlock> getLatestBlockForNode(String nodeName) {
-        final Iterable<LatestBlock> blocks = latestBlockRepository.findAll();
+  @Override
+  public Optional<LatestBlock> getLatestBlockForNode(String nodeName) {
+    final Iterable<LatestBlock> blocks = latestBlockRepository.findAll();
 
-        return latestBlockRepository.findById(nodeName);
-    }
+    return latestBlockRepository.findById(nodeName);
+  }
 
-    @Override
-    public boolean isPagingZeroIndexed() {
-        return true;
-    }
+  @Override
+  public boolean isPagingZeroIndexed() {
+    return true;
+  }
 
-    @Override
-    public Optional<MessageDetails> getLatestMessageFromTopic(String nodeName, String topicId) {
-        Sort.TypedSort<MessageDetails> message = Sort.sort(MessageDetails.class);
-        return messageDetailsRepository.findFirstByNodeNameAndTopicId(
-                nodeName, topicId, message.by(MessageDetails::getTimestamp).descending());
-    }
+  @Override
+  public Optional<MessageDetails> getLatestMessageFromTopic(String nodeName, String topicId) {
+    Sort.TypedSort<MessageDetails> message = Sort.sort(MessageDetails.class);
+    return messageDetailsRepository.findFirstByNodeNameAndTopicId(
+        nodeName, topicId, message.by(MessageDetails::getTimestamp).descending());
+  }
 
-    @Override
-    public Optional<ContractEventDetails> getContractEvent(
-            String eventSignature,
-            String contractAddress,
-            String blockHash,
-            String transactionHash,
-            BigInteger logIndex
-    ) {
-        return eventDetailsRepository
-                .findByEventSpecificationSignatureAndAddressAndBlockHashAndTransactionHashAndLogIndex(
-                        eventSignature, contractAddress, blockHash, transactionHash, logIndex
-                );
-    }
+  @Override
+  public Optional<ContractEventDetails> getContractEvent(
+      String eventSignature,
+      String contractAddress,
+      String blockHash,
+      String transactionHash,
+      BigInteger logIndex) {
+    return eventDetailsRepository
+        .findByEventSpecificationSignatureAndAddressAndBlockHashAndTransactionHashAndLogIndex(
+            eventSignature, contractAddress, blockHash, transactionHash, logIndex);
+  }
 
-    @Override
-    public void save(ContractEventDetails contractEventDetails) {
-        eventDetailsRepository.save(contractEventDetails);
-    }
+  @Override
+  public void save(ContractEventDetails contractEventDetails) {
+    eventDetailsRepository.save(contractEventDetails);
+  }
 
-    @Override
-    public void save(LatestBlock latestBlock) {
-        latestBlockRepository.save(latestBlock);
-    }
+  @Override
+  public void save(LatestBlock latestBlock) {
+    latestBlockRepository.save(latestBlock);
+  }
 
-    @Override
-    public void save(MessageDetails messageDetails) {
-        messageDetailsRepository.save(messageDetails);
-    }
+  @Override
+  public void save(MessageDetails messageDetails) {
+    messageDetailsRepository.save(messageDetails);
+  }
 }

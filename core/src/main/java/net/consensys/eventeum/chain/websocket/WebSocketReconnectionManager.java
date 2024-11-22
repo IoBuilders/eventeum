@@ -22,16 +22,16 @@ import org.web3j.protocol.websocket.WebSocketClient;
 @Slf4j
 public class WebSocketReconnectionManager {
 
-    public synchronized void reconnect(WebSocketClient client) {
-        log.info("Attempting websocket reconnection...");
-        try {
-            if (!client.reconnectBlocking()) {
-                log.error("Reconnect failed!");
-            } else {
-                log.info("Websocket reconnected successfully.");
-            }
-        } catch (InterruptedException e) {
-            log.error("Reconnect failed!", e);
-        }
+  public synchronized void reconnect(WebSocketClient client) {
+    log.info("Attempting websocket reconnection...");
+    try {
+      if (!client.reconnectBlocking()) {
+        log.error("Reconnect failed!");
+      } else {
+        log.info("Websocket reconnected successfully.");
+      }
+    } catch (InterruptedException e) {
+      log.error("Reconnect failed!", e);
     }
+  }
 }

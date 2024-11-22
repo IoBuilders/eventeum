@@ -32,10 +32,11 @@ import net.consensys.eventeum.integration.eventstore.EventStore;
 import org.springframework.stereotype.Component;
 
 /**
- * A contract event listener that initialises a block listener after being passed an unconfirmed event.
- * <p>
- * This created block listener counts blocks since the event was first fired and broadcasts a CONFIRMED
- * event once the configured number of blocks have passed.
+ * A contract event listener that initialises a block listener after being passed an unconfirmed
+ * event.
+ *
+ * <p>This created block listener counts blocks since the event was first fired and broadcasts a
+ * CONFIRMED event once the configured number of blocks have passed.
  *
  * @author Craig Williams <craig.williams@consensys.net>
  */
@@ -43,70 +44,80 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class BroadcastAndInitialiseConfirmationListener extends BaseContractEventListener {
 
-    private final ChainServicesContainer chainServicesContainer;
-    private final BlockchainEventBroadcaster eventBroadcaster;
-    private final NodeSettings nodeSettings;
+  private final ChainServicesContainer chainServicesContainer;
+  private final BlockchainEventBroadcaster eventBroadcaster;
+  private final NodeSettings nodeSettings;
 
-    public BroadcastAndInitialiseConfirmationListener(
-            ChainServicesContainer chainServicesContainer,
-            BlockchainEventBroadcaster eventBroadcaster,
-            NodeSettings nodeSettings,
-            EventStore eventStore
-    ) {
-        super(eventStore);
-        this.chainServicesContainer = chainServicesContainer;
-        this.eventBroadcaster = eventBroadcaster;
-        this.nodeSettings = nodeSettings;
+  public BroadcastAndInitialiseConfirmationListener(
+      ChainServicesContainer chainServicesContainer,
+      BlockchainEventBroadcaster eventBroadcaster,
+      NodeSettings nodeSettings,
+      EventStore eventStore) {
+    super(eventStore);
+    this.chainServicesContainer = chainServicesContainer;
+    this.eventBroadcaster = eventBroadcaster;
+    this.nodeSettings = nodeSettings;
+  }
+
+  @Override
+  public void onEvent(ContractEventDetails eventDetails) {
+    final Node node = nodeSettings.getNode(eventDetails.getNodeName());
+    final ChainType chainType = node.getChainType();
+
+    if (isExistingEvent(eventDetails)) {
+      if (chainType == ChainType.ETHEREUM
+          && eventDetails.getStatus() == ContractEventStatus.UNCONFIRMED
+          && !shouldInstantlyConfirm(eventDetails)) {
+        log.info(
+            "Registering an EventConfirmationBlockListener for event: {}",
+            eventDetails.getEventIdentifier());
+        getBlockSubscriptionStrategy(eventDetails)
+            .addBlockListener(createEventConfirmationBlockListener(eventDetails, node));
+        return;
+      }
+      eventDetails.setStatus(ContractEventStatus.CONFIRMED);
+      eventBroadcaster.broadcastContractEvent(eventDetails);
     }
+  }
 
-    @Override
-    public void onEvent(ContractEventDetails eventDetails) {
-        final Node node = nodeSettings.getNode(eventDetails.getNodeName());
-        final ChainType chainType = node.getChainType();
+  protected BlockListener createEventConfirmationBlockListener(
+      ContractEventDetails eventDetails, Node node) {
+    return new EventConfirmationBlockListener(
+        eventDetails,
+        getBlockchainService(eventDetails),
+        getBlockSubscriptionStrategy(eventDetails),
+        eventBroadcaster,
+        node);
+  }
 
-        if (isExistingEvent(eventDetails)) {
-            if (chainType == ChainType.ETHEREUM
-                    && eventDetails.getStatus() == ContractEventStatus.UNCONFIRMED
-                    && !shouldInstantlyConfirm(eventDetails)) {
-                log.info("Registering an EventConfirmationBlockListener for event: {}", eventDetails.getEventIdentifier());
-                getBlockSubscriptionStrategy(eventDetails)
-                        .addBlockListener(createEventConfirmationBlockListener(eventDetails, node));
-                return;
-            }
-            eventDetails.setStatus(ContractEventStatus.CONFIRMED);
-            eventBroadcaster.broadcastContractEvent(eventDetails);
-        }
-    }
+  private BlockchainService getBlockchainService(ContractEventDetails eventDetails) {
+    return chainServicesContainer
+        .getNodeServices(eventDetails.getNodeName())
+        .getBlockchainService();
+  }
 
-    protected BlockListener createEventConfirmationBlockListener(ContractEventDetails eventDetails,Node node) {
-        return new EventConfirmationBlockListener(eventDetails,
-                getBlockchainService(eventDetails), getBlockSubscriptionStrategy(eventDetails), eventBroadcaster, node);
-    }
+  private BlockSubscriptionStrategy getBlockSubscriptionStrategy(
+      ContractEventDetails eventDetails) {
+    return chainServicesContainer
+        .getNodeServices(eventDetails.getNodeName())
+        .getBlockSubscriptionStrategy();
+  }
 
-    private BlockchainService getBlockchainService(ContractEventDetails eventDetails) {
-        return chainServicesContainer.getNodeServices(
-                eventDetails.getNodeName()).getBlockchainService();
-    }
+  private boolean shouldInstantlyConfirm(ContractEventDetails eventDetails) {
+    final BlockchainService blockchainService = getBlockchainService(eventDetails);
+    final Node node = nodeSettings.getNode(blockchainService.getNodeName());
+    BigInteger currentBlock = blockchainService.getCurrentBlockNumber();
+    BigInteger waitBlocks = node.getBlocksToWaitForConfirmation();
 
-    private BlockSubscriptionStrategy getBlockSubscriptionStrategy(ContractEventDetails eventDetails) {
-        return chainServicesContainer.getNodeServices(
-                eventDetails.getNodeName()).getBlockSubscriptionStrategy();
-    }
+    return currentBlock.compareTo(eventDetails.getBlockNumber().add(waitBlocks)) >= 0
+        && isTransactionStillInBlock(
+            eventDetails.getTransactionHash(), eventDetails.getBlockHash(), blockchainService);
+  }
 
-    private boolean shouldInstantlyConfirm(ContractEventDetails eventDetails) {
-        final BlockchainService blockchainService = getBlockchainService(eventDetails);
-        final Node node = nodeSettings.getNode(blockchainService.getNodeName());
-        BigInteger currentBlock = blockchainService.getCurrentBlockNumber();
-        BigInteger waitBlocks = node.getBlocksToWaitForConfirmation();
+  private boolean isTransactionStillInBlock(
+      String txHash, String blockHash, BlockchainService blockchainService) {
+    final TransactionReceipt receipt = blockchainService.getTransactionReceipt(txHash);
 
-        return currentBlock.compareTo(eventDetails.getBlockNumber().add(waitBlocks)) >= 0
-            && isTransactionStillInBlock(
-                    eventDetails.getTransactionHash(), eventDetails.getBlockHash(), blockchainService);
-    }
-
-    private boolean isTransactionStillInBlock(String txHash, String blockHash, BlockchainService blockchainService) {
-        final TransactionReceipt receipt = blockchainService.getTransactionReceipt(txHash);
-
-        return receipt != null && receipt.getBlockHash().equals(blockHash);
-    }
+    return receipt != null && receipt.getBlockHash().equals(blockHash);
+  }
 }

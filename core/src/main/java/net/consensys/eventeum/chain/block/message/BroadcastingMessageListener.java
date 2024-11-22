@@ -13,21 +13,21 @@ import org.springframework.stereotype.Component;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class BroadcastingMessageListener implements MessageListener {
 
-    private EventStore eventStore;
-    private BlockchainEventBroadcaster eventBroadcaster;
+  private EventStore eventStore;
+  private BlockchainEventBroadcaster eventBroadcaster;
 
-    @Autowired
-    public BroadcastingMessageListener(EventStore eventStore, BlockchainEventBroadcaster eventBroadcaster) {
-        this.eventStore = eventStore;
-        this.eventBroadcaster = eventBroadcaster;
+  @Autowired
+  public BroadcastingMessageListener(
+      EventStore eventStore, BlockchainEventBroadcaster eventBroadcaster) {
+    this.eventStore = eventStore;
+    this.eventBroadcaster = eventBroadcaster;
+  }
+
+  @Override
+  public void onMessage(MessageDetails messageDetails) {
+    eventBroadcaster.broadcastMessage(messageDetails);
+    if (eventStore instanceof SaveableEventStore) {
+      ((SaveableEventStore) eventStore).save(messageDetails);
     }
-
-    @Override
-    public void onMessage(MessageDetails messageDetails) {
-        eventBroadcaster.broadcastMessage(messageDetails);
-        if (eventStore instanceof SaveableEventStore) {
-            ((SaveableEventStore) eventStore).save(messageDetails);
-        }
-    }
-
+  }
 }

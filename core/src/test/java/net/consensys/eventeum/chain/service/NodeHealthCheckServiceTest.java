@@ -14,7 +14,14 @@
 
 package net.consensys.eventeum.chain.service;
 
+import static org.mockito.Mockito.*;
+
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.consensys.eventeum.chain.service.health.NodeHealthCheckService;
 import net.consensys.eventeum.chain.service.health.strategy.ReconnectionStrategy;
 import net.consensys.eventeum.chain.service.strategy.BlockSubscriptionStrategy;
@@ -27,200 +34,197 @@ import net.consensys.eventeum.service.SubscriptionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Optional;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.mockito.Mockito.*;
-
 public class NodeHealthCheckServiceTest {
 
-    private static final BigInteger BLOCK_NUMBER = BigInteger.valueOf(1234);
+  private static final BigInteger BLOCK_NUMBER = BigInteger.valueOf(1234);
 
-    private static final Integer SYNCING_THRESHOLD = Integer.valueOf(60);
+  private static final Integer SYNCING_THRESHOLD = Integer.valueOf(60);
 
-    private static final Long HEALTH_CHECK_INTERVAL = 1000L;
-    private final AtomicBoolean isConnected = new AtomicBoolean(false);
-    private NodeHealthCheckService underTest;
-    private BlockchainService mockBlockchainService;
-    private BlockSubscriptionStrategy mockBlockSubscriptionStrategy;
-    private ReconnectionStrategy mockReconnectionStrategy;
-    private SubscriptionService mockSubscriptionService;
-    private EventeumValueMonitor mockEventeumValueMonitor;
-    private EventStoreService mockEventStoreService;
-    private ScheduledThreadPoolExecutor mockTaskScheduler;
+  private static final Long HEALTH_CHECK_INTERVAL = 1000L;
+  private final AtomicBoolean isConnected = new AtomicBoolean(false);
+  private NodeHealthCheckService underTest;
+  private BlockchainService mockBlockchainService;
+  private BlockSubscriptionStrategy mockBlockSubscriptionStrategy;
+  private ReconnectionStrategy mockReconnectionStrategy;
+  private SubscriptionService mockSubscriptionService;
+  private EventeumValueMonitor mockEventeumValueMonitor;
+  private EventStoreService mockEventStoreService;
+  private ScheduledThreadPoolExecutor mockTaskScheduler;
 
-    @BeforeEach
-    public void init() throws Exception {
-        mockBlockchainService = mock(BlockchainService.class);
-        when(mockBlockchainService.getNodeName()).thenReturn(Constants.DEFAULT_NODE_NAME);
-        mockBlockSubscriptionStrategy = mock(BlockSubscriptionStrategy.class);
-        when(mockBlockSubscriptionStrategy.getNodeName()).thenReturn(Constants.DEFAULT_NODE_NAME);
+  @BeforeEach
+  public void init() throws Exception {
+    mockBlockchainService = mock(BlockchainService.class);
+    when(mockBlockchainService.getNodeName()).thenReturn(Constants.DEFAULT_NODE_NAME);
+    mockBlockSubscriptionStrategy = mock(BlockSubscriptionStrategy.class);
+    when(mockBlockSubscriptionStrategy.getNodeName()).thenReturn(Constants.DEFAULT_NODE_NAME);
 
-        mockReconnectionStrategy = mock(ReconnectionStrategy.class);
-        mockSubscriptionService = mock(SubscriptionService.class);
-        when(mockSubscriptionService.getState()).thenReturn(SubscriptionService.SubscriptionServiceState.SUBSCRIBED);
+    mockReconnectionStrategy = mock(ReconnectionStrategy.class);
+    mockSubscriptionService = mock(SubscriptionService.class);
+    when(mockSubscriptionService.getState())
+        .thenReturn(SubscriptionService.SubscriptionServiceState.SUBSCRIBED);
 
-        mockEventStoreService = mock(EventStoreService.class);
-        LatestBlock latestBlock = new LatestBlock();
-        latestBlock.setNumber(BLOCK_NUMBER);
-        when(mockEventStoreService.getLatestBlock(any())).thenReturn(Optional.of(latestBlock));
-        mockEventeumValueMonitor = new MicrometerValueMonitor(new SimpleMeterRegistry());
-        mockTaskScheduler = mock(ScheduledThreadPoolExecutor.class);
+    mockEventStoreService = mock(EventStoreService.class);
+    LatestBlock latestBlock = new LatestBlock();
+    latestBlock.setNumber(BLOCK_NUMBER);
+    when(mockEventStoreService.getLatestBlock(any())).thenReturn(Optional.of(latestBlock));
+    mockEventeumValueMonitor = new MicrometerValueMonitor(new SimpleMeterRegistry());
+    mockTaskScheduler = mock(ScheduledThreadPoolExecutor.class);
 
-        underTest = createUnderTest();
+    underTest = createUnderTest();
+  }
 
+  @Test
+  public void testEverythingUpHappyPath() {
+    wireBlockchainServiceUp(true);
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, never()).reconnect();
+    verify(mockReconnectionStrategy, never()).resubscribe();
+  }
+
+  @Test
+  public void testNodeDisconnectedReconnectSuccess() {
+    wireBlockchainServiceDown(false, false);
+    wireReconnectResult(true);
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(1)).reconnect();
+    verify(mockReconnectionStrategy, times(1)).resubscribe();
+  }
+
+  @Test
+  public void testNodeDisconnectedReconnectFailure() {
+    wireBlockchainServiceDown(false, false);
+    wireReconnectResult(false);
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(1)).reconnect();
+    verify(mockReconnectionStrategy, never()).resubscribe();
+  }
+
+  @Test
+  public void testNodeStaysDown() {
+    wireBlockchainServiceDown(false, false);
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(1)).reconnect();
+
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(2)).reconnect();
+    verify(mockReconnectionStrategy, never()).resubscribe();
+  }
+
+  @Test
+  public void testNodeComesBackUpNotSubscribed() {
+    wireBlockchainServiceDown(false, false);
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(1)).reconnect();
+    verify(mockReconnectionStrategy, never()).resubscribe();
+
+    reset(mockBlockchainService);
+    wireBlockchainServiceUp(false);
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(2)).reconnect();
+    verify(mockReconnectionStrategy, times(1)).resubscribe();
+  }
+
+  @Test
+  public void testNodeFromSubscribedToConnected() {
+    wireBlockchainServiceUp(true);
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, never()).reconnect();
+    verify(mockReconnectionStrategy, never()).resubscribe();
+
+    reset(mockBlockchainService);
+    wireBlockchainServiceUp(false);
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(1)).reconnect();
+    verify(mockReconnectionStrategy, times(1)).resubscribe();
+  }
+
+  @Test
+  public void testNodeComesBackUpAndStaysUp() {
+    wireBlockchainServiceDown(true, false);
+
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(1)).reconnect();
+    verify(mockReconnectionStrategy, times(1)).resubscribe();
+
+    reset(mockBlockchainService);
+    reset(mockSubscriptionService);
+
+    wireBlockchainServiceUp(true);
+
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(1)).reconnect();
+    verify(mockReconnectionStrategy, times(1)).resubscribe();
+
+    underTest.checkHealth();
+
+    verify(mockReconnectionStrategy, times(1)).reconnect();
+    verify(mockReconnectionStrategy, times(1)).resubscribe();
+  }
+
+  private void wireBlockchainServiceUp(boolean isSubscribed) {
+    when(mockBlockchainService.getCurrentBlockNumber()).thenReturn(BLOCK_NUMBER);
+    when(mockBlockSubscriptionStrategy.isSubscribed()).thenReturn(isSubscribed);
+    when(mockBlockchainService.getNodeName()).thenReturn(Constants.DEFAULT_NODE_NAME);
+  }
+
+  private void wireBlockchainServiceDown(boolean isConnected, boolean isSubscribed) {
+
+    when(mockBlockSubscriptionStrategy.isSubscribed()).thenReturn(isSubscribed);
+    if (isConnected) {
+      when(mockBlockchainService.getCurrentBlockNumber()).thenReturn(BLOCK_NUMBER);
+    } else {
+      when(mockBlockchainService.getCurrentBlockNumber())
+          .thenThrow(new BlockchainException("Error!", new IOException("")));
     }
+  }
 
-    @Test
-    public void testEverythingUpHappyPath() {
-        wireBlockchainServiceUp(true);
-        underTest.checkHealth();
+  private void wireReconnectResult(boolean reconnectSuccess) {
+    isConnected.set(false);
 
-        verify(mockReconnectionStrategy, never()).reconnect();
-        verify(mockReconnectionStrategy, never()).resubscribe();
-    }
+    doAnswer(
+            (invocation) -> {
+              isConnected.set(reconnectSuccess);
+              return null;
+            })
+        .when(mockReconnectionStrategy)
+        .reconnect();
 
-    @Test
-    public void testNodeDisconnectedReconnectSuccess() {
-        wireBlockchainServiceDown(false, false);
-        wireReconnectResult(true);
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(1)).reconnect();
-        verify(mockReconnectionStrategy, times(1)).resubscribe();
-    }
-
-    @Test
-    public void testNodeDisconnectedReconnectFailure() {
-        wireBlockchainServiceDown(false, false);
-        wireReconnectResult(false);
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(1)).reconnect();
-        verify(mockReconnectionStrategy, never()).resubscribe();
-    }
-
-    @Test
-    public void testNodeStaysDown() {
-        wireBlockchainServiceDown(false, false);
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(1)).reconnect();
-
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(2)).reconnect();
-        verify(mockReconnectionStrategy, never()).resubscribe();
-    }
-
-    @Test
-    public void testNodeComesBackUpNotSubscribed() {
-        wireBlockchainServiceDown(false, false);
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(1)).reconnect();
-        verify(mockReconnectionStrategy, never()).resubscribe();
-
-        reset(mockBlockchainService);
-        wireBlockchainServiceUp(false);
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(2)).reconnect();
-        verify(mockReconnectionStrategy, times(1)).resubscribe();
-    }
-
-    @Test
-    public void testNodeFromSubscribedToConnected() {
-        wireBlockchainServiceUp(true);
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, never()).reconnect();
-        verify(mockReconnectionStrategy, never()).resubscribe();
-
-        reset(mockBlockchainService);
-        wireBlockchainServiceUp(false);
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(1)).reconnect();
-        verify(mockReconnectionStrategy, times(1)).resubscribe();
-    }
-
-    @Test
-    public void testNodeComesBackUpAndStaysUp() {
-        wireBlockchainServiceDown(true, false);
-
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(1)).reconnect();
-        verify(mockReconnectionStrategy, times(1)).resubscribe();
-
-        reset(mockBlockchainService);
-        reset(mockSubscriptionService);
-
-        wireBlockchainServiceUp(true);
-
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(1)).reconnect();
-        verify(mockReconnectionStrategy, times(1)).resubscribe();
-
-        underTest.checkHealth();
-
-        verify(mockReconnectionStrategy, times(1)).reconnect();
-        verify(mockReconnectionStrategy, times(1)).resubscribe();
-    }
-
-    private void wireBlockchainServiceUp(boolean isSubscribed) {
-        when(mockBlockchainService.getCurrentBlockNumber()).thenReturn(BLOCK_NUMBER);
-        when(mockBlockSubscriptionStrategy.isSubscribed()).thenReturn(isSubscribed);
-        when(mockBlockchainService.getNodeName()).thenReturn(Constants.DEFAULT_NODE_NAME);
-    }
-
-    private void wireBlockchainServiceDown(boolean isConnected, boolean isSubscribed) {
-
-        when(mockBlockSubscriptionStrategy.isSubscribed()).thenReturn(isSubscribed);
-        if (isConnected) {
-            when(mockBlockchainService.getCurrentBlockNumber()).thenReturn(BLOCK_NUMBER);
-        } else {
-            when(mockBlockchainService.getCurrentBlockNumber()).thenThrow(
-                    new BlockchainException("Error!", new IOException("")));
-        }
-    }
-
-    private void wireReconnectResult(boolean reconnectSuccess) {
-        isConnected.set(false);
-
-        doAnswer((invocation) -> {
-            isConnected.set(reconnectSuccess);
-            return null;
-        }).when(mockReconnectionStrategy).reconnect();
-
-        doAnswer((invocation) -> {
-            if (isConnected.get()) {
+    doAnswer(
+            (invocation) -> {
+              if (isConnected.get()) {
                 return BLOCK_NUMBER;
-            } else {
+              } else {
                 throw new BlockchainException("Error!", new IOException(""));
-            }
-        }).when(mockBlockchainService).getCurrentBlockNumber();
-    }
+              }
+            })
+        .when(mockBlockchainService)
+        .getCurrentBlockNumber();
+  }
 
-    private NodeHealthCheckService createUnderTest() throws Exception {
-        final NodeHealthCheckService healthCheckService =
-                new NodeHealthCheckService(
-                        mockBlockchainService,
-                        mockBlockSubscriptionStrategy,
-                        mockReconnectionStrategy,
-                        mockSubscriptionService,
-                        mockEventeumValueMonitor,
-                        mockEventStoreService,
-                        SYNCING_THRESHOLD,
-                        mockTaskScheduler,
-                        HEALTH_CHECK_INTERVAL
-                );
+  private NodeHealthCheckService createUnderTest() throws Exception {
+    final NodeHealthCheckService healthCheckService =
+        new NodeHealthCheckService(
+            mockBlockchainService,
+            mockBlockSubscriptionStrategy,
+            mockReconnectionStrategy,
+            mockSubscriptionService,
+            mockEventeumValueMonitor,
+            mockEventStoreService,
+            SYNCING_THRESHOLD,
+            mockTaskScheduler,
+            HEALTH_CHECK_INTERVAL);
 
-        return healthCheckService;
-    }
+    return healthCheckService;
+  }
 }

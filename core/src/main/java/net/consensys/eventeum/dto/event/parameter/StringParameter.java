@@ -14,11 +14,10 @@
 
 package net.consensys.eventeum.dto.event.parameter;
 
+import jakarta.persistence.Embeddable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import jakarta.persistence.Embeddable;
 
 /**
  * A textual based EventParameter, represented by a String.
@@ -31,12 +30,12 @@ import jakarta.persistence.Embeddable;
 @NoArgsConstructor
 public class StringParameter extends AbstractEventParameter<String> {
 
-    public StringParameter(String type, String value) {
-        super(type, value);
-    }
+  public StringParameter(String type, String value) {
+    super(type, value);
+  }
 
-    @Override
-    public String getValueString() {
-        return getValue();
-    }
+  @Override
+  public String getValueString() {
+    return getValue();
+  }
 }

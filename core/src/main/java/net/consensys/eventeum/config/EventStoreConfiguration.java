@@ -43,73 +43,75 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @Order(0)
 public class EventStoreConfiguration {
 
-    @Configuration
-    @ConditionalOnExpression("'${eventStore.type}:${database.type}'=='DB:MONGO'")
-    @ConditionalOnMissingBean(EventStoreFactory.class)
-    public static class MongoEventStoreConfiguration {
+  @Configuration
+  @ConditionalOnExpression("'${eventStore.type}:${database.type}'=='DB:MONGO'")
+  @ConditionalOnMissingBean(EventStoreFactory.class)
+  public static class MongoEventStoreConfiguration {
 
-        @Bean
-        public SaveableEventStore dbEventStore(
-                ContractEventDetailsRepository contractEventRepository,
-                MessageDetailsRepository messageDetailsRepository,
-                LatestBlockRepository latestBlockRepository,
-                MongoTemplate mongoTemplate) {
-            return new MongoEventStore(
-                    contractEventRepository, messageDetailsRepository, latestBlockRepository, mongoTemplate);
-        }
-
-        @Bean
-        public ContractEventListener eventStoreContractEventUpdater(SaveableEventStore eventStore) {
-            return new EventStoreContractEventUpdater(eventStore);
-        }
-
-        @Bean
-        public BlockListener eventStoreLatestBlockUpdater(SaveableEventStore eventStore,
-                                                          BlockDetailsFactory blockDetailsFactory,
-                                                          EventeumValueMonitor valueMonitor,
-                                                          ChainServicesContainer chainServicesContainer) {
-            return new EventStoreLatestBlockUpdater(eventStore, blockDetailsFactory, valueMonitor, chainServicesContainer);
-        }
+    @Bean
+    public SaveableEventStore dbEventStore(
+        ContractEventDetailsRepository contractEventRepository,
+        MessageDetailsRepository messageDetailsRepository,
+        LatestBlockRepository latestBlockRepository,
+        MongoTemplate mongoTemplate) {
+      return new MongoEventStore(
+          contractEventRepository, messageDetailsRepository, latestBlockRepository, mongoTemplate);
     }
 
-    @Configuration
-    @ConditionalOnExpression("'${eventStore.type}:${database.type}'=='DB:SQL'")
-    @ConditionalOnMissingBean(EventStoreFactory.class)
-    public static class SqlEventStoreConfiguration {
-
-        @Bean
-        public SaveableEventStore dbEventStore(
-                ContractEventDetailsRepository contractEventRepository,
-                MessageDetailsRepository messageDetailsRepository,
-                LatestBlockRepository latestBlockRepository) {
-            return new SqlEventStore(
-                    contractEventRepository, messageDetailsRepository, latestBlockRepository);
-        }
-
-        @Bean
-        public ContractEventListener eventStoreContractEventUpdater(SaveableEventStore eventStore) {
-            return new EventStoreContractEventUpdater(eventStore);
-        }
-
-        @Bean
-        public BlockListener eventStoreLatestBlockUpdater(SaveableEventStore eventStore,
-                                                          BlockDetailsFactory blockDetailsFactory,
-                                                          EventeumValueMonitor valueMonitor,
-                                                          ChainServicesContainer chainServiceContainer) {
-            return new EventStoreLatestBlockUpdater(eventStore, blockDetailsFactory, valueMonitor, chainServiceContainer);
-        }
+    @Bean
+    public ContractEventListener eventStoreContractEventUpdater(SaveableEventStore eventStore) {
+      return new EventStoreContractEventUpdater(eventStore);
     }
 
-    @Configuration
-    @ConditionalOnProperty(name = "eventStore.type", havingValue = "REST")
-    @ConditionalOnMissingBean(EventStoreFactory.class)
-    public static class RESTEventStoreConfiguration {
+    @Bean
+    public BlockListener eventStoreLatestBlockUpdater(
+        SaveableEventStore eventStore,
+        BlockDetailsFactory blockDetailsFactory,
+        EventeumValueMonitor valueMonitor,
+        ChainServicesContainer chainServicesContainer) {
+      return new EventStoreLatestBlockUpdater(
+          eventStore, blockDetailsFactory, valueMonitor, chainServicesContainer);
+    }
+  }
 
-        @Bean
-        public EventStore RESTEventStore(EventStoreClient client) {
-            return new RESTEventStore(client);
-        }
+  @Configuration
+  @ConditionalOnExpression("'${eventStore.type}:${database.type}'=='DB:SQL'")
+  @ConditionalOnMissingBean(EventStoreFactory.class)
+  public static class SqlEventStoreConfiguration {
+
+    @Bean
+    public SaveableEventStore dbEventStore(
+        ContractEventDetailsRepository contractEventRepository,
+        MessageDetailsRepository messageDetailsRepository,
+        LatestBlockRepository latestBlockRepository) {
+      return new SqlEventStore(
+          contractEventRepository, messageDetailsRepository, latestBlockRepository);
     }
 
+    @Bean
+    public ContractEventListener eventStoreContractEventUpdater(SaveableEventStore eventStore) {
+      return new EventStoreContractEventUpdater(eventStore);
+    }
 
+    @Bean
+    public BlockListener eventStoreLatestBlockUpdater(
+        SaveableEventStore eventStore,
+        BlockDetailsFactory blockDetailsFactory,
+        EventeumValueMonitor valueMonitor,
+        ChainServicesContainer chainServiceContainer) {
+      return new EventStoreLatestBlockUpdater(
+          eventStore, blockDetailsFactory, valueMonitor, chainServiceContainer);
+    }
+  }
+
+  @Configuration
+  @ConditionalOnProperty(name = "eventStore.type", havingValue = "REST")
+  @ConditionalOnMissingBean(EventStoreFactory.class)
+  public static class RESTEventStoreConfiguration {
+
+    @Bean
+    public EventStore RESTEventStore(EventStoreClient client) {
+      return new RESTEventStore(client);
+    }
+  }
 }

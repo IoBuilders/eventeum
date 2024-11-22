@@ -19,15 +19,15 @@ import net.consensys.eventeum.chain.block.BlockListener;
 
 public interface BlockSubscriptionStrategy {
 
-    String getNodeName();
+  String getNodeName();
 
-    Disposable subscribe();
+  Disposable subscribe();
 
-    void unsubscribe();
+  void unsubscribe();
 
-    void addBlockListener(BlockListener blockListener);
+  void addBlockListener(BlockListener blockListener);
 
-    void removeBlockListener(BlockListener blockListener);
+  void removeBlockListener(BlockListener blockListener);
 
-    boolean isSubscribed();
+  boolean isSubscribed();
 }

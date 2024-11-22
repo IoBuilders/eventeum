@@ -14,6 +14,9 @@
 
 package net.consensys.eventeumserver.integrationtest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.math.BigInteger;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
@@ -25,30 +28,31 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.math.BigInteger;
-
-import static org.junit.jupiter.api.Assertions.assertEquals; 
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestPropertySource(locations={"classpath:application-test.properties", "classpath:zero-confirmations.properties"})
+@TestPropertySource(
+    locations = {
+      "classpath:application-test.properties",
+      "classpath:zero-confirmations.properties"
+    })
 public class BroadcasterZeroConfirmationsIT extends BaseKafkaIntegrationTest {
 
-    @Test
-    public void testBroadcastsConfirmedEventAfterInitialEmit() throws Exception {
+  @Test
+  public void testBroadcastsConfirmedEventAfterInitialEmit() throws Exception {
 
-        final EventEmitter emitter = deployEventEmitterContract();
+    final EventEmitter emitter = deployEventEmitterContract();
 
-        final ContractEventFilter registeredFilter = registerDummyEventFilter(emitter.getContractAddress());
-        emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
+    final ContractEventFilter registeredFilter =
+        registerDummyEventFilter(emitter.getContractAddress());
+    emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
 
-        waitForContractEventMessages(1);
+    waitForContractEventMessages(1);
 
-        assertEquals(1, getBroadcastContractEvents().size());
+    assertEquals(1, getBroadcastContractEvents().size());
 
-        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
-        System.out.println(JSON.stringify(eventDetails));
-        verifyDummyEventDetails(registeredFilter, eventDetails, ContractEventStatus.CONFIRMED);
-    }
+    final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
+    System.out.println(JSON.stringify(eventDetails));
+    verifyDummyEventDetails(registeredFilter, eventDetails, ContractEventStatus.CONFIRMED);
+  }
 }

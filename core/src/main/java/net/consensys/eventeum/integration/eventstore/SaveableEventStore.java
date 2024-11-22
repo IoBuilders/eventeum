@@ -24,9 +24,9 @@ import net.consensys.eventeum.model.LatestBlock;
  * @author Craig Williams <craig.williams@consensys.net>
  */
 public interface SaveableEventStore extends EventStore {
-    void save(ContractEventDetails contractEventDetails);
+  void save(ContractEventDetails contractEventDetails);
 
-    void save(LatestBlock latestBlock);
+  void save(LatestBlock latestBlock);
 
-    void save(MessageDetails messageDetails);
+  void save(MessageDetails messageDetails);
 }

@@ -24,13 +24,11 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestPropertySource(locations="classpath:application-test-prometheus.properties")
+@TestPropertySource(locations = "classpath:application-test-prometheus.properties")
 public class PrometheusIT extends BaseKafkaIntegrationTest {
 
-    //For now just test that eventeum starts up when prometheus is configured.
-    //Add more tests in the future
-    @Test
-    public void testStartup() {
-
-    }
+  // For now just test that eventeum starts up when prometheus is configured.
+  // Add more tests in the future
+  @Test
+  public void testStartup() {}
 }

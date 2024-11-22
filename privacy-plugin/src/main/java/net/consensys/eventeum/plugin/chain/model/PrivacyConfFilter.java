@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PrivacyConfFilter {
-    private boolean enabled;
-    private String privacyGroupID;
+  private boolean enabled;
+  private String privacyGroupID;
 }

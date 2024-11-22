@@ -6,6 +6,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class TimestampResponse {
-    String from;
-    String to;
+  String from;
+  String to;
 }

@@ -17,6 +17,10 @@ package net.consensys.eventeum.dto.event;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -27,11 +31,6 @@ import net.consensys.eventeum.dto.event.parameter.EventParameter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * Represents the details of an emitted Ethereum smart contract event.
@@ -47,52 +46,51 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ContractEventDetails implements TransactionBasedDetails {
 
-    @Id
-    @GeneratedValue
-    private UUID id;
+  @Id @GeneratedValue private UUID id;
 
-    @MongoId
-    @Field("_id")
-    private String filterId;
+  @MongoId
+  @Field("_id")
+  private String filterId;
 
-    private String name;
+  private String name;
 
-    private String nodeName;
+  private String nodeName;
 
-    @ElementCollection
-    @Convert(converter = EventParameterConverter.class)
-    private List<EventParameter> indexedParameters;
+  @ElementCollection
+  @Convert(converter = EventParameterConverter.class)
+  private List<EventParameter> indexedParameters;
 
-    @ElementCollection
-    @Convert(converter = EventParameterConverter.class)
-    private List<EventParameter> nonIndexedParameters;
+  @ElementCollection
+  @Convert(converter = EventParameterConverter.class)
+  private List<EventParameter> nonIndexedParameters;
 
-    private String transactionHash;
+  private String transactionHash;
 
-    private BigInteger logIndex;
+  private BigInteger logIndex;
 
-    private BigInteger blockNumber;
+  private BigInteger blockNumber;
 
-    private String blockHash;
+  private String blockHash;
 
-    private String address;
+  private String address;
 
-    @Column(name = "\"from\"")
-    private String from;
+  @Column(name = "\"from\"")
+  private String from;
 
-    private ContractEventStatus status = ContractEventStatus.UNCONFIRMED;
+  private ContractEventStatus status = ContractEventStatus.UNCONFIRMED;
 
-    private String eventSpecificationSignature;
+  private String eventSpecificationSignature;
 
-    private String networkName;
+  private String networkName;
 
-    private BigInteger timestamp;
+  private BigInteger timestamp;
 
-    private BigInteger blockTimestamp;
-    @Convert(converter = HashMapConverter.class)
-    private Map<String, Object> extensionData;
+  private BigInteger blockTimestamp;
 
-    public String getEventIdentifier() {
-        return transactionHash + "-" + blockHash + "-" + logIndex;
-    }
+  @Convert(converter = HashMapConverter.class)
+  private Map<String, Object> extensionData;
+
+  public String getEventIdentifier() {
+    return transactionHash + "-" + blockHash + "-" + logIndex;
+  }
 }

@@ -27,5 +27,5 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 @ConditionalOnMissingBean(ContractEventFilterRepositoryFactory.class)
-public interface TransactionMonitoringSpecRepository extends CrudRepository<TransactionMonitoringSpec, String> {
-}
+public interface TransactionMonitoringSpecRepository
+    extends CrudRepository<TransactionMonitoringSpec, String> {}

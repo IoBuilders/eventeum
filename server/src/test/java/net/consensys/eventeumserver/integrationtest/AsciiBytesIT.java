@@ -14,6 +14,9 @@
 
 package net.consensys.eventeumserver.integrationtest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.math.BigInteger;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.ContractEventStatus;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
@@ -27,36 +30,37 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.web3j.crypto.Keys;
 
-import java.math.BigInteger;
-
-import static org.junit.jupiter.api.Assertions.assertEquals; 
-
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-        properties = {"broadcaster.bytesToAscii=true"},
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+    properties = {"broadcaster.bytesToAscii=true"},
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestPropertySource(locations="classpath:application-test-db.properties")
+@TestPropertySource(locations = "classpath:application-test-db.properties")
 public class AsciiBytesIT extends MainBroadcasterTests {
 
-    @Autowired
-    private EventStore eventStore;
+  @Autowired private EventStore eventStore;
 
-    @Test
-    public void testAsciiBytes() throws Exception {
-        final EventEmitter emitter = deployEventEmitterContract();
+  @Test
+  public void testAsciiBytes() throws Exception {
+    final EventEmitter emitter = deployEventEmitterContract();
 
-        final ContractEventFilter registeredFilter = registerDummyEventFilter(emitter.getContractAddress());
-        emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
+    final ContractEventFilter registeredFilter =
+        registerDummyEventFilter(emitter.getContractAddress());
+    emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
 
-        waitForContractEventMessages(1);
+    waitForContractEventMessages(1);
 
-        assertEquals(1, getBroadcastContractEvents().size());
+    assertEquals(1, getBroadcastContractEvents().size());
 
-        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
+    final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
 
-        verifyDummyEventDetails(registeredFilter, eventDetails, ContractEventStatus.UNCONFIRMED,
-                "BytesValue", Keys.toChecksumAddress(CREDS.getAddress()), BigInteger.TEN, "StringValue");
-    }
+    verifyDummyEventDetails(
+        registeredFilter,
+        eventDetails,
+        ContractEventStatus.UNCONFIRMED,
+        "BytesValue",
+        Keys.toChecksumAddress(CREDS.getAddress()),
+        BigInteger.TEN,
+        "StringValue");
+  }
 }

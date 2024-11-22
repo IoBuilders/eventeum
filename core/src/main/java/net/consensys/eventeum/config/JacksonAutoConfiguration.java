@@ -33,13 +33,13 @@ import org.springframework.data.domain.Page;
 @ConditionalOnClass(ModelMapper.class)
 public class JacksonAutoConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean(ObjectMapper.class)
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.addMixIn(Page.class, PageMixIn.class);
+  @Bean
+  @ConditionalOnMissingBean(ObjectMapper.class)
+  public ObjectMapper objectMapper() {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JavaTimeModule());
+    mapper.addMixIn(Page.class, PageMixIn.class);
 
-        return mapper;
-    }
+    return mapper;
+  }
 }

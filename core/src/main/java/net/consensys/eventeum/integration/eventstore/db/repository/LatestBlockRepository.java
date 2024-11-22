@@ -24,5 +24,4 @@ import org.springframework.stereotype.Repository;
 @Repository("latestBlockRepository")
 @ConditionalOnProperty(name = "eventStore.type", havingValue = "DB")
 @ConditionalOnMissingBean(EventStoreFactory.class)
-public interface LatestBlockRepository extends CrudRepository<LatestBlock, String> {
-}
+public interface LatestBlockRepository extends CrudRepository<LatestBlock, String> {}

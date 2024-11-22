@@ -14,12 +14,11 @@
 
 package net.consensys.eventeum.dto.event.parameter;
 
+import jakarta.persistence.Embeddable;
+import java.math.BigInteger;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import jakarta.persistence.Embeddable;
-import java.math.BigInteger;
 
 /**
  * A number based EventParameter, represented by a BigInteger.
@@ -32,12 +31,12 @@ import java.math.BigInteger;
 @EqualsAndHashCode(callSuper = true)
 public class NumberParameter extends AbstractEventParameter<BigInteger> {
 
-    public NumberParameter(String type, BigInteger value) {
-        super(type, value);
-    }
+  public NumberParameter(String type, BigInteger value) {
+    super(type, value);
+  }
 
-    @Override
-    public String getValueString() {
-        return getValue().toString();
-    }
+  @Override
+  public String getValueString() {
+    return getValue().toString();
+  }
 }

@@ -5,20 +5,20 @@ import net.consensys.eventeum.integration.eventstore.EventStore;
 
 public abstract class BaseContractEventListener implements ContractEventListener {
 
-    protected EventStore eventStore;
+  protected EventStore eventStore;
 
-    public BaseContractEventListener(EventStore eventStore) {
-        this.eventStore = eventStore;
-    }
+  public BaseContractEventListener(EventStore eventStore) {
+    this.eventStore = eventStore;
+  }
 
-    protected boolean isExistingEvent(ContractEventDetails eventDetails) {
-        return eventStore.getContractEvent(
-                eventDetails.getEventSpecificationSignature(),
-                eventDetails.getAddress(),
-                eventDetails.getBlockHash(),
-                eventDetails.getTransactionHash(),
-                eventDetails.getLogIndex()
-        ).isEmpty();
-    }
-
+  protected boolean isExistingEvent(ContractEventDetails eventDetails) {
+    return eventStore
+        .getContractEvent(
+            eventDetails.getEventSpecificationSignature(),
+            eventDetails.getAddress(),
+            eventDetails.getBlockHash(),
+            eventDetails.getTransactionHash(),
+            eventDetails.getLogIndex())
+        .isEmpty();
+  }
 }

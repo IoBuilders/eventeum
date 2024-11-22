@@ -14,13 +14,12 @@
 
 package net.consensys.eventeum.chain.factory;
 
+import java.math.BigInteger;
 import net.consensys.eventeum.chain.service.domain.TransactionReceipt;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
-
-import java.math.BigInteger;
 
 /**
  * A factory interface for creating ContractEventDetails objects from the event filter plus the
@@ -29,6 +28,15 @@ import java.math.BigInteger;
  * @author Craig Williams <craig.williams@consensys.net>
  */
 public interface ContractEventDetailsFactory {
-    ContractEventDetails createEventDetails(ContractEventFilter eventFilter, Log log, EthBlock ethBlock, TransactionReceipt transactionReceipt);
-    ContractEventDetails createEventDetails(ContractEventFilter eventFilter, Log log, BigInteger blockTimestamp, String fromTransactionReceipt);
+  ContractEventDetails createEventDetails(
+      ContractEventFilter eventFilter,
+      Log log,
+      EthBlock ethBlock,
+      TransactionReceipt transactionReceipt);
+
+  ContractEventDetails createEventDetails(
+      ContractEventFilter eventFilter,
+      Log log,
+      BigInteger blockTimestamp,
+      String fromTransactionReceipt);
 }

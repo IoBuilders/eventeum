@@ -2,6 +2,12 @@ package net.consensys.eventeum.plugin.chain.service;
 
 import io.reactivex.Flowable;
 import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.consensys.eventeum.chain.factory.ContractEventDetailsFactory;
 import net.consensys.eventeum.chain.service.BlockchainException;
@@ -29,158 +35,156 @@ import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.utils.Async;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 @Slf4j
 public class Web3JEeaService extends Web3jService {
 
-    private final Web3j web3j;
-    private final ContractEventDetailsFactory eventDetailsFactory;
-    private Besu web3JEea;
-    @Autowired
-    private NodeSettings nodeSettings;
-    private PrivacyConfNode privacyConf;
+  private final Web3j web3j;
+  private final ContractEventDetailsFactory eventDetailsFactory;
+  private Besu web3JEea;
+  @Autowired private NodeSettings nodeSettings;
+  private PrivacyConfNode privacyConf;
 
-    public Web3JEeaService(String nodeName,
-                           Web3j web3j,
-                           ContractEventDetailsFactory eventDetailsFactory,
-                           AsyncTaskService asyncTaskService,
-                           EventBlockManagementService blockManagement) {
+  public Web3JEeaService(
+      String nodeName,
+      Web3j web3j,
+      ContractEventDetailsFactory eventDetailsFactory,
+      AsyncTaskService asyncTaskService,
+      EventBlockManagementService blockManagement) {
 
-        super(nodeName, web3j, eventDetailsFactory, asyncTaskService, blockManagement);
-        this.web3j = web3j;
-        this.eventDetailsFactory = eventDetailsFactory;
+    super(nodeName, web3j, eventDetailsFactory, asyncTaskService, blockManagement);
+    this.web3j = web3j;
+    this.eventDetailsFactory = eventDetailsFactory;
+  }
+
+  @PostConstruct
+  private void init() throws NoSuchFieldException, IllegalAccessException {
+    web3JEea =
+        Besu.build(
+            getNetworkServiceFromWeb3jInstance(web3j),
+            nodeSettings.getNode(getNodeName()).getPollingInterval(),
+            Async.defaultExecutorService());
+    privacyConf =
+        PrivacyUtils.buildPrivacyConfNodeFromExtension(
+            nodeSettings.getNodes().get(getNodeName()).getExtension());
+  }
+
+  @Override
+  protected List<ContractEventDetails> extractEventDetailsFromLogs(
+      EthFilter ethFilter, ContractEventFilter eventFilter, BigInteger blockNumber)
+      throws IOException {
+
+    PrivacyConfFilter privData =
+        PrivacyUtils.buildPrivacyConfFilterFromExtension(eventFilter.getExtension());
+
+    if (privData != null && privData.isEnabled() && isPrivacyEnabled()) {
+      final EthLog logs = web3JEea.privGetLogs(privData.getPrivacyGroupID(), ethFilter).send();
+      DefaultBlockParameterNumber blockParameterNumber =
+          new DefaultBlockParameterNumber(blockNumber);
+      EthBlock ethBlock = this.web3j.ethGetBlockByNumber(blockParameterNumber, false).send();
+      return logs.getLogs().stream()
+          .map(
+              logResult ->
+                  eventDetailsFactory.createEventDetails(
+                      eventFilter,
+                      (Log) logResult.get(),
+                      ethBlock,
+                      getTransactionReceipt(((Log) logResult.get()).getTransactionHash())))
+          .collect(Collectors.toList());
     }
 
-    @PostConstruct
-    private void init() throws NoSuchFieldException, IllegalAccessException {
-        web3JEea = Besu.build(
-                getNetworkServiceFromWeb3jInstance(web3j),
-                nodeSettings.getNode(getNodeName()).getPollingInterval(),
-                Async.defaultExecutorService()
-        );
-        privacyConf = PrivacyUtils.buildPrivacyConfNodeFromExtension(
-                nodeSettings.getNodes().get(getNodeName()).getExtension()
-        );
+    return super.extractEventDetailsFromLogs(ethFilter, eventFilter, blockNumber);
+  }
+
+  /** {inheritDoc} */
+  @Override
+  public TransactionReceipt getTransactionReceipt(String txHash) {
+    log.debug("Getting tx recepit");
+    if (isPrivateTransaction(txHash)) {
+      log.debug("Receipt is private");
+      return getPrivateTransactionReceipt(txHash);
+    } else {
+      return super.getTransactionReceipt(txHash);
+    }
+  }
+
+  /** {inheritDoc} */
+  @Override
+  protected Flowable<Log> createEthLogFlowable(
+      EthFilter ethFilter, ContractEventFilter eventFilter, Optional<Runnable> onCompletion) {
+    PrivacyConfFilter privData =
+        PrivacyUtils.buildPrivacyConfFilterFromExtension(eventFilter.getExtension());
+
+    if (privData != null && privData.isEnabled() && isPrivacyEnabled()) {
+      log.debug("Creating private EthLog flowable for filter {}", eventFilter.getId());
+      return web3JEea
+          .privLogFlowable(privData.getPrivacyGroupID(), ethFilter)
+          .doOnComplete(
+              () -> {
+                if (onCompletion.isPresent()) {
+                  onCompletion.get().run();
+                }
+              });
     }
 
-    @Override
-    protected List<ContractEventDetails> extractEventDetailsFromLogs(
-            EthFilter ethFilter,
-            ContractEventFilter eventFilter,
-            BigInteger blockNumber
-    ) throws IOException
-    {
+    return super.createEthLogFlowable(ethFilter, eventFilter, onCompletion);
+  }
 
-        PrivacyConfFilter privData = PrivacyUtils.buildPrivacyConfFilterFromExtension(eventFilter.getExtension());
+  public boolean isPrivacyEnabled() {
+    return privacyConf != null && privacyConf.isEnabled();
+  }
 
-        if (privData != null && privData.isEnabled() && isPrivacyEnabled()) {
-            final EthLog logs = web3JEea.privGetLogs(privData.getPrivacyGroupID(), ethFilter).send();
-            DefaultBlockParameterNumber blockParameterNumber = new DefaultBlockParameterNumber(blockNumber);
-            EthBlock ethBlock = this.web3j.ethGetBlockByNumber(blockParameterNumber, false).send();
-            return logs.getLogs()
-                    .stream()
-                    .map(logResult -> eventDetailsFactory.createEventDetails(eventFilter, (Log) logResult.get(), ethBlock, getTransactionReceipt(((Log) logResult.get()).getTransactionHash())))
-                    .collect(Collectors.toList());
-        }
+  public boolean isPrivateTransaction(String txHash) {
+    final TransactionReceipt publicTx = super.getTransactionReceipt(txHash);
+    return isPrivacyEnabled()
+        && publicTx != null
+        && publicTx.getTo() != null
+        && publicTx.getTo().equals(privacyConf.getPrivacyPrecompiledAddress());
+  }
 
-        return super.extractEventDetailsFromLogs(ethFilter, eventFilter, blockNumber);
+  public boolean isPrivateTransaction(Transaction tx) {
+    return isPrivacyEnabled()
+        && tx.getTo() != null
+        && tx.getTo().equals(privacyConf.getPrivacyPrecompiledAddress());
+  }
+
+  public Transaction getPrivateTransaction(String txHash) throws IOException {
+    PrivGetPrivateTransaction privateTx =
+        web3JEea.privGetPrivateTransaction(txHash).send(); // TODO returning null tx
+    return privateTx
+        .getPrivateTransaction()
+        .map(PrivacyUtils::buildTransactionFromPrivateTransaction)
+        .orElse(null);
+  }
+
+  public TransactionReceipt getPrivateTransactionReceipt(String txHash) {
+    try {
+      PrivGetTransactionReceipt privateTx = web3JEea.privGetTransactionReceipt(txHash).send();
+
+      return privateTx
+          .getTransactionReceipt()
+          .map(
+              (receipt) -> {
+                // Node returns null for cumulativeGasUsed and gasUsed
+                // so we have to set 0 value to avoid null pointers
+                // in other parts of the code
+                receipt.setCumulativeGasUsed("0");
+                receipt.setGasUsed("0");
+                return new Web3jTransactionReceipt(receipt);
+              })
+          .orElse(null);
+    } catch (IOException e) {
+      throw new BlockchainException("Unable to connect to the ethereum client", e);
     }
+  }
 
-    /**
-     * {inheritDoc}
-     */
-    @Override
-    public TransactionReceipt getTransactionReceipt(String txHash) {
-        log.debug("Getting tx recepit");
-        if(isPrivateTransaction(txHash)){
-            log.debug("Receipt is private");
-            return getPrivateTransactionReceipt(txHash);
-        }
-        else {
-            return super.getTransactionReceipt(txHash);
-        }
-    }
+  /////////////////////////////////////////////////////
+  /////////////////// PRIVATE METHODS///////////////////
+  /////////////////////////////////////////////////////
 
-    /**
-     * {inheritDoc}
-     */
-    @Override
-    protected Flowable<Log> createEthLogFlowable(
-            EthFilter ethFilter,
-            ContractEventFilter eventFilter,
-            Optional<Runnable> onCompletion)
-    {
-        PrivacyConfFilter privData = PrivacyUtils.buildPrivacyConfFilterFromExtension(eventFilter.getExtension());
-
-        if(privData != null && privData.isEnabled() && isPrivacyEnabled()){
-            log.debug("Creating private EthLog flowable for filter {}",eventFilter.getId());
-            return web3JEea
-                    .privLogFlowable(privData.getPrivacyGroupID(), ethFilter)
-                    .doOnComplete(() -> {
-                        if (onCompletion.isPresent()) {
-                            onCompletion.get().run();
-                        }
-                    });
-        }
-
-        return super.createEthLogFlowable(ethFilter,eventFilter,onCompletion);
-    }
-
-    public boolean isPrivacyEnabled() {
-        return privacyConf != null && privacyConf.isEnabled();
-    }
-
-    public boolean isPrivateTransaction(String txHash) {
-        final TransactionReceipt publicTx = super.getTransactionReceipt(txHash);
-        return isPrivacyEnabled() && publicTx != null && publicTx.getTo() != null && publicTx.getTo().equals(privacyConf.getPrivacyPrecompiledAddress());
-    }
-
-    public boolean isPrivateTransaction(Transaction tx) {
-        return isPrivacyEnabled() && tx.getTo() != null && tx.getTo().equals(privacyConf.getPrivacyPrecompiledAddress());
-    }
-
-    public Transaction getPrivateTransaction(String txHash) throws IOException {
-        PrivGetPrivateTransaction privateTx = web3JEea.privGetPrivateTransaction(txHash).send(); //TODO returning null tx
-        return privateTx
-                .getPrivateTransaction()
-                .map(PrivacyUtils::buildTransactionFromPrivateTransaction)
-                .orElse(null);
-    }
-
-    public TransactionReceipt getPrivateTransactionReceipt(String txHash) {
-        try {
-            PrivGetTransactionReceipt privateTx = web3JEea.privGetTransactionReceipt(txHash).send();
-
-            return privateTx
-                    .getTransactionReceipt()
-                    .map((receipt) -> {
-                        //Node returns null for cumulativeGasUsed and gasUsed
-                        //so we have to set 0 value to avoid null pointers
-                        //in other parts of the code
-                        receipt.setCumulativeGasUsed("0");
-                        receipt.setGasUsed("0");
-                        return new Web3jTransactionReceipt(receipt);})
-                    .orElse(null);
-        } catch (IOException e) {
-            throw new BlockchainException("Unable to connect to the ethereum client", e);
-        }
-    }
-
-    /////////////////////////////////////////////////////
-    ///////////////////PRIVATE METHODS///////////////////
-    /////////////////////////////////////////////////////
-
-    private org.web3j.protocol.Web3jService getNetworkServiceFromWeb3jInstance(Web3j web3j)
-            throws NoSuchFieldException, IllegalAccessException {
-        Field field = web3j.getClass().getDeclaredField("web3jService");
-        field.setAccessible(true);
-        return (org.web3j.protocol.Web3jService) field.get(web3j);
-    }
-
+  private org.web3j.protocol.Web3jService getNetworkServiceFromWeb3jInstance(Web3j web3j)
+      throws NoSuchFieldException, IllegalAccessException {
+    Field field = web3j.getClass().getDeclaredField("web3jService");
+    field.setAccessible(true);
+    return (org.web3j.protocol.Web3jService) field.get(web3j);
+  }
 }

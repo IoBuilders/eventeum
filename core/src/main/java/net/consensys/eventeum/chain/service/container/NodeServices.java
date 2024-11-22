@@ -23,15 +23,15 @@ import org.web3j.protocol.Web3j;
 @Data
 public class NodeServices {
 
-    private String nodeName;
+  private String nodeName;
 
-    private String nodeType;
+  private String nodeType;
 
-    private Web3j web3j;
+  private Web3j web3j;
 
-    private BlockchainService blockchainService;
+  private BlockchainService blockchainService;
 
-    private BlockSubscriptionStrategy blockSubscriptionStrategy;
+  private BlockSubscriptionStrategy blockSubscriptionStrategy;
 
-    private HederaService hederaService;
+  private HederaService hederaService;
 }

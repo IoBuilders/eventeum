@@ -27,46 +27,51 @@ import org.springframework.core.env.Environment;
 @Configuration
 public class MonitoringConfiguration {
 
-    @ConditionalOnProperty(name="management.endpoint.metrics.enabled", havingValue = "true")
-    public class PrometheusConfiguration {
+  @ConditionalOnProperty(name = "management.endpoint.metrics.enabled", havingValue = "true")
+  public class PrometheusConfiguration {
 
-        @Bean
-        public MeterRegistryCustomizer<MeterRegistry> metricsCommonTags(Environment environment) {
-            return registry -> registry.config().commonTags("application", "Eventeum", "environment", getProfileName(environment));
-        }
-
-        @Bean
-        public EventeumValueMonitor eventeumValueMonitor(MeterRegistry meterRegistry) {
-            return new MicrometerValueMonitor(meterRegistry);
-        }
-
-        @Bean
-        public PrometheusMeterRegistry.Config configurePrometheus(MeterRegistry meterRegistry) {
-            return meterRegistry.config().namingConvention(new CustomNamingConvention());
-        }
-
-        private String getProfileName(Environment environment) {
-            if (environment.getActiveProfiles() == null || environment.getActiveProfiles().length == 0) {
-                return "Default";
-            }
-
-            return environment.getActiveProfiles()[0];
-        }
-
+    @Bean
+    public MeterRegistryCustomizer<MeterRegistry> metricsCommonTags(Environment environment) {
+      return registry ->
+          registry
+              .config()
+              .commonTags("application", "Eventeum", "environment", getProfileName(environment));
     }
 
-    @ConditionalOnProperty(value = "management.endpoint.metrics.enabled", havingValue="false", matchIfMissing = true)
-    public class DoNothingMonitoringConfiguration {
-
-        @Bean
-        public EventeumValueMonitor eventeumValueMonitor() {
-            return new EventeumValueMonitor() {
-
-                @Override
-                public <T extends Number> T monitor(String name, String node, T number) {
-                    return number;
-                }
-            };
-        }
+    @Bean
+    public EventeumValueMonitor eventeumValueMonitor(MeterRegistry meterRegistry) {
+      return new MicrometerValueMonitor(meterRegistry);
     }
+
+    @Bean
+    public PrometheusMeterRegistry.Config configurePrometheus(MeterRegistry meterRegistry) {
+      return meterRegistry.config().namingConvention(new CustomNamingConvention());
+    }
+
+    private String getProfileName(Environment environment) {
+      if (environment.getActiveProfiles() == null || environment.getActiveProfiles().length == 0) {
+        return "Default";
+      }
+
+      return environment.getActiveProfiles()[0];
+    }
+  }
+
+  @ConditionalOnProperty(
+      value = "management.endpoint.metrics.enabled",
+      havingValue = "false",
+      matchIfMissing = true)
+  public class DoNothingMonitoringConfiguration {
+
+    @Bean
+    public EventeumValueMonitor eventeumValueMonitor() {
+      return new EventeumValueMonitor() {
+
+        @Override
+        public <T extends Number> T monitor(String name, String node, T number) {
+          return number;
+        }
+      };
+    }
+  }
 }

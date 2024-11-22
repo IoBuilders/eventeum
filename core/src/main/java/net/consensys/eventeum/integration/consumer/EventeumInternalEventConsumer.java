@@ -22,5 +22,5 @@ import net.consensys.eventeum.dto.message.EventeumMessage;
  * @author Craig Williams <craig.williams@consensys.net>
  */
 public interface EventeumInternalEventConsumer {
-    void onMessage(EventeumMessage<?> message);
+  void onMessage(EventeumMessage<?> message);
 }

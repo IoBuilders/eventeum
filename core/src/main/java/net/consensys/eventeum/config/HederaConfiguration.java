@@ -14,18 +14,18 @@ import org.springframework.util.StringUtils;
 @ConditionalOnProperty(name = "hedera.account.id")
 public class HederaConfiguration {
 
-    @Bean
-    public Client hederaClient(HederaSettings hederaSettings) throws BeanCreationException {
-        AccountId operatorId = AccountId.fromString(hederaSettings.getAccount().getId());
-        Client client = hederaSettings.isTestnet() ? Client.forTestnet() : Client.forMainnet();
-        if (!StringUtils.hasLength(hederaSettings.getAccount().getPrivateKey())) {
-            throw new BeanCreationException("Invalid Hedera account configuration. Provide a valid private key.");
-        }
-
-        PrivateKey operatorKey = PrivateKey.fromString(hederaSettings.getAccount().getPrivateKey());
-        client.setOperator(operatorId, operatorKey);
-
-        return client;
+  @Bean
+  public Client hederaClient(HederaSettings hederaSettings) throws BeanCreationException {
+    AccountId operatorId = AccountId.fromString(hederaSettings.getAccount().getId());
+    Client client = hederaSettings.isTestnet() ? Client.forTestnet() : Client.forMainnet();
+    if (!StringUtils.hasLength(hederaSettings.getAccount().getPrivateKey())) {
+      throw new BeanCreationException(
+          "Invalid Hedera account configuration. Provide a valid private key.");
     }
 
+    PrivateKey operatorKey = PrivateKey.fromString(hederaSettings.getAccount().getPrivateKey());
+    client.setOperator(operatorId, operatorKey);
+
+    return client;
+  }
 }

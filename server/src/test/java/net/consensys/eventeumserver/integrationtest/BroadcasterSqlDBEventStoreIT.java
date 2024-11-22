@@ -14,6 +14,11 @@
 
 package net.consensys.eventeumserver.integrationtest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Optional;
 import net.consensys.eventeum.dto.block.BlockDetails;
 import net.consensys.eventeum.dto.event.ContractEventDetails;
 import net.consensys.eventeum.dto.event.filter.ContractEventFilter;
@@ -36,123 +41,119 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.web3j.crypto.Keys;
 
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals; 
-
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestPropertySource(locations="classpath:application-test-sql.properties")
+@TestPropertySource(locations = "classpath:application-test-sql.properties")
 @ContextConfiguration(initializers = {BroadcasterSqlDBEventStoreIT.Initializer.class})
 @Testcontainers
 public class BroadcasterSqlDBEventStoreIT extends MainBroadcasterTests {
 
-    @Container
-    public static MSSQLServerContainer mssqlserver = new MSSQLServerContainer()
-            .withPassword("reallyStrongPwd123")
-            .acceptLicense();
+  @Container
+  public static MSSQLServerContainer mssqlserver =
+      new MSSQLServerContainer().withPassword("reallyStrongPwd123").acceptLicense();
 
-    static class Initializer
-            implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-                    "spring.datasource.url=" + mssqlserver.getJdbcUrl()
-            ).applyTo(configurableApplicationContext.getEnvironment());
-        }
+  static class Initializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of("spring.datasource.url=" + mssqlserver.getJdbcUrl())
+          .applyTo(configurableApplicationContext.getEnvironment());
     }
+  }
 
-    @Autowired
-    private EventStore eventStore;
+  @Autowired private EventStore eventStore;
 
-    @Test
-    public void testBroadcastsUnconfirmedEventAfterInitialEmit() throws Exception {
-        doTestBroadcastsUnconfirmedEventAfterInitialEmit();
-    }
+  @Test
+  public void testBroadcastsUnconfirmedEventAfterInitialEmit() throws Exception {
+    doTestBroadcastsUnconfirmedEventAfterInitialEmit();
+  }
 
-    @Test
-    public void testBroadcastNotOrderedEvent() throws Exception {
-        doTestBroadcastsNotOrderedEvent();
-    }
+  @Test
+  public void testBroadcastNotOrderedEvent() throws Exception {
+    doTestBroadcastsNotOrderedEvent();
+  }
 
-    @Test
-    public void testBroadcastsConfirmedEventAfterBlockThresholdReached() throws Exception {
-        doTestBroadcastsConfirmedEventAfterBlockThresholdReached();
-    }
+  @Test
+  public void testBroadcastsConfirmedEventAfterBlockThresholdReached() throws Exception {
+    doTestBroadcastsConfirmedEventAfterBlockThresholdReached();
+  }
 
-    @Test
-    public void testContractEventForUnregisteredEventFilterNotBroadcast() throws Exception {
-        doTestContractEventForUnregisteredEventFilterNotBroadcast();
-    }
+  @Test
+  public void testContractEventForUnregisteredEventFilterNotBroadcast() throws Exception {
+    doTestContractEventForUnregisteredEventFilterNotBroadcast();
+  }
 
-    @Test
-    public void testBroadcastBlock() throws Exception {
-        doTestBroadcastBlock();
-    }
+  @Test
+  public void testBroadcastBlock() throws Exception {
+    doTestBroadcastBlock();
+  }
 
-    @Test
-    public void testBroadcastsUnconfirmedTransactionAfterInitialMining() throws Exception {
-        doTestBroadcastsUnconfirmedTransactionAfterInitialMining();
-    }
+  @Test
+  public void testBroadcastsUnconfirmedTransactionAfterInitialMining() throws Exception {
+    doTestBroadcastsUnconfirmedTransactionAfterInitialMining();
+  }
 
-    @Test
-    public void testBroadcastsConfirmedTransactionAfterBlockThresholdReached() throws Exception {
-        doTestBroadcastsConfirmedTransactionAfterBlockThresholdReached();
-    }
+  @Test
+  public void testBroadcastsConfirmedTransactionAfterBlockThresholdReached() throws Exception {
+    doTestBroadcastsConfirmedTransactionAfterBlockThresholdReached();
+  }
 
-    @Test
-    public void testBroadcastFailedTransactionFilteredByHash() throws Exception {
-        doTestBroadcastFailedTransactionFilteredByHash();
-    }
+  @Test
+  public void testBroadcastFailedTransactionFilteredByHash() throws Exception {
+    doTestBroadcastFailedTransactionFilteredByHash();
+  }
 
-    @Test
-    public void testBroadcastFailedTransactionFilteredByTo() throws Exception {
-        doTestBroadcastFailedTransactionFilteredByTo();
-    }
+  @Test
+  public void testBroadcastFailedTransactionFilteredByTo() throws Exception {
+    doTestBroadcastFailedTransactionFilteredByTo();
+  }
 
-    @Test
-    public void testBroadcastFailedTransactionFilteredByFrom() throws Exception {
-        doTestBroadcastFailedTransactionFilteredByFrom();
-    }
+  @Test
+  public void testBroadcastFailedTransactionFilteredByFrom() throws Exception {
+    doTestBroadcastFailedTransactionFilteredByFrom();
+  }
 
-    @Test
-    public void testBroadcastEventAddedToEventStore() throws Exception {
+  @Test
+  public void testBroadcastEventAddedToEventStore() throws Exception {
 
-        final EventEmitter emitter = deployEventEmitterContract();
+    final EventEmitter emitter = deployEventEmitterContract();
 
-        final ContractEventFilter registeredFilter = registerDummyEventFilter(emitter.getContractAddress());
-        emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
+    final ContractEventFilter registeredFilter =
+        registerDummyEventFilter(emitter.getContractAddress());
+    emitter.emitEvent(stringToBytes("BytesValue"), BigInteger.TEN, "StringValue").send();
 
-        waitForContractEventMessages(1);
+    waitForContractEventMessages(1);
 
-        assertEquals(1, getBroadcastContractEvents().size());
+    assertEquals(1, getBroadcastContractEvents().size());
 
-        final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
+    final ContractEventDetails eventDetails = getBroadcastContractEvents().get(0);
 
-        Thread.sleep(1000);
+    Thread.sleep(1000);
 
-        List<ContractEventDetails> savedEvents = eventStore.getContractEventsForSignature(
-            eventDetails.getEventSpecificationSignature(), Keys.toChecksumAddress(emitter.getContractAddress()), PageRequest.of(0, 100000)).getContent();
+    List<ContractEventDetails> savedEvents =
+        eventStore
+            .getContractEventsForSignature(
+                eventDetails.getEventSpecificationSignature(),
+                Keys.toChecksumAddress(emitter.getContractAddress()),
+                PageRequest.of(0, 100000))
+            .getContent();
 
-        assertEquals(1, savedEvents.size());
-        assertEquals(eventDetails, savedEvents.get(0));
-    }
+    assertEquals(1, savedEvents.size());
+    assertEquals(eventDetails, savedEvents.get(0));
+  }
 
-    @Test
-    public void testBroadcastBlockAddedToEventStore() throws Exception {
-        doTestBroadcastBlock();
+  @Test
+  public void testBroadcastBlockAddedToEventStore() throws Exception {
+    doTestBroadcastBlock();
 
-        Thread.sleep(1000);
+    Thread.sleep(1000);
 
-        final Optional<LatestBlock> latestBlock = eventStore.getLatestBlockForNode("default");
+    final Optional<LatestBlock> latestBlock = eventStore.getLatestBlockForNode("default");
 
-        assertEquals(true, latestBlock.isPresent());
+    assertEquals(true, latestBlock.isPresent());
 
-        final List<BlockDetails> broadcastBlocks = getBroadcastBlockMessages();
-        assertEquals(broadcastBlocks.get(broadcastBlocks.size() - 1).getNumber(),
-                latestBlock.get().getNumber());
-    }
+    final List<BlockDetails> broadcastBlocks = getBroadcastBlockMessages();
+    assertEquals(
+        broadcastBlocks.get(broadcastBlocks.size() - 1).getNumber(), latestBlock.get().getNumber());
+  }
 }

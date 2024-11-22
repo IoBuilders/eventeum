@@ -26,26 +26,26 @@ import org.modelmapper.ModelMapper;
  */
 public class ModelMapperFactory {
 
-    private static ModelMapperFactory INSTANCE;
-    private static ModelMapper MODEL_MAPPER_INSTANCE;
+  private static ModelMapperFactory INSTANCE;
+  private static ModelMapper MODEL_MAPPER_INSTANCE;
 
-    private ModelMapperFactory() {}
+  private ModelMapperFactory() {}
 
-    public static ModelMapperFactory getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new ModelMapperFactory();
-        }
-
-        return INSTANCE;
+  public static ModelMapperFactory getInstance() {
+    if (INSTANCE == null) {
+      INSTANCE = new ModelMapperFactory();
     }
 
-    public ModelMapper getModelMapper() {
-        if (MODEL_MAPPER_INSTANCE == null) {
-            MODEL_MAPPER_INSTANCE = new ModelMapper();
-            MODEL_MAPPER_INSTANCE.addConverter(new EthBlockToWeb3jBlockConverter());
-            MODEL_MAPPER_INSTANCE.addConverter(new BlockResponseToHederaBlockConverter());
-            MODEL_MAPPER_INSTANCE.addConverter(new ContractResultResponseToTransactionConverter());
-        }
-        return MODEL_MAPPER_INSTANCE;
+    return INSTANCE;
+  }
+
+  public ModelMapper getModelMapper() {
+    if (MODEL_MAPPER_INSTANCE == null) {
+      MODEL_MAPPER_INSTANCE = new ModelMapper();
+      MODEL_MAPPER_INSTANCE.addConverter(new EthBlockToWeb3jBlockConverter());
+      MODEL_MAPPER_INSTANCE.addConverter(new BlockResponseToHederaBlockConverter());
+      MODEL_MAPPER_INSTANCE.addConverter(new ContractResultResponseToTransactionConverter());
     }
+    return MODEL_MAPPER_INSTANCE;
+  }
 }

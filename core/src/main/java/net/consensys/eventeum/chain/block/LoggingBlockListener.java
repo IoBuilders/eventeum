@@ -30,10 +30,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoggingBlockListener implements BlockListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(LoggingBlockListener.class);
+  private static final Logger logger = LoggerFactory.getLogger(LoggingBlockListener.class);
 
-    @Override
-    public void onBlock(Block block) {
-        logger.info("New block mined. Hash: {}, Number: {}", block.getHash(), block.getNumber());
-    }
+  @Override
+  public void onBlock(Block block) {
+    logger.info("New block mined. Hash: {}, Number: {}", block.getHash(), block.getNumber());
+  }
 }

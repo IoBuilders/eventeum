@@ -28,15 +28,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoggingContractEventListener extends BaseContractEventListener {
 
-    public LoggingContractEventListener(EventStore eventStore) {
-        super(eventStore);
-    }
+  public LoggingContractEventListener(EventStore eventStore) {
+    super(eventStore);
+  }
 
-    @Override
-    public void onEvent(ContractEventDetails eventDetails) {
-        if (isExistingEvent(eventDetails)) {
-            log.info("Contract event fired: {}", eventDetails.getName());
-        }
+  @Override
+  public void onEvent(ContractEventDetails eventDetails) {
+    if (isExistingEvent(eventDetails)) {
+      log.info("Contract event fired: {}", eventDetails.getName());
     }
-
+  }
 }
