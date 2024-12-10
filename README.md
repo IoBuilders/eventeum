@@ -7,14 +7,6 @@ to an Ethereum node.
 
 [![Gitter](https://badges.gitter.im/eventeum/community.svg)](https://gitter.im/eventeum/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-**Master**
-
-[![CircleCI](https://circleci.com/gh/ConsenSys/eventeum/tree/master.svg?style=svg)](https://circleci.com/gh/ConsenSys/eventeum/tree/master)
-
-**Development**
-
-[![CircleCI](https://circleci.com/gh/ConsenSys/eventeum/tree/development.svg?style=svg)](https://circleci.com/gh/ConsenSys/eventeum/tree/development)
-
 ## Features
 
 * Dynamically Configurable - Eventeum exposes a REST api so that smart contract events can be dynamically subscribed /
@@ -34,8 +26,8 @@ to an Ethereum node.
 
 * Kafka
 * HTTP Post
-* [RabbitMQ](https://www.rabbitmq.com/)
-* [Pulsar](https://pulsar.apache.org)
+* RabbitMQ
+* Pulsar
 
 For RabbitMQ, you can configure the following extra values
 
@@ -44,19 +36,13 @@ For RabbitMQ, you can configure the following extra values
 * rabbitmq.routingKey.blockEvents
 * rabbitmq.routingKey.transactionEvents
 
-## Eventeum Tutorials
-
-- [Listening to Ethereum Events](https://kauri.io/article/90dc8d911f1c43008c7d0dfa20bde298/listening-to-ethereum-events-with-eventeum)
-- [Listening for Ethereum Transactions](https://kauri.io/article/3e31587c96a74d24b5cdd17952d983e9/v1/listening-for-ethereum-transactions-with-eventeum)
-- [Using Eventeum to Build a Java Smart Contract Data Cache](https://kauri.io/article/fe81ee9612eb4e5a9ab72790ef24283d/using-eventeum-to-build-a-java-smart-contract-data-cache)
-
 ## Getting Started
 
 Follow the instructions below in order to run Eventeum on your local machine for development and testing purposes.
 
 ### Prerequisites
 
-* Java 8
+* Java 21
 * Maven
 * Docker (optional)
 
@@ -268,7 +254,7 @@ Dynamically sized arrays are also supported by suffixing the type with `[]`, e.g
 | parameterIndex | Number | yes       |         | The parameter index to use within the correlation strategy. |
 
 - **Success Response:**
-    - **Code:** 200  
+    - **Code:** 200
       **Content:**
 
 ```json
@@ -480,7 +466,7 @@ field `transactionIdentifierValue`
 - **Body:** `N/A`
 
 - **Success Response:**
-    - **Code:** 200  
+    - **Code:** 200
       **Content:** `N/A`
 
 ## Broadcast Messages Format
@@ -712,7 +698,7 @@ The implemented REST service should have a pageable endpoint which accepts a req
 - **Body:** `N/A`
 
 - **Success Response:**
-    - **Code:** 200  
+    - **Code:** 200
       **Content:**
 
 ```json
@@ -751,7 +737,7 @@ Eventeum can be embedded into an existing Spring Application via an annotation.
 1. Add the Eventeum Artifactory repository into your `pom.xml` file:
 
     ```xml
-    
+
     <repositories>
         <repository>
             <id>eventeum-artifactory</id>
@@ -763,7 +749,7 @@ Eventeum can be embedded into an existing Spring Application via an annotation.
 2. Add the eventeum-core dependency to your `pom.xml` file:
 
     ```xml
-    
+
     <dependency>
         <groupId>io.eventeum</groupId>
         <artifactId>eventeum-core</artifactId>
