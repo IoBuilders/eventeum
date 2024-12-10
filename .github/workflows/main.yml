@@ -38,6 +38,9 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v3
@@ -48,8 +51,14 @@ jobs:
           java-version: '21'
           distribution: 'corretto'
           cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
 
-      - name: Publish Module
+      - name: Install parent POM
+        run: mvn install -N
+
+      - name: Publish to GitHub Packages
         run: mvn deploy -pl core -am -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

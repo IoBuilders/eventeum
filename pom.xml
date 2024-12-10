@@ -58,15 +58,10 @@
 
     <distributionManagement>
         <repository>
-            <id>artifactory</id>
-            <name>artifactory</name>
-            <url>https://eventeum.jfrog.io/artifactory/eventeum</url>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/iobuilders/eventeum</url>
         </repository>
-        <snapshotRepository>
-            <id>artifactory</id>
-            <name>artifactory</name>
-            <url>https://eventeum.jfrog.io/artifactory/eventeum</url>
-        </snapshotRepository>
     </distributionManagement>
 
     <repositories>

@@ -6,6 +6,7 @@ provides a distinct separation of concerns and means that your microservices do 
 to an Ethereum node.
 
 [![Gitter](https://badges.gitter.im/eventeum/community.svg)](https://gitter.im/eventeum/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Eventeum CI](https://github.com/IoBuilders/eventeum/actions/workflows/main.yml/badge.svg)](https://github.com/IoBuilders/eventeum/actions/workflows/main.yml)
 
 ## Features
 

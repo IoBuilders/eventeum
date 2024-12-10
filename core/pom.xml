@@ -26,15 +26,6 @@
     <artifactId>eventeum-core</artifactId>
     <version>${eventeum.core.version}</version>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <!--suppress UnresolvedMavenProperty -->
-            <url>https://maven.pkg.github.com/${GITHUB_REPOSITORY}</url>
-        </repository>
-    </distributionManagement>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
