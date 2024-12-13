@@ -324,14 +324,11 @@ public class NodeBeanRegistrationStrategy {
     builder.addConstructorArgReference(
         String.format(CONTRACT_EVENT_DETAILS_FACTORY_BEAN_NAME, node.getName()));
     builder.addConstructorArgReference("defaultEventStoreService");
-    builder.addConstructorArgReference("broadcastingMessageListener");
     builder.addConstructorArgReference("objectMapper");
-    builder.addConstructorArgReference("hederaClient");
     builder.addConstructorArgValue(node);
     builder.addConstructorArgValue(Executors.newScheduledThreadPool(10));
     builder.addConstructorArgReference("modelMapper");
     builder.addConstructorArgValue(globalOkHttpClient);
-
     final String beanName = String.format(HEDERA_SERVICE_BEAN_NAME, node.getName());
     registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
 

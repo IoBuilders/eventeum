@@ -17,7 +17,6 @@ package net.consensys.eventeum.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import net.consensys.eventeum.integration.mixin.PageMixIn;
-import org.modelmapper.ModelMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -30,7 +29,7 @@ import org.springframework.data.domain.Page;
  * @author Craig Williams <craig.williams@consensys.net>
  */
 @AutoConfiguration
-@ConditionalOnClass(ModelMapper.class)
+@ConditionalOnClass(ObjectMapper.class)
 public class JacksonAutoConfiguration {
 
   @Bean
