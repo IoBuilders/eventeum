@@ -64,11 +64,6 @@
             <artifactId>eventeum-core</artifactId>
             <version>${revision}</version>
         </dependency>
-        <dependency>
-            <groupId>io.eventeum</groupId>
-            <artifactId>eventeum-privacy-plugin</artifactId>
-            <version>${revision}</version>
-        </dependency>
         <!-- Test dependencies -->
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>
