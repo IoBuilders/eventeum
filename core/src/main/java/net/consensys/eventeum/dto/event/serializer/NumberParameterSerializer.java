@@ -27,7 +27,7 @@ public class NumberParameterSerializer
             throws IOException {
 
         typeSer.writeTypePrefixForObject(value, gen);
-        serialize(value, gen, provider); // call your customized serialize method
+        serialize(value, gen, provider);
         typeSer.writeTypeSuffixForObject(value, gen);
     }
 }
