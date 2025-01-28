@@ -15,7 +15,10 @@
 package net.consensys.eventeum.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import net.consensys.eventeum.dto.event.parameter.NumberParameter;
+import net.consensys.eventeum.dto.event.serializer.NumberParameterSerializer;
 import net.consensys.eventeum.integration.mixin.PageMixIn;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -38,6 +41,11 @@ public class JacksonAutoConfiguration {
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(new JavaTimeModule());
     mapper.addMixIn(Page.class, PageMixIn.class);
+
+
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(NumberParameter.class, new NumberParameterSerializer());
+    mapper.registerModule(module);
 
     return mapper;
   }
