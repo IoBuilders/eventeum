@@ -44,7 +44,6 @@ public class CustomNamingConvention implements NamingConvention {
         if (!conventionName.endsWith("_total")) {
           conventionName = conventionName + "_total";
         }
-        break;
       case DISTRIBUTION_SUMMARY:
       case GAUGE:
         if (baseUnit != null && !conventionName.endsWith("_" + baseUnit)) {
