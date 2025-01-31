@@ -36,13 +36,13 @@
     </modules>
 
     <properties>
-        <revision>2.0.3</revision>
+        <revision>2.0.4</revision>
         <java.version>21</java.version>
         <web3j.version>4.12.0</web3j.version>
         <springcloud.version>4.1.2</springcloud.version>
         <modelmapper.version>3.1.0</modelmapper.version>
         <pulsar.version>3.3.0</pulsar.version>
-        <micrometer.version>1.13.1</micrometer.version>
+        <micrometer.version>1.13.10</micrometer.version>
         <reflections.version>0.10.2</reflections.version>
         <okhttp3.version>4.10.0</okhttp3.version>
         <apachecommons.version>4.4</apachecommons.version>
