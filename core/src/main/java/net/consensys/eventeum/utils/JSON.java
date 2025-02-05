@@ -16,9 +16,6 @@ package net.consensys.eventeum.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import net.consensys.eventeum.dto.event.parameter.NumberParameter;
-import net.consensys.eventeum.dto.event.serializer.NumberParameterSerializer;
 
 /**
  * Useful JSON based utility methods.
@@ -30,10 +27,6 @@ public class JSON {
 
   public static String stringify(Object object) {
     try {
-      SimpleModule module = new SimpleModule();
-      module.addSerializer(NumberParameter.class, new NumberParameterSerializer());
-      objectMapper.registerModule(module);
-
       return objectMapper.writeValueAsString(object);
     } catch (JsonProcessingException e) {
       e.printStackTrace();

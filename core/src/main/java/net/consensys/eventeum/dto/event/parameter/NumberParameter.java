@@ -14,13 +14,11 @@
 
 package net.consensys.eventeum.dto.event.parameter;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.Embeddable;
 import java.math.BigInteger;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import net.consensys.eventeum.dto.event.serializer.NumberParameterSerializer;
 
 /**
  * A number based EventParameter, represented by a BigInteger.
@@ -31,7 +29,6 @@ import net.consensys.eventeum.dto.event.serializer.NumberParameterSerializer;
 @Embeddable
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@JsonSerialize(using = NumberParameterSerializer.class)
 public class NumberParameter extends AbstractEventParameter<BigInteger> {
 
   public NumberParameter(String type, BigInteger value) {
