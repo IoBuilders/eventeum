@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRESQL_HOST:localhost}:${POSTGRESQL_PORT:5432}/${POSTGRESQL_DATABASE:eventeum}
+    username: ${POSTGRESQL_USERNAME:user}
+    password: ${POSTGRESQL_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+database:
+  type: ${EVENT_STORE_DATABASE_TYPE:SQL}

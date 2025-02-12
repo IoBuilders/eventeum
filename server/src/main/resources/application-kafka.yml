@@ -1,0 +1,24 @@
+broadcaster:
+  type: ${BROADCASTER_TYPE:KAFKA}
+  cache:
+    expirationMillis: ${BROADCASTER_CACHE_EXPIRATION_MILLIS:6000000}
+  event:
+    confirmation:
+      numBlocksToWait: ${BROADCASTER_EVENT_CONFIRMATION_NUM_BLOCKS_TO_WAIT:0}
+      numBlocksToWaitForMissingTx: ${BROADCASTER_EVENT_CONFIRMATION_NUM_BLOCKS_TO_WAIT_FOR_MISSING_TX:100}
+      numBlocksToWaitBeforeInvalidating: ${BROADCASTER_EVENT_CONFIRMATION_NUM_BLOCKS_TO_WAIT_BEFORE_INVALIDATING:2}
+  multiInstance: ${BROADCASTER_MULTI_INSTANCE:false}
+  enableBlockNotifications: ${BROADCASTER_ENABLE_BLOCK_NOTIFICATION:false}
+
+kafka:
+  bootstrap:
+    addresses: ${KAFKA_ADDRESSES:localhost:9092}
+  topic:
+    contractEvents: ${KAFKA_TOPIC_CONTRACT_EVENTS:contract-events}
+    blockEvents: ${KAFKA_TOPIC_BLOCK_EVENTS:block-events}
+    eventeumEvents: ${KAFKA_TOPIC_EVENTEUM_EVENTS:eventeum-events}
+    messageEvents: ${KAFKA_TOPIC_MESSAGE_EVENTS:message-events}
+    transactionEvents: ${KAFKA_TOPIC_TRANSACTION_EVENTS:transaction-events}
+
+    partitions: ${KAFKA_TOPIC_PARTITIONS:1}
+    replicationSets: ${KAFKA_TOPIC_REPLICATION_SETS:1}

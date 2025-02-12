@@ -1,0 +1,7 @@
+ethereum:
+  nodes:
+    - name: ${NODE_NAME:default}
+      url: ${ETHEREUM_NODE_URL:http://localhost:8545}
+      blockStrategy: ${ETHEREUM_NODE_BLOCK_STRATEGY:POLL}
+      syncingThreshold: ${SYNCING_THRESHOLD:100}
+      healthcheckInterval: ${ETHEREUM_NODE_HEALTHCHECK_POLL_INTERVAL:2000}

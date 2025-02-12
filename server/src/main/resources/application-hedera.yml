@@ -1,0 +1,14 @@
+hashgraph:
+  nodes:
+    - name: hedera
+      type: MIRROR
+      url: ${HEDERA_NODE_URL:https://testnet.mirrornode.hedera.com}
+      blockStrategy: ${HEDERA_BLOCK_STRATEGY:POLL}
+      syncingThreshold: 100
+      healthcheckInterval: 5000
+
+hedera:
+  testnet: ${HEDERA_NODE_TESTNET:true}
+  account:
+    id: ${HEDERA_ACCOUNT_ID:0.0.0000}
+    privateKey: ${HEDERA_ACCOUNT_PRIVATE_KEY:0x0}
