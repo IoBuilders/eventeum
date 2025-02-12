@@ -35,25 +35,23 @@ public class DatabaseConfiguration {
 
   @ConditionalOnProperty(name = "database.type", havingValue = "MONGO")
   @EnableAutoConfiguration(
-    exclude = {
-      DataSourceAutoConfiguration.class,
-      DataSourceTransactionManagerAutoConfiguration.class,
-      HibernateJpaAutoConfiguration.class,
-      JpaRepositoriesAutoConfiguration.class
-    })
+      exclude = {
+        DataSourceAutoConfiguration.class,
+        DataSourceTransactionManagerAutoConfiguration.class,
+        HibernateJpaAutoConfiguration.class,
+        JpaRepositoriesAutoConfiguration.class
+      })
   @EnableMongoRepositories(basePackages = {BaseConfiguration.BASE_PACKAGE})
-  static class WithMongo {
-  }
+  static class WithMongo {}
 
   @ConditionalOnProperty(name = "database.type", havingValue = "SQL")
   @EnableJpaRepositories(basePackages = {BaseConfiguration.BASE_PACKAGE})
   @EnableAutoConfiguration(
-    exclude = {
-      MongoAutoConfiguration.class,
-      MongoDataAutoConfiguration.class,
-      MongoReactiveAutoConfiguration.class,
-      MongoRepositoriesAutoConfiguration.class,
-    })
-  static class WithJpa {
-  }
+      exclude = {
+        MongoAutoConfiguration.class,
+        MongoDataAutoConfiguration.class,
+        MongoReactiveAutoConfiguration.class,
+        MongoRepositoriesAutoConfiguration.class,
+      })
+  static class WithJpa {}
 }
