@@ -91,7 +91,7 @@ public class NodeHealthCheckService {
   public void onApplicationEvent(ContextRefreshedEvent event) {
     log.info("Starting healthcheck scheduler");
     taskScheduler.scheduleWithFixedDelay(
-        () -> this.checkHealth(), 0, healthCheckPollInterval, TimeUnit.MILLISECONDS);
+        this::checkHealth, 0, healthCheckPollInterval, TimeUnit.MILLISECONDS);
   }
 
   public void checkHealth() {

@@ -1,0 +1,32 @@
+spring:
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+    virtualHost: ${RABBIT_VIRTUAL_HOST:/}
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASSWORD:guest}
+    connectionTimeout: ${RABBIT_CONNECTION_TIMEOUT:30000}
+    port: ${RABBIT_PORT:5672}
+    ssl:
+      enabled: ${RABBIT_SSL_ENABLED:false}
+      algorithm: ${RABBIT_SSL_ALGORITHM:TLSv1.2}
+
+broadcaster:
+  type: ${BROADCASTER_TYPE:RABBIT}
+  cache:
+    expirationMillis: ${BROADCASTER_CACHE_EXPIRATION_MILLIS:6000000}
+  event:
+    confirmation:
+      numBlocksToWait: ${BROADCASTER_EVENT_CONFIRMATION_NUM_BLOCKS_TO_WAIT:0}
+      numBlocksToWaitForMissingTx: ${BROADCASTER_EVENT_CONFIRMATION_NUM_BLOCKS_TO_WAIT_FOR_MISSING_TX:100}
+      numBlocksToWaitBeforeInvalidating: ${BROADCASTER_EVENT_CONFIRMATION_NUM_BLOCKS_TO_WAIT_BEFORE_INVALIDATING:2}
+  multiInstance: ${BROADCASTER_MULTI_INSTANCE:false}
+  enableBlockNotifications: ${BROADCASTER_ENABLE_BLOCK_NOTIFICATION:false}
+
+rabbitmq:
+  exchange: ${RABBIT_EXCHANGE:my_exchange}
+  blockNotification: ${BROADCASTER_ENABLE_BLOCK_NOTIFICATION:false}
+  routingKey:
+    contractEvents: ${RABBIT_ROUTING_KEY_CONTRACT_EVENTS:contract_events}
+    blockEvents: ${RABBIT_ROUTING_KEY_BLOCK_EVENTS:block_events}
+    transactionEvents: ${RABBIT_ROUTING_KEY_TRANSACTION_EVENTS:contract_events}
+    messageEvents: ${RABBIT_ROUTING_KEY_MESSAGE_EVENTS:message_events}
