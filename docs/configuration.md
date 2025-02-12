@@ -1,16 +1,41 @@
-# Configuration
+# Configuring Eventeum
 
 Eventeum can be configured in two primary ways:
 
-1. **YAML Configuration File**
-   Place an `application.yml` file (for example, by copying one from the [`config-examples`](#) folder) next to your
-   built JAR. This file overlays the defaults found in `server/src/main/resources/application.yml` that uses .
+## 1. YAML Configuration Files
 
-2. **Environment Variables**
-   Override any default by setting the corresponding environment variables. Many YAML properties use the syntax
-   `${VARIABLE:defaultValue}` to support this.
+Eventeum uses YAML files to define its configuration, and these files can be customized based on the messaging
+technology you choose.
 
-## Environment variables
+- The default configuration is located in `server/src/main/resources/application.yml`.
+- Additional configurations are provided for specific messaging technologies, such as:
+    - `application-kafka.yml`
+    - `application-rabbitmq.yml`
+    - `application-sqs.yml`
+- You can override these configurations by
+  using [Spring Profiles](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.profiles)
+  to load the appropriate file automatically. Alternatively, you can manually specify a profile when running Eventeum.
+- To customize settings, place an `application.yml` file alongside your built JAR. This will overlay the default values
+  from the included configuration files.
+
+## 2. Environment Variables
+
+You can override any YAML-defined property using environment variables. Eventeum supports Spring Boot’s syntax for
+environment variable expansion, meaning many properties are defined as:
+
+```yaml
+property.name: ${ENV_VARIABLE:defaultValue}
+```
+
+This allows you to configure the application dynamically without modifying YAML files, making it easier to deploy in
+different environments.
+
+> **Note**: You can use the `setup_env.sh` script to set up environment variables automatically before running Eventeum.
+> This
+> simplifies the configuration process by loading predefined variables into your shell session.
+
+For more details on available configuration properties, refer to the documentation or the default YAML files in the
+`server/src/main/resources` directory.
 
 | Env Variable                                                          | Default                           | Description                                                                                                                                                                               |
 |-----------------------------------------------------------------------|-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -179,18 +204,34 @@ Eventeum can be embedded into an existing Spring Application via an annotation.
 
 #### Steps to Embed
 
-1. Add the Eventeum Artifactory repository into your `pom.xml` file:
+1. Add the GitHub Packages repository to your `pom.xml` file:
 
     ```xml
     <repositories>
         <repository>
-            <id>eventeum-artifactory</id>
-            <url>https://eventeum.jfrog.io/artifactory/eventeum</url>
+            <id>github-eventeum</id>
+            <url>https://maven.pkg.github.com/IoBuilders/eventeum</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
     ```
 
-2. Add the eventeum-core dependency to your `pom.xml` file:
+2. Add authentication for GitHub Packages by including your GitHub token in your `settings.xml` file (typically located
+   in `~/.m2/settings.xml`):
+
+    ```xml
+    <servers>
+        <server>
+            <id>github-eventeum</id>
+            <username>YOUR_GITHUB_USERNAME</username>
+            <password>YOUR_GITHUB_TOKEN</password>
+        </server>
+    </servers>
+    ```
+
+3. Add the `eventeum-core` dependency to your `pom.xml` file:
 
     ```xml
     <dependency>
@@ -200,7 +241,7 @@ Eventeum can be embedded into an existing Spring Application via an annotation.
     </dependency>
     ```
 
-3. Within your Application class or a `@Configuration` annotated class, add the `@EnableEventeum` annotation.
+4. Within your Application class or a `@Configuration` annotated class, add the `@EnableEventeum` annotation.
 
 #### Health check endpoint
 
@@ -208,21 +249,21 @@ Eventeum offers a healthcheck url where you can ask for the status of the system
 
 ```json
 {
-   "status":"UP",
-   "details":{
-      "rabbit":{
-         "status":"UP",
-         "details":{
-            "version":"3.7.13"
-         }
-      },
-      "mongo":{
-         "status":"UP",
-         "details":{
-            "version":"4.0.8"
-         }
+  "status": "UP",
+  "details": {
+    "rabbit": {
+      "status": "UP",
+      "details": {
+        "version": "3.7.13"
       }
-   }
+    },
+    "mongo": {
+      "status": "UP",
+      "details": {
+        "version": "4.0.8"
+      }
+    }
+  }
 }
 ```
 
