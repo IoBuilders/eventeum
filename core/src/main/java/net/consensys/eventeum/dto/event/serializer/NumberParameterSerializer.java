@@ -17,8 +17,10 @@ public class NumberParameterSerializer
                           JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider)
             throws IOException {
-        jsonGenerator.writeStringField("type", value.getType());
-        jsonGenerator.writeStringField("value", value.getValueString());
+      jsonGenerator.writeStartObject();
+      jsonGenerator.writeStringField("type", value.getType());
+      jsonGenerator.writeStringField("value", value.getValueString());
+      jsonGenerator.writeEndObject();
     }
 
     @Override
