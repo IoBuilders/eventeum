@@ -18,11 +18,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -47,11 +45,6 @@ public class DatabaseConfiguration {
   @ConditionalOnProperty(name = "database.type", havingValue = "SQL")
   @EnableJpaRepositories(basePackages = {BaseConfiguration.BASE_PACKAGE})
   @EnableAutoConfiguration(
-      exclude = {
-        MongoAutoConfiguration.class,
-        MongoDataAutoConfiguration.class,
-        MongoReactiveAutoConfiguration.class,
-        MongoRepositoriesAutoConfiguration.class,
-      })
+      exclude = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
   static class WithJpa {}
 }
